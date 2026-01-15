@@ -168,8 +168,8 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    controller.rightBumper().whileTrue(m_Shooter.PIDCMD(1));
-    controller.rightBumper().whileFalse(m_Shooter.PIDCMD(0));
+    controller.rightBumper().toggleOnTrue(m_Shooter.PIDCMD(1));
+    controller.rightBumper().toggleOnFalse(m_Shooter.PIDCMD(0));
   }
 
   /**

@@ -7,11 +7,13 @@ package frc.robot.subsystems.shooter;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -20,6 +22,8 @@ import frc.robot.Constants;
 public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
   SparkMax Flywheel = new SparkMax(Constants.ShooterConstants.SHOOTERID, MotorType.kBrushless);
+
+  SparkMaxSim FlywheelSim = new SparkMaxSim(Flywheel, DCMotor.getNEO(1));
 
   // To use a SparkMax, we create a SparkMax object. To use PID, we have to use the PID Object.
   // REVLib have their own PID Object called SparkClosedLoopController.
@@ -79,8 +83,30 @@ public class Shooter extends SubsystemBase {
     double newD = SmartDashboard.getNumber("PID/Shooter/kD", kD);
     double newTargetRPM = SmartDashboard.getNumber("PID/Shooter/Target RPM", targetRPM);
 
+    SmartDashboard.putNumber("PID/Shooter/Dropper Output", Flywheel.getAppliedOutput()); // Setpoint
+
     SmartDashboard.putNumber("PID/Shooter/Dropper Setpoint", targetRPM); // Setpoint
     SmartDashboard.putNumber(
         "PID/Shooter/Dropper Velocity", flywheelEncoder.getVelocity()); // Actual velocity
+
+    SmartDashboard.updateValues();
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    // In this method, we update our simulation of what our arm is doing
+    // First, we set our "inputs" (voltages)
+
+    // Next, we update it. The standard loop time is 20ms.
+
+    // Now, we update the Spark MAX
+    FlywheelSim.iterate(
+        FlywheelSim.getVelocity(),
+        12, // Simulated battery voltage, in Volts
+        0.02); // Time interval, in Seconds
+
+    // SimBattery estimates loaded battery voltages
+    // This should include all motors being simulated
+
   }
 }
