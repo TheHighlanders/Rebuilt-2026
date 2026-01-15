@@ -18,6 +18,12 @@ public final class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
+  public static class ShooterConstants {
+
+    public static final int SHOOTERID = 8;
+    public static final int HOODID = 9;
+  }
+
   public static enum Mode {
     /** Running on a real robot. */
     REAL,

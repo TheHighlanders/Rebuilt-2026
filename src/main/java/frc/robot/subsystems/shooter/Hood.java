@@ -17,16 +17,16 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-public class Shooter extends SubsystemBase {
-  /** Creates a new Shooter. */
-  SparkMax Flywheel = new SparkMax(Constants.ShooterConstants.SHOOTERID, MotorType.kBrushless);
+public class Hood extends SubsystemBase {
+  /** Creates a new Hood. */
+  SparkMax hoodMax = new SparkMax(Constants.ShooterConstants.HOODID, MotorType.kBrushless);
 
   // To use a SparkMax, we create a SparkMax object. To use PID, we have to use the PID Object.
   // REVLib have their own PID Object called SparkClosedLoopController.
-  SparkClosedLoopController shootController = Flywheel.getClosedLoopController();
+  SparkClosedLoopController hoodController = hoodMax.getClosedLoopController();
 
   // Encoder: A sensor that measures the amount of rotations
-  RelativeEncoder flywheelEncoder;
+  RelativeEncoder hoodEncoder;
 
   // PID
   double kP = 0.1;
@@ -35,25 +35,25 @@ public class Shooter extends SubsystemBase {
   double targetRPM = 0.0;
 
   // pid config
-  SparkMaxConfig ShooterConfig = new SparkMaxConfig();
+  SparkMaxConfig hoodConfig = new SparkMaxConfig();
 
-  public Shooter() {
+  public Hood() {
     // initialize encoder
-    flywheelEncoder = Flywheel.getEncoder();
+    hoodEncoder = hoodMax.getEncoder();
 
     // Set PID gains
-    ShooterConfig.closedLoop.p(kP).i(kI).d(kD);
+    hoodConfig.closedLoop.p(kP).i(kI).d(kD);
 
     // dropper config
-    Flywheel.configure(
-        ShooterConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+    hoodMax.configure(
+        hoodConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // For Elastic and Advantage
 
-    SmartDashboard.putNumber("PID/Shooter/kP", kP);
-    SmartDashboard.putNumber("PID/Shooter/kI", kI);
-    SmartDashboard.putNumber("PID/Shooter/kD", kD);
-    SmartDashboard.putNumber("PID/Shooter/Target RPM", targetRPM);
+    SmartDashboard.putNumber("PID/Hood/kP", kP);
+    SmartDashboard.putNumber("PID/Hood/kI", kI);
+    SmartDashboard.putNumber("PID/Hood/kD", kD);
+    SmartDashboard.putNumber("PID/Hood/Target RPM", targetRPM);
   }
 
   /*
@@ -66,21 +66,22 @@ public class Shooter extends SubsystemBase {
 
     return runOnce(
         () -> {
-          shootController.setSetpoint(newTargetRPM, ControlType.kVelocity);
+          hoodController.setSetpoint(newTargetRPM, ControlType.kVelocity);
         });
   }
 
   @SuppressWarnings("unused")
   @Override
   public void periodic() {
+    // This method will be called once per scheduler run
     // For Elastic and Advtange Scope
-    double newP = SmartDashboard.getNumber("PID/Shooter/kP", kP);
-    double newI = SmartDashboard.getNumber("PID/Shooter/kI", kI);
-    double newD = SmartDashboard.getNumber("PID/Shooter/kD", kD);
-    double newTargetRPM = SmartDashboard.getNumber("PID/Shooter/Target RPM", targetRPM);
+    double newP = SmartDashboard.getNumber("PID/Hood/kP", kP);
+    double newI = SmartDashboard.getNumber("PID/Hood/kI", kI);
+    double newD = SmartDashboard.getNumber("PID/Hood/kD", kD);
+    double newTargetRPM = SmartDashboard.getNumber("Target RPM", targetRPM);
 
-    SmartDashboard.putNumber("PID/Shooter/Dropper Setpoint", targetRPM); // Setpoint
+    SmartDashboard.putNumber("PID/Hood/Dropper Setpoint", targetRPM); // Setpoint
     SmartDashboard.putNumber(
-        "PID/Shooter/Dropper Velocity", flywheelEncoder.getVelocity()); // Actual velocity
+        "PID/Hood/Dropper Velocity", hoodEncoder.getVelocity()); // Actual velocity
   }
 }
