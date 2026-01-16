@@ -25,8 +25,7 @@ public class Shooter extends SubsystemBase {
 
   SparkMaxSim FlywheelSim = new SparkMaxSim(Flywheel, DCMotor.getNEO(1));
 
-  // To use a SparkMax, we create a SparkMax object. To use PID, we have to use the PID Object.
-  // REVLib have their own PID Object called SparkClosedLoopController.
+  // pid
   SparkClosedLoopController shootController = Flywheel.getClosedLoopController();
 
   // Encoder: A sensor that measures the amount of rotations
@@ -53,19 +52,14 @@ public class Shooter extends SubsystemBase {
         ShooterConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // For Elastic and Advantage
-
     SmartDashboard.putNumber("PID/Shooter/kP", kP);
     SmartDashboard.putNumber("PID/Shooter/kI", kI);
     SmartDashboard.putNumber("PID/Shooter/kD", kD);
     SmartDashboard.putNumber("PID/Shooter/Target RPM", 0.0);
   }
 
-  /*
-   * Hint: New Commands and Methods go here
-   */
   public Command PIDCMD(double newTargetRPM) {
 
-    // advantage scope (?)
     targetRPM = newTargetRPM;
     //SmartDashboard.putNumber("PID/Shooter/Target RPM", newTargetRPM);
 
