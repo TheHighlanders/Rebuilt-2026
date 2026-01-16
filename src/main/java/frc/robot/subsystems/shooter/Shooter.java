@@ -35,7 +35,7 @@ public class Shooter extends SubsystemBase {
   // PID
   double kP = 0.1;
   double kI = 0.0;
-  double kD = 0.0;
+  double kD = 3.0;
   double targetRPM = 0.0;
 
   // pid config
@@ -57,7 +57,7 @@ public class Shooter extends SubsystemBase {
     SmartDashboard.putNumber("PID/Shooter/kP", kP);
     SmartDashboard.putNumber("PID/Shooter/kI", kI);
     SmartDashboard.putNumber("PID/Shooter/kD", kD);
-    SmartDashboard.putNumber("PID/Shooter/Target RPM", targetRPM);
+    SmartDashboard.putNumber("PID/Shooter/Target RPM", 0.0);
   }
 
   /*
@@ -67,6 +67,7 @@ public class Shooter extends SubsystemBase {
 
     // advantage scope (?)
     targetRPM = newTargetRPM;
+    //SmartDashboard.putNumber("PID/Shooter/Target RPM", newTargetRPM);
 
     return runOnce(
         () -> {
@@ -81,15 +82,17 @@ public class Shooter extends SubsystemBase {
     double newP = SmartDashboard.getNumber("PID/Shooter/kP", kP);
     double newI = SmartDashboard.getNumber("PID/Shooter/kI", kI);
     double newD = SmartDashboard.getNumber("PID/Shooter/kD", kD);
-    double newTargetRPM = SmartDashboard.getNumber("PID/Shooter/Target RPM", targetRPM);
+    // double newTTargetRPM = SmartDashboard.getNumber("PID/Shooter/Target RPM", targetRPM);
 
-    SmartDashboard.putNumber("PID/Shooter/Dropper Output", Flywheel.getAppliedOutput()); // Setpoint
+    SmartDashboard.putNumber(
+        "PID/Shooter/Dropper Output", flywheelEncoder.getPosition()); // Setpoint
 
-    SmartDashboard.putNumber("PID/Shooter/Dropper Setpoint", targetRPM); // Setpoint
+    SmartDashboard.putNumber("PID/Shooter/Target RPM", shootController.getSetpoint()); //
+    // Setpoint
     SmartDashboard.putNumber(
         "PID/Shooter/Dropper Velocity", flywheelEncoder.getVelocity()); // Actual velocity
 
-    SmartDashboard.updateValues();
+    // SmartDashboard.updateValues();
   }
 
   @Override
@@ -101,7 +104,7 @@ public class Shooter extends SubsystemBase {
 
     // Now, we update the Spark MAX
     FlywheelSim.iterate(
-        FlywheelSim.getVelocity(),
+        FlywheelSim.getSetpoint(),
         12, // Simulated battery voltage, in Volts
         0.02); // Time interval, in Seconds
 

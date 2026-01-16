@@ -31,7 +31,7 @@ public class Hood extends SubsystemBase {
   // PID
   double kP = 0.1;
   double kI = 0.0;
-  double kD = 0.0;
+  double kD = 3.0;
   double targetRPM = 0.0;
 
   // pid config
