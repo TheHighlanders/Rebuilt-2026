@@ -178,6 +178,14 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
                     drive)
                 .ignoringDisable(true));
+    controller
+        .y()
+        .whileTrue(
+            DriveCommands.lookAt(
+                drive,
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                () -> vision.getTargetX(28)));
   }
 
   /**

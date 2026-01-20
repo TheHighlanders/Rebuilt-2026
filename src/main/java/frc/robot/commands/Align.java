@@ -5,12 +5,21 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.vision.Vision;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class Align extends Command {
   /** Creates a new Align. */
-  public Align() {
+  public Drive drive;
+
+  public Vision vision;
+
+  public Align(Drive _drive, Vision _vision) {
     // Use addRequirements() here to declare subsystem dependencies.
+    drive = _drive;
+    vision = _vision;
+    addRequirements(drive, vision);
   }
 
   // Called when the command is initially scheduled.
