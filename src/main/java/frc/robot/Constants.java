@@ -23,6 +23,7 @@ public final class Constants {
     public static final int INTAKEID2 = 11;
     public static final double INTAKE_SPEED = 1;
     public static final double SPITAKE_SPEED = 1;
+    public static final double DEPLOYID = 12;
   }
 
   public static enum Mode {

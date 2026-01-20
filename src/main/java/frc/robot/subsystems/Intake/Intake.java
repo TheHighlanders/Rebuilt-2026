@@ -10,9 +10,6 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -32,7 +29,7 @@ public class Intake extends SubsystemBase {
   }
 
   public void intake() {
-  //  SmartDashboard.putNumber(("intake"), 1);
+    //  SmartDashboard.putNumber(("intake"), 1);
     intakeMotor1.set(Constants.IntakeConstants.INTAKE_SPEED);
     intakeMotor2.set(-Constants.IntakeConstants.INTAKE_SPEED);
   }

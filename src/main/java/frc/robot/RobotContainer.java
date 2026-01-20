@@ -11,7 +11,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -19,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Intake.Deploy;
 import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -38,6 +38,7 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final Intake intake;
+  private final Deploy deploy;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -105,7 +106,7 @@ public class RobotContainer {
         break;
     }
     intake = new Intake(); // Fits outside because it's the same in both Real and Sim.
-
+    deploy = new Deploy();
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -174,6 +175,9 @@ public class RobotContainer {
 
     operator.y().onTrue(intake.spitakeCMD());
     operator.y().onFalse(intake.stoptakeCMD());
+
+    operator.a().onTrue(deploy.deployCMD());
+    operator.a().onFalse(deploy.stopDeployCMD());
   }
 
   /**
