@@ -11,6 +11,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -88,7 +89,7 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
-        
+
         break;
 
       default:
@@ -103,7 +104,7 @@ public class RobotContainer {
 
         break;
     }
-        intake = new Intake(); // Fits outside because it's the same in both Real and Sim.
+    intake = new Intake(); // Fits outside because it's the same in both Real and Sim.
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -166,13 +167,14 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
                     drive)
                 .ignoringDisable(true));
-  
-    operator.b().onTrue(Commands.runOnce(intake::intakeCMD, intake)); 
-    operator.b().onFalse(Commands.runOnce(intake::stoptakeCMD, intake));
-    
-    operator.y().onTrue(Commands.runOnce(intake::spitakeCMD, intake));
-    operator.y().onFalse(Commands.runOnce(intake::spitakeCMD, intake));
-}
+
+    /* operator controlls port 1 */
+    operator.b().onTrue(intake.intakeCMD());
+    operator.b().onFalse(intake.stoptakeCMD());
+
+    operator.y().onTrue(intake.spitakeCMD());
+    operator.y().onFalse(intake.stoptakeCMD());
+  }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
