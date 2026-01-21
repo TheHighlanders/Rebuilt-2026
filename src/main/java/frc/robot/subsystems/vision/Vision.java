@@ -17,12 +17,15 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import java.util.LinkedList;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
+import org.w3c.dom.ranges.DocumentRange;
 
 public class Vision extends SubsystemBase {
   private final VisionConsumer consumer;
@@ -55,18 +58,13 @@ public class Vision extends SubsystemBase {
    * @param cameraIndex The index of the camera to use.
    */
   public Rotation2d getTargetX(int cameraIndex) {
-    // Add tag poses
-    //for (int c = 0; c < 2; c++) {
-    for (int tagId : inputs[0].tagIds) {
-    //  for (int tagId2 : inputs[1].tagIds) {
-      
-      var tagPose = aprilTagLayout.getTagPose(tagId);
-     // if (tagId == cameraIndex) {
-        // DriverStation.reportWarning(Integer.toString(tagId), false);
-        return tagPose.get().toPose2d().getRotation();
-      //}
+    for (int i: inputs[0].tagIds) {
+      DriverStation.reportWarning(Integer.toString(i), false);
+      var tagPose = aprilTagLayout.getTagPose(i);
+      if (i == cameraIndex) {
+        return Rotation2d.fromRotations(tagPose.get().getRotation().toRotation2d().getDegrees() * -1 * tagPose.get().getRotation().getX());
+      }
     }
- // }
     return Rotation2d.kZero;
   }
 
