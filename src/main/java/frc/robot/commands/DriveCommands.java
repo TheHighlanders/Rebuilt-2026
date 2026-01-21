@@ -150,9 +150,7 @@ public class DriveCommands {
         .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
   }
 
-  /**
-   * pid look at thingy
-   */
+  /** pid look at thingy */
   public static Command lookAt(
       Drive drive,
       DoubleSupplier xSupplier,
@@ -171,7 +169,7 @@ public class DriveCommands {
     // Construct command
     return Commands.run(
             () -> {
-              
+
               // Get linear velocity
               Translation2d linearVelocity =
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
