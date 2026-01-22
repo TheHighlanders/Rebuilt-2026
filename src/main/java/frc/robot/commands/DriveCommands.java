@@ -8,7 +8,6 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -43,9 +42,6 @@ public class DriveCommands {
   private static final double FF_RAMP_RATE = 0.1; // Volts/Sec
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
-
-  private static final PIDController orbitController = 
-    new PIDController(1, 0, 0.5);
 
 
   private DriveCommands() {}
@@ -157,18 +153,36 @@ public class DriveCommands {
         .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
   }
 
+  /**
+   * Field relative drive command where joystick controlls linear velocity and robot is continuously towards a point on the field.
+   * Useful for orbitting shooting targets
+   * @param orbitPose field-relative point to orbit
+   */
   public static Command joystickOrbitDrive(
       Drive drive,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       Pose2d orbitPose) {
+
+        //create angle PID controller
+        ProfiledPIDController angleController = 
+          new ProfiledPIDController(
+            1, 
+            0, 
+            0.5,
+            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+
+        angleController.enableContinuousInput(-Math.PI, Math.PI);
+        angleController.setTolerance(Units.degreesToRadians(5));
+
+
         return Commands.run(
           () -> {
             Rotation2d rotationTarget = PhotonUtils.getYawToPose(drive.getPose(), orbitPose);//gets angle from robot position to tag position
 
             double radiansOff = drive.getPose().getRotation().getRadians() - rotationTarget.getRadians();
 
-            double orbitControllerOutput = orbitController.calculate(radiansOff, 0);
+            double orbitControllerOutput = angleController.calculate(radiansOff, 0);
             double orbitPIDXOut = xSupplier.getAsDouble();
             double orbitPIDYOut = ySupplier.getAsDouble();
 
@@ -177,7 +191,10 @@ public class DriveCommands {
             );
 
 
-          }, drive);
+          }, drive)
+
+        // Reset PID controller when command starts
+        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
       }
   /** pid look at thingy */
   public static Command lookAt(
