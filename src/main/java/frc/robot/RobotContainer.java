@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Hopper.Hopper;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
@@ -36,7 +37,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-
+    private final Hopper hopper;
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -168,9 +169,12 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    controller.rightBumper().onFalse(m_Shooter.PIDCMD(500));
-    controller.rightBumper().onTrue(m_Shooter.PIDCMD(0));
-  }
+    controller.leftBumper().onFalse(m_Shooter.PIDCMD(500));
+    controller.leftBumper().onTrue(m_Shooter.PIDCMD(0));
+    controller.rightBumper().onFalse(Commands.parallel(hopper.StopCMD(), m_Shooter.PIDCMD(0)));
+    controller.rightBumper().onTrue(Commands.parallel(hopper.SpinCMD(), m_Shooter.PIDCMD(500)));
+
+  
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

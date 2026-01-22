@@ -24,6 +24,11 @@ public final class Constants {
     public static final int HOODID = 9;
   }
 
+  public final class HopperConstants {
+
+    public static final int HOPPERID = 13;
+  }
+
   public static enum Mode {
     /** Running on a real robot. */
     REAL,

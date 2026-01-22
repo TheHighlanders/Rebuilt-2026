@@ -14,6 +14,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -61,10 +62,11 @@ public class Shooter extends SubsystemBase {
   public Command PIDCMD(double newTargetRPM) {
 
     targetRPM = newTargetRPM;
-    //SmartDashboard.putNumber("PID/Shooter/Target RPM", newTargetRPM);
+    // SmartDashboard.putNumber("PID/Shooter/Target RPM", newTargetRPM);
 
     return runOnce(
         () -> {
+          DriverStation.reportWarning("Shooter", false);
           shootController.setSetpoint(newTargetRPM, ControlType.kVelocity);
         });
   }
