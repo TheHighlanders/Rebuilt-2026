@@ -8,6 +8,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -30,6 +31,8 @@ import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import org.photonvision.PhotonUtils;
+
 public class DriveCommands {
   private static final double DEADBAND = 0.1;
   private static final double ANGLE_KP = 5.0;
@@ -40,6 +43,10 @@ public class DriveCommands {
   private static final double FF_RAMP_RATE = 0.1; // Volts/Sec
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
+
+  private static final PIDController orbitController = 
+    new PIDController(1, 0, 0.5);
+
 
   private DriveCommands() {}
 
@@ -150,6 +157,28 @@ public class DriveCommands {
         .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
   }
 
+  public static Command joystickOrbitDrive(
+      Drive drive,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      Pose2d orbitPose) {
+        return Commands.run(
+          () -> {
+            Rotation2d rotationTarget = PhotonUtils.getYawToPose(drive.getPose(), orbitPose);//gets angle from robot position to tag position
+
+            double radiansOff = drive.getPose().getRotation().getRadians() - rotationTarget.getRadians();
+
+            double orbitControllerOutput = orbitController.calculate(radiansOff, 0);
+            double orbitPIDXOut = xSupplier.getAsDouble();
+            double orbitPIDYOut = ySupplier.getAsDouble();
+
+            drive.runVelocity(
+              ChassisSpeeds.fromFieldRelativeSpeeds(orbitPIDXOut, orbitPIDYOut, orbitControllerOutput, drive.getPose().getRotation())
+            );
+
+
+          }, drive);
+      }
   /** pid look at thingy */
   public static Command lookAt(
       Drive drive,
