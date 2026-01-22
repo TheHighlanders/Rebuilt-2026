@@ -56,14 +56,22 @@ public class Vision extends SubsystemBase {
    * @param cameraIndex The index of the camera to use.
    */
   public Rotation2d getTargetX(int cameraIndex) {
-    for (int i : inputs[0].tagIds) {
+    DriverStation.reportWarning(Double.toString(inputs[cameraIndex].latestTargetObservation.tx().getDegrees()), false);
+    return inputs[cameraIndex].latestTargetObservation.tx();
+      
+    /**for (int i : inputs[0].tagIds) {
       DriverStation.reportWarning(Integer.toString(i), false);
       var tagPose = aprilTagLayout.getTagPose(i);
+      DriverStation.reportWarning(
+          Double.toString(
+            tagPose.get().getRotation().toRotation2d().plus(Rotation2d.kPi).getDegrees()),
+          false);
       if (i == cameraIndex) {
         return tagPose.get().getRotation().toRotation2d().plus(Rotation2d.kPi);
       }
     }
     return Rotation2d.kZero;
+    */
   }
 
   @Override
