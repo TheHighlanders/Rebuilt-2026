@@ -14,6 +14,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -48,6 +49,8 @@ public class RobotContainer {
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
+
+  private boolean robotRelative;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -147,13 +150,15 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    robotRelative = false;
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
-            () -> -controller.getRightX()));
+            () -> -controller.getRightX(),
+            () -> robotRelative));
 
     // Lock to 0° when A button is held
     controller
@@ -163,7 +168,8 @@ public class RobotContainer {
                 drive,
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
-                () -> Rotation2d.kZero));
+                () -> Rotation2d.kZero,
+                () -> robotRelative));
 
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
@@ -185,7 +191,23 @@ public class RobotContainer {
                 drive,
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
-                new Pose2d(5, 5, Rotation2d.kZero)));
+                aprilTagLayout.getTagPose(25).get().toPose2d(),
+                () -> robotRelative) // / get position of april tag on blue basket
+            );
+
+    controller
+        .povDown()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  robotRelative = !robotRelative;
+                  SmartDashboard.putBoolean("Robot Relative Drive", robotRelative);
+                }));
+    /**
+     * DriveCommands.joystickOrbitDrive( drive, () -> -controller.getLeftY(), () ->
+     * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
+     * Rotation2d.kZero)));
+     */
   }
 
   /**

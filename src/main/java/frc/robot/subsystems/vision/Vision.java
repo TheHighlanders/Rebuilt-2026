@@ -18,7 +18,6 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import java.util.LinkedList;
@@ -56,22 +55,22 @@ public class Vision extends SubsystemBase {
    * @param cameraIndex The index of the camera to use.
    */
   public Rotation2d getTargetX(int cameraIndex) {
-    DriverStation.reportWarning(Double.toString(inputs[cameraIndex].latestTargetObservation.tx().getDegrees()), false);
+
+    // DriverStation.reportWarning(
+    //    Double.toString(inputs[cameraIndex].latestTargetObservation.tx().getDegrees()), false);
     return inputs[cameraIndex].latestTargetObservation.tx();
-      
-    /**for (int i : inputs[0].tagIds) {
-      DriverStation.reportWarning(Integer.toString(i), false);
-      var tagPose = aprilTagLayout.getTagPose(i);
-      DriverStation.reportWarning(
-          Double.toString(
-            tagPose.get().getRotation().toRotation2d().plus(Rotation2d.kPi).getDegrees()),
-          false);
-      if (i == cameraIndex) {
-        return tagPose.get().getRotation().toRotation2d().plus(Rotation2d.kPi);
-      }
-    }
-    return Rotation2d.kZero;
-    */
+    /**
+     * var prevPose = Pose2d.kZero;
+     *
+     * <p>for (int i : inputs[0].tagIds) { DriverStation.reportWarning(Integer.toString(i), false);
+     * var tagPose = aprilTagLayout.getTagPose(i);
+     *
+     * <p>if (i == cameraIndex) { return tagPose.get().toPose2d(); }
+     *
+     * <p>prevPose = tagPose.get().toPose2d(); }
+     *
+     * <p>return prevPose;
+     */
   }
 
   @Override
