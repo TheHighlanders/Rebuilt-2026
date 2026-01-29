@@ -29,6 +29,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+// import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -159,6 +160,17 @@ public class Drive extends SubsystemBase {
             sample.vy + yController.calculate(pose.getY(), sample.y),
             sample.omega
                 + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
+
+    // boolean isFlipped =
+    //           DriverStation.getAlliance().isPresent()
+    //               && DriverStation.getAlliance().get() == Alliance.Red;
+
+    runVelocity(
+        ChassisSpeeds.fromFieldRelativeSpeeds(
+            speeds,
+            // isFlipped
+            // ? getRotation().plus(new Rotation2d(Math.PI)) :
+            getRotation()));
   }
 
   @Override

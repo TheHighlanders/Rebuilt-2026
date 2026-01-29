@@ -36,6 +36,8 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
 
+  private final Autos autos;
+
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -100,10 +102,13 @@ public class RobotContainer {
     }
 
     // Set up auto routines
+    autos = new Autos(drive);
     //  autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoFactory.buildAutoChooser());
     autoChooser = new AutoChooser();
-    // Set up SysId routines
-    SmartDashboard.putData(autoChooser);
+    autoChooser.addRoutine(
+        "THE WORKING AUTO", () -> autos.shootTwiceRoutine()); // Set up SysId routines
+
+    SmartDashboard.putData("CHOREO", autoChooser);
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
 
     // Configure the button bindings
