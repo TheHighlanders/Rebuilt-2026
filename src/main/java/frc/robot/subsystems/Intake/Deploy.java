@@ -4,37 +4,42 @@
 
 package frc.robot.subsystems.Intake;
 
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class Deploy extends SubsystemBase {
   /** Creates a new Deploy. */
-  SparkMax deployMotor = new SparkMax(1, MotorType.kBrushless);
+  SparkMax deployMotor = new SparkMax(Constants.IntakeConstants.DEPLOYID, MotorType.kBrushless);
 
-  public Deploy() {}
+  SparkMaxConfig config = new SparkMaxConfig();
 
-  public void InandOut() {
-    deployMotor.set(Constants.IntakeConstants.DEPLOYID);
+  public Deploy() {
+    config.smartCurrentLimit(50).idleMode(IdleMode.kBrake);
+
+    deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
-  public void stopDeploy() {
-    deployMotor.set(0);
-  }
+  // Adds start and stop for deploying
   public Command deployCMD() {
+    // Deploys fuel
     return runOnce(
         () -> {
-          InandOut();
+          deployMotor.set(Constants.IntakeConstants.DEPLOY_SPEED);
         });
   }
-    public Command stopDeployCMD() {
+  // Stops motor
+  public Command stopDeployCMD() {
     return runOnce(
         () -> {
-          stopDeploy();
+          deployMotor.set(0);
         });
   }
-
 
   @Override
   public void periodic() {

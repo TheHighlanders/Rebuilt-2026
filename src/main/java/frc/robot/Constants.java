@@ -19,11 +19,11 @@ public final class Constants {
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
   public static class IntakeConstants {
-    public static final int INTAKEID = 10;
-    public static final int INTAKEID2 = 11;
+    public static final int SPINTAKEID = 10;
+    public static final int DEPLOYID = 12;
     public static final double INTAKE_SPEED = 1;
-    public static final double SPITAKE_SPEED = 1;
-    public static final double DEPLOYID = 12;
+    public static final double SPITAKE_SPEED = -1;
+    public static final double DEPLOY_SPEED = 1;
   }
 
   public static enum Mode {
