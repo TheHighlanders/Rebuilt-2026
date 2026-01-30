@@ -80,6 +80,18 @@ public final class Constants {
     public static final double kD2 = 0;
   }
 
+  public static class ShooterConstants {
+
+    public static final int SHOOTERID = 8;
+    public static final int HOODID = 9;
+    public static final int KICKERID = 14;
+  }
+  
+  public final class HopperConstants {
+
+    public static final int HOPPERID = 13;
+  }
+
   public static enum Mode {
     /** Running on a real robot. */
     REAL,
