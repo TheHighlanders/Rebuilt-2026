@@ -21,6 +21,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Intake.Deploy;
+import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
@@ -43,9 +45,12 @@ public class RobotContainer {
   private final Drive drive;
   private final Vision vision;
   private final Autos autos;
+  private final Intake intake;
+  private final Deploy deploy;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
+  private final CommandXboxController operator = new CommandXboxController(1);
 
   // Dashboard inputs
   //  private final LoggedDashboardChooser<Command> autoChooser;
@@ -106,6 +111,7 @@ public class RobotContainer {
                 drive::addVisionMeasurement,
                 new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose),
                 new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose));
+
         break;
 
       default:
@@ -118,9 +124,11 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+
         break;
     }
-
+    intake = new Intake(); // Fits outside because it's the same in both Real and Sim.
+    deploy = new Deploy();
     // Set up auto routines
     autos = new Autos(drive);
     //  autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoFactory.buildAutoChooser());
@@ -177,7 +185,7 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
     controller
-        .y()
+        .x()
         .whileTrue(
             DriveCommands.joystickOrbitDrive(
                 drive,
@@ -200,6 +208,16 @@ public class RobotContainer {
      * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
      * Rotation2d.kZero)));
      */
+
+    /* operator controlls port 1 */
+    operator.b().onTrue(intake.intakeCMD());
+    operator.b().onFalse(intake.stoptakeCMD());
+
+    operator.y().onTrue(intake.spitakeCMD());
+    operator.y().onFalse(intake.stoptakeCMD());
+
+    operator.a().onTrue(deploy.deployCMD());
+    operator.a().onFalse(deploy.stopDeployCMD());
   }
 
   /**

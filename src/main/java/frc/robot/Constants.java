@@ -63,6 +63,23 @@ public final class Constants {
         Double.POSITIVE_INFINITY; // No rotation data available
   }
 
+  public static class IntakeConstants {
+    public static final int SPINTAKEID = 10;
+    public static final int DEPLOYID = 12;
+
+    public static final double INTAKE_SPEED = 1;
+    public static final double SPITAKE_SPEED = -1;
+    public static final double DEPLOY_SPEED = 1;
+
+    public static final double kP1 = 0.1;
+    public static final double kI1 = 0;
+    public static final double kD1 = 0;
+    
+    public static final double kP2 = 0.0001;
+    public static final double kI2 = 0;
+    public static final double kD2 = 0;
+  }
+
   public static enum Mode {
     /** Running on a real robot. */
     REAL,
