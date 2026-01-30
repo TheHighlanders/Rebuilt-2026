@@ -12,11 +12,11 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import frc.robot.Constants.IntakeConstants;
 
 public class Deploy extends SubsystemBase {
   /** Creates a new Deploy. */
-  SparkMax deployMotor = new SparkMax(Constants.IntakeConstants.DEPLOYID, MotorType.kBrushless);
+  SparkMax deployMotor = new SparkMax(IntakeConstants.DEPLOYID, MotorType.kBrushless);
 
   SparkMaxConfig config = new SparkMaxConfig();
 
@@ -30,7 +30,7 @@ public class Deploy extends SubsystemBase {
     // Deploys fuel
     return runOnce(
         () -> {
-          deployMotor.set(Constants.IntakeConstants.DEPLOY_SPEED);
+          deployMotor.set(IntakeConstants.DEPLOY_SPEED);
         });
   }
   // Stops motor
