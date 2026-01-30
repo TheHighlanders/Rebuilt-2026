@@ -22,8 +22,9 @@ public final class Constants {
 
     public static final int SHOOTERID = 8;
     public static final int HOODID = 9;
+    public static final int KICKERID = 14;
   }
-
+  
   public final class HopperConstants {
 
     public static final int HOPPERID = 13;

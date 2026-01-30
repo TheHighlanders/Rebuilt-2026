@@ -51,6 +51,8 @@ public class RobotContainer {
 
     // Define Shooter
     m_Shooter = new Shooter();
+    // Define Hopper
+    hopper = new Hopper();
 
     switch (Constants.currentMode) {
       case REAL:
@@ -168,12 +170,13 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
                     drive)
                 .ignoringDisable(true));
-
+//activates the shooter without the hopper, meant for unclogging the shooter or if something goes wrong. 
     controller.leftBumper().onFalse(m_Shooter.PIDCMD(500));
     controller.leftBumper().onTrue(m_Shooter.PIDCMD(0));
+    // activates the shooter and hopper, meant for shooting fuel.
     controller.rightBumper().onFalse(Commands.parallel(hopper.StopCMD(), m_Shooter.PIDCMD(0)));
     controller.rightBumper().onTrue(Commands.parallel(hopper.SpinCMD(), m_Shooter.PIDCMD(500)));
-
+  }
   
 
   /**
@@ -184,4 +187,5 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     return autoChooser.get();
   }
+
 }

@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.shooter;
 
+import java.lang.management.MemoryType;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -23,14 +25,16 @@ import frc.robot.Constants;
 public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
   SparkMax Flywheel = new SparkMax(Constants.ShooterConstants.SHOOTERID, MotorType.kBrushless);
-
+  SparkMax Kickerwheel = new SparkMax(Constants.ShooterConstants.KICKERID,MotorType.kBrushless);
   SparkMaxSim FlywheelSim = new SparkMaxSim(Flywheel, DCMotor.getNEO(1));
 
   // pid
   SparkClosedLoopController shootController = Flywheel.getClosedLoopController();
+  SparkClosedLoopController kickController = Kickerwheel.getClosedLoopController();
 
   // Encoder: A sensor that measures the amount of rotations
   RelativeEncoder flywheelEncoder;
+  RelativeEncoder kickEncoder;
 
   // PID
   double kP = 0.1;
@@ -38,16 +42,20 @@ public class Shooter extends SubsystemBase {
   double kD = 3.0;
   double targetRPM = 0.0;
 
+  double kickTargetRPM = 0.0;
+
   // pid config
   SparkMaxConfig ShooterConfig = new SparkMaxConfig();
+  SparkMaxConfig KickConfig = new SparkMaxConfig();
 
   public Shooter() {
     // initialize encoder
     flywheelEncoder = Flywheel.getEncoder();
+    kickEncoder = Kickerwheel.getEncoder();
 
     // Set PID gains
     ShooterConfig.closedLoop.p(kP).i(kI).d(kD);
-
+    KickConfig.closedLoop.p(kP).i(kI).d(kD);
     // dropper config
     Flywheel.configure(
         ShooterConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
@@ -57,8 +65,16 @@ public class Shooter extends SubsystemBase {
     SmartDashboard.putNumber("PID/Shooter/kI", kI);
     SmartDashboard.putNumber("PID/Shooter/kD", kD);
     SmartDashboard.putNumber("PID/Shooter/Target RPM", 0.0);
+    SmartDashboard.putNumber("PID/KickWheel/Target RPM", 0.0);
   }
+  public Command shootCMD(double newTargetRPM){
+    /**spin the flywheel untill it reaches speed 
+     * once it reaches speed, activate the kicker wheel.
+     * then it stops both 
+    */
 
+
+  }
   public Command PIDCMD(double newTargetRPM) {
 
     targetRPM = newTargetRPM;
