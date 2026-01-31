@@ -27,6 +27,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -64,7 +65,8 @@ public class DriveCommands {
       Drive drive,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
-      DoubleSupplier omegaSupplier) {
+      DoubleSupplier omegaSupplier,
+      BooleanSupplier robotRelative) {
     return Commands.run(
         () -> {
           // Get linear velocity
@@ -83,15 +85,19 @@ public class DriveCommands {
                   linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                   linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                   omega * drive.getMaxAngularSpeedRadPerSec());
+
           boolean isFlipped =
               DriverStation.getAlliance().isPresent()
                   && DriverStation.getAlliance().get() == Alliance.Red;
+
           drive.runVelocity(
-              ChassisSpeeds.fromFieldRelativeSpeeds(
-                  speeds,
-                  isFlipped
-                      ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                      : drive.getRotation()));
+              robotRelative.getAsBoolean()
+                  ? ChassisSpeeds.fromRobotRelativeSpeeds(speeds, Rotation2d.fromDegrees(0))
+                  : ChassisSpeeds.fromFieldRelativeSpeeds(
+                      speeds,
+                      isFlipped
+                          ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                          : drive.getRotation()));
         },
         drive);
   }
@@ -105,7 +111,8 @@ public class DriveCommands {
       Drive drive,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
-      Supplier<Rotation2d> rotationSupplier) {
+      Supplier<Rotation2d> rotationSupplier,
+      BooleanSupplier robotRelative) {
 
     // Create PID controller
     ProfiledPIDController angleController =
@@ -119,6 +126,110 @@ public class DriveCommands {
     // Construct command
     return Commands.run(
             () -> {
+              // Get linear velocity
+              Translation2d linearVelocity =
+                  getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+
+              // Calculate angular speed
+              double omega =
+                  angleController.calculate(
+                      drive.getRotation().getRadians(), rotationSupplier.get().getRadians());
+
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                      omega);
+
+              boolean isFlipped =
+                  DriverStation.getAlliance().isPresent()
+                      && DriverStation.getAlliance().get() == Alliance.Red;
+
+              drive.runVelocity(
+                  robotRelative.getAsBoolean()
+                      ? ChassisSpeeds.fromRobotRelativeSpeeds(speeds, Rotation2d.fromDegrees(0))
+                      : ChassisSpeeds.fromFieldRelativeSpeeds(
+                          speeds,
+                          isFlipped
+                              ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                              : drive.getRotation()));
+            },
+            drive)
+
+        // Reset PID controller when command starts
+        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+  }
+
+  /**
+   * Field relative drive command where joystick controlls linear velocity and robot is continuously
+   * towards a point on the field. Useful for orbitting shooting targets
+   *
+   * @param target Pose2d to look at
+   */
+  public static Command joystickOrbitDrive(
+      Drive drive,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      Pose2d target,
+      BooleanSupplier robotRelative) {
+
+    return joystickDriveAtAngle(
+        drive,
+        xSupplier,
+        ySupplier,
+        () ->
+            Rotation2d.fromRadians(
+                Math.atan2(
+                    target.getY() - drive.getPose().getY(),
+                    target.getX() - drive.getPose().getX())),
+        robotRelative);
+  }
+
+  // create angle PID controller
+  /**
+   * ProfiledPIDController angleController = new ProfiledPIDController( 1, 0, 0.5, new
+   * TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+   *
+   * <p>angleController.enableContinuousInput(-Math.PI, Math.PI);
+   * angleController.setTolerance(Units.degreesToRadians(5));
+   *
+   * <p>return Commands.run( () -> { Rotation2d rotationTarget = Rotation2d.fromRadians( Math.atan2(
+   * // find relative angle of robot to orbit pose target.getY() - drive.getPose().getY(),
+   * target.getX() - drive.getPose().getX()));
+   *
+   * <p>double radiansOff = drive.getPose().getRotation().getRadians() -
+   * rotationTarget.getRadians();
+   *
+   * <p>double orbitControllerOutput = angleController.calculate(radiansOff, 0); double orbitPIDXOut
+   * = xSupplier.getAsDouble(); double orbitPIDYOut = ySupplier.getAsDouble();
+   *
+   * <p>drive.runVelocity( ChassisSpeeds.fromRobotRelativeSpeeds( orbitPIDXOut, orbitPIDYOut,
+   * orbitControllerOutput, drive.getPose().getRotation())); }, drive)
+   *
+   * <p>// Reset PID controller when command starts .beforeStarting(() ->
+   * angleController.reset(drive.getRotation().getRadians())); }
+   */
+  /** pid look at thingy */
+  public static Command lookAt(
+      Drive drive,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      Supplier<Rotation2d> rotationSupplier) {
+
+    // Create PID controller
+    ProfiledPIDController angleController =
+        new ProfiledPIDController(
+            1,
+            0,
+            0.02,
+            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+
+    // Construct command
+    return Commands.run(
+            () -> {
+
               // Get linear velocity
               Translation2d linearVelocity =
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
