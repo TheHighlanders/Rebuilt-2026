@@ -19,24 +19,24 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
 
 public class Intake extends SubsystemBase {
-    SparkMax intakeMotor =
+  SparkMax intakeMotor =
       new SparkMax(IntakeConstants.SPINTAKEID, MotorType.kBrushless); // 10, for now
-     RelativeEncoder encoder;
-    SparkMaxConfig config = new SparkMaxConfig();
-    SparkClosedLoopController controller = intakeMotor.getClosedLoopController();
+  RelativeEncoder encoder;
+  SparkMaxConfig config = new SparkMaxConfig();
+  SparkClosedLoopController controller = intakeMotor.getClosedLoopController();
+
   public Intake() {
 
     encoder = intakeMotor.getEncoder();
 
-    config.encoder
-        .positionConversionFactor(1)
-        .velocityConversionFactor(1);
+    config.encoder.positionConversionFactor(1).velocityConversionFactor(1);
 
     /*
      * Configure the closed loop controller. We want to make sure we set the
      * feedback sensor as the primary encoder.
      */
-    config.closedLoop
+    config
+        .closedLoop
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         // Set PID values for position control. We don't need to pass a closed loop
         // slot, as it will default to slot 0.
@@ -50,8 +50,8 @@ public class Intake extends SubsystemBase {
         .d(IntakeConstants.kD2, ClosedLoopSlot.kSlot1)
         .outputRange(-1, 1, ClosedLoopSlot.kSlot1)
         .feedForward
-          // kV is now in Volts, so we multiply by the nominal voltage (12V)
-          .kV(12.0 / 5767, ClosedLoopSlot.kSlot1);
+        // kV is now in Volts, so we multiply by the nominal voltage (12V)
+        .kV(12.0 / 5767, ClosedLoopSlot.kSlot1);
 
     /*
      * Apply the configuration to the SPARK MAX.
@@ -65,9 +65,6 @@ public class Intake extends SubsystemBase {
      */
     intakeMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
-
-
-  
     config.smartCurrentLimit(50).idleMode(IdleMode.kBrake);
 
     intakeMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);

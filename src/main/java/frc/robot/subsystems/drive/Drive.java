@@ -380,4 +380,13 @@ public class Drive extends SubsystemBase {
       new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
     };
   }
+
+  @AutoLogOutput(key = "Drive/isAligned")
+  public boolean isAligned() {
+    Pose2d currentPose = getPose();
+    Pose2d hubRelative = currentPose.relativeTo(Constants.DriveConstants.HUB_POSE);
+    Rotation2d hubAngle = hubRelative.getRotation();
+    Rotation2d threshold = Rotation2d.fromDegrees(5.0);
+    return Math.abs(hubAngle.getRadians()) < threshold.getRadians();
+  }
 }

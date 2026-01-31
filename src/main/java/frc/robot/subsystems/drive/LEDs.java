@@ -8,8 +8,6 @@ import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Seconds;
 
-import java.util.function.BooleanSupplier;
-
 import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLED.ColorOrder;
@@ -21,10 +19,11 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import java.util.function.BooleanSupplier;
 
 public class LEDs extends SubsystemBase {
 
-  Trigger canAlign;
+  Trigger isAlign;
 
   /** Creates a new LEDs. */
   private static final int kPort = 9;
@@ -41,15 +40,15 @@ public class LEDs extends SubsystemBase {
   LEDPattern allianceColor;
 
   // LEDPattern pattern = blink.blink(Seconds.of(.1));
-  public LEDs(Trigger canAlign) {
+  public LEDs(Trigger isAlign) {
     if (DriverStation.getAlliance().isPresent()
         && DriverStation.getAlliance().get() == Alliance.Blue) {
       allianceLED = LEDPattern.solid(Color.kBlue);
     }
 
-    this.canAlign = canAlign;
+    this.isAlign = isAlign;
 
-    this.canAlign
+    this.isAlign
         .onTrue(runPatternCommand(alignOk).withName("Alignment OK Pattern"))
         .onFalse(breathingPattern(getAllianceLed(), 1d).withName("Alignment NOT OK Pattern"));
 

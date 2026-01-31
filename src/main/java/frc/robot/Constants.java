@@ -9,6 +9,8 @@ package frc.robot;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -22,7 +24,10 @@ public final class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
-  public static final class DriveConstants {}
+  public static final class DriveConstants {
+    public static final Pose2d HUB_POSE =
+        new Pose2d(11.8, 4.1, new Rotation2d()); // TODO: Get actual pose
+  }
 
   public final class VisionConstants {
     // AprilTag layout
@@ -72,7 +77,7 @@ public final class Constants {
 
     public static final int HOPPERID = 13;
   }
-  
+
   public static class IntakeConstants {
     public static final int SPINTAKEID = 10;
     public static final int DEPLOYID = 12;
@@ -84,7 +89,7 @@ public final class Constants {
     public static final double kP1 = 0.1;
     public static final double kI1 = 0;
     public static final double kD1 = 0;
-    
+
     public static final double kP2 = 0.0001;
     public static final double kI2 = 0;
     public static final double kD2 = 0;

@@ -19,23 +19,24 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Hopper.Hopper;
 import frc.robot.subsystems.Intake.Deploy;
 import frc.robot.subsystems.Intake.Intake;
-import frc.robot.subsystems.Hopper.Hopper;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
+import frc.robot.subsystems.drive.LEDs;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import frc.robot.subsystems.shooter.Shooter;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -50,7 +51,8 @@ public class RobotContainer {
   private final Autos autos;
   private final Intake intake;
   private final Deploy deploy;
-    private final Hopper hopper;
+  private final Hopper hopper;
+  private final LEDs leds;
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
   private final CommandXboxController operator = new CommandXboxController(1);
@@ -140,6 +142,7 @@ public class RobotContainer {
     }
     intake = new Intake(); // Fits outside because it's the same in both Real and Sim.
     deploy = new Deploy();
+    leds = new LEDs(new Trigger(drive::isAligned));
     // Set up auto routines
     autos = new Autos(drive);
     //  autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoFactory.buildAutoChooser());
@@ -229,14 +232,14 @@ public class RobotContainer {
 
     operator.a().onTrue(deploy.deployCMD());
     operator.a().onFalse(deploy.stopDeployCMD());
-//activates the shooter without the hopper, meant for unclogging the shooter or if something goes wrong. 
+    // activates the shooter without the hopper, meant for unclogging the shooter or if something
+    // goes wrong.
     controller.leftBumper().onFalse(m_Shooter.PIDCMD(500));
     controller.leftBumper().onTrue(m_Shooter.PIDCMD(0));
     // activates the shooter and hopper, meant for shooting fuel.
     controller.rightBumper().onFalse(Commands.parallel(hopper.StopCMD(), m_Shooter.PIDCMD(0)));
     controller.rightBumper().onTrue(Commands.parallel(hopper.SpinCMD(), m_Shooter.PIDCMD(500)));
   }
-  
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -246,5 +249,4 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     return autoChooser.selectedCommand();
   }
-
 }
