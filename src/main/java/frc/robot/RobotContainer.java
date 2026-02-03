@@ -22,7 +22,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Hopper.Hopper;
-import frc.robot.subsystems.Intake.Deploy;
+import frc.robot.subsystems.deploy.Deploy;
 import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
