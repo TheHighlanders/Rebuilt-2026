@@ -34,12 +34,11 @@ public class Autos {
         .active()
         .onTrue(
             Commands.sequence(
-                align.resetOdometry(), 
-                align.cmd(), 
+                align.resetOdometry(),
+                align.cmd(),
                 Commands.runOnce(() -> drive.stop(), drive),
-                Commands.waitSeconds(3), 
-                collect.cmd())
-              );
+                Commands.waitSeconds(3),
+                collect.cmd()));
 
     return routine;
   }
