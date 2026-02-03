@@ -156,7 +156,11 @@ public class DriveCommands {
                               ? drive.getRotation().plus(new Rotation2d(Math.PI))
                               : drive.getRotation()));
 
-              SmartDashboard.putNumber("drive angle error", (rotationSupplier.get().getDegrees() - drive.getRotation().getDegrees() + 180)%(360) - 180);
+              SmartDashboard.putNumber(
+                  "drive angle error",
+                  (rotationSupplier.get().getDegrees() - drive.getRotation().getDegrees() + 180)
+                          % (360)
+                      - 180);
             },
             drive)
 

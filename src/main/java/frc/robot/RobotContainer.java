@@ -7,11 +7,13 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.Constants.VisionConstants.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -52,6 +54,9 @@ public class RobotContainer {
 
   private boolean robotRelative;
 
+
+  private Command testVisionSim;
+
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     switch (Constants.currentMode) {
@@ -70,7 +75,9 @@ public class RobotContainer {
             new Vision(
                 drive::addVisionMeasurement,
                 new VisionIOPhotonVision(camera0Name, robotToCamera0),
-                new VisionIOPhotonVision(camera1Name, robotToCamera1));
+                new VisionIOPhotonVision(camera1Name, robotToCamera1),
+                new VisionIOPhotonVision(camera2Name, robotToCamera2),
+                new VisionIOPhotonVision(camera3Name, robotToCamera3));
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -104,7 +111,10 @@ public class RobotContainer {
             new Vision(
                 drive::addVisionMeasurement,
                 new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose),
-                new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose));
+                new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose),
+                new VisionIOPhotonVisionSim(camera2Name, robotToCamera2, drive::getPose),
+                new VisionIOPhotonVisionSim(camera3Name, robotToCamera3, drive::getPose)
+                );
         break;
 
       default:
@@ -119,6 +129,28 @@ public class RobotContainer {
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         break;
     }
+
+    testVisionSim = Commands.runOnce(
+                        () -> SmartDashboard.putNumber("failed tests", 0)
+                    )
+                    .andThen(Commands.run(
+                        () -> {
+                            if (drive.getPose().getMeasureX().in(Meters) > 10) {
+                                
+                            }
+                            else if (drive.getPose().getMeasureY().in(Meters) > 8.5) {
+                                drive.setPose(new Pose2d(drive.getPose().getX() + 0.5, 0, Rotation2d.fromDegrees(0)));
+                                
+                            }
+                            else if (drive.getPose().getRotation().getDegrees() < -15 && drive.getPose().getRotation().getDegrees() > -45) {
+                                drive.setPose(new Pose2d(drive.getPose().getX(), drive.getPose().getY() + 0.5, Rotation2d.fromDegrees(0)));
+                                
+                            }
+                            else drive.setPose(drive.getPose().plus(new Transform2d(0, 0, Rotation2d.fromDegrees(36))));
+                            if (!vision.hasTarget()) {
+                                SmartDashboard.putNumber("failed tests", SmartDashboard.getNumber("failed tests", 0) + 1);
+                            }
+                    }, drive, vision));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
