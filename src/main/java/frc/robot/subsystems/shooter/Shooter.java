@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems.shooter;
 
-import java.lang.management.MemoryType;
-
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -26,7 +24,8 @@ import frc.robot.Constants;
 public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
   SparkMax Flywheel = new SparkMax(Constants.ShooterConstants.SHOOTERID, MotorType.kBrushless);
-  SparkMax Kickerwheel = new SparkMax(Constants.ShooterConstants.KICKERID,MotorType.kBrushless);
+
+  SparkMax Kickerwheel = new SparkMax(Constants.ShooterConstants.KICKERID, MotorType.kBrushless);
   SparkMaxSim FlywheelSim = new SparkMaxSim(Flywheel, DCMotor.getNEO(1));
 
   // pid
@@ -68,14 +67,15 @@ public class Shooter extends SubsystemBase {
     SmartDashboard.putNumber("PID/Shooter/Target RPM", 0.0);
     SmartDashboard.putNumber("PID/KickWheel/Target RPM", 0.0);
   }
-  public Command shootCMD(double newTargetRPM){
-    /**spin the flywheel untill it reaches speed 
-     * once it reaches speed, activate the kicker wheel.
-     * then it stops both 
-    */
-    return Commands.none();
 
+  public Command shootCMD(double newTargetRPM) {
+    /**
+     * spin the flywheel untill it reaches speed once it reaches speed, activate the kicker wheel.
+     * then it stops both
+     */
+    return Commands.none();
   }
+
   public Command PIDCMD(double newTargetRPM) {
 
     targetRPM = newTargetRPM;

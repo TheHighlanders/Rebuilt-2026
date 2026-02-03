@@ -26,18 +26,17 @@ public class Hopper extends SubsystemBase {
     // Persist parameters to retain configuration in the event of a power cycle
     Hopper.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
-  //spins the motor inside the hopper
+  // spins the motor inside the hopper
   public Command SpinCMD() {
- 
+
     return runOnce(
         () -> {
           Hopper.set(1);
-          //speed can be changed
+          // speed can be changed
           DriverStation.reportWarning("StartHopper", false);
         });
-       
   }
-  //stops the hopper
+  // stops the hopper
   public Command StopCMD() {
 
     return runOnce(
@@ -45,7 +44,6 @@ public class Hopper extends SubsystemBase {
           Hopper.set(0);
           DriverStation.reportWarning("StopHopper", false);
         });
-        
   }
 
   @Override

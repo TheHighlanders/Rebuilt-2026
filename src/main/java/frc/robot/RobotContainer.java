@@ -21,21 +21,21 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Hopper.Hopper;
 import frc.robot.subsystems.Intake.Deploy;
 import frc.robot.subsystems.Intake.Intake;
-import frc.robot.subsystems.Hopper.Hopper;
+import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import frc.robot.subsystems.shooter.Shooter;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -50,7 +50,8 @@ public class RobotContainer {
   private final Autos autos;
   private final Intake intake;
   private final Deploy deploy;
-    private final Hopper hopper;
+  private final Hopper hopper;
+  private final Climber climber;
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
   private final CommandXboxController operator = new CommandXboxController(1);
@@ -70,6 +71,8 @@ public class RobotContainer {
     m_Shooter = new Shooter();
     // Define Hopper
     hopper = new Hopper();
+    // Define Climber
+    climber = new Climber();
 
     switch (Constants.currentMode) {
       case REAL:
@@ -221,6 +224,7 @@ public class RobotContainer {
      */
 
     /* operator controlls port 1 */
+
     operator.b().onTrue(intake.intakeCMD());
     operator.b().onFalse(intake.stoptakeCMD());
 
@@ -229,14 +233,21 @@ public class RobotContainer {
 
     operator.a().onTrue(deploy.deployCMD());
     operator.a().onFalse(deploy.stopDeployCMD());
-//activates the shooter without the hopper, meant for unclogging the shooter or if something goes wrong. 
+
+    operator.rightStick().onTrue(climber.downCMD());
+    operator.rightStick().onFalse(climber.stopClimbCMD());
+
+    // Hold down the button to climb.
+    operator.x().onTrue(climber.climberCMD());
+    operator.x().onFalse(climber.stopClimbCMD());
+    // activates the shooter without the hopper, meant for unclogging the shooter or if something
+    // goes wrong.
     controller.leftBumper().onFalse(m_Shooter.PIDCMD(500));
     controller.leftBumper().onTrue(m_Shooter.PIDCMD(0));
     // activates the shooter and hopper, meant for shooting fuel.
     controller.rightBumper().onFalse(Commands.parallel(hopper.StopCMD(), m_Shooter.PIDCMD(0)));
     controller.rightBumper().onTrue(Commands.parallel(hopper.SpinCMD(), m_Shooter.PIDCMD(500)));
   }
-  
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -246,5 +257,4 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     return autoChooser.selectedCommand();
   }
-
 }

@@ -64,18 +64,19 @@ public final class Constants {
   }
 
   public static class ClimberConstants {
-    public static final int CLIMBERID = 10;
+    public static final int CLIMBERID = 12;
     public static final double CLIMBER_SPEED = 1;
+    public static final double CLIMBER_SPEED_DOWN = -1;
   }
 
   public final class HopperConstants {
 
     public static final int HOPPERID = 13;
   }
-  
+
   public static class IntakeConstants {
     public static final int SPINTAKEID = 10;
-    public static final int DEPLOYID = 12;
+    public static final int DEPLOYID = 11;
 
     public static final double INTAKE_SPEED = 1;
     public static final double SPITAKE_SPEED = -1;
@@ -84,7 +85,7 @@ public final class Constants {
     public static final double kP1 = 0.1;
     public static final double kI1 = 0;
     public static final double kD1 = 0;
-    
+
     public static final double kP2 = 0.0001;
     public static final double kI2 = 0;
     public static final double kD2 = 0;

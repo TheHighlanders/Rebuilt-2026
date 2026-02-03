@@ -18,7 +18,21 @@ public class Climber extends SubsystemBase {
   public Command climberCMD() {
     return runOnce(
         () -> {
-          climbMotor.set(ClimberConstants.CLIMBERID);
+          climbMotor.set(ClimberConstants.CLIMBER_SPEED);
+        });
+  }
+
+  public Command downCMD() {
+    return runOnce(
+        () -> {
+          climbMotor.set(ClimberConstants.CLIMBER_SPEED_DOWN);
+        });
+  }
+
+  public Command stopClimbCMD() {
+    return runOnce(
+        () -> {
+          climbMotor.set(0);
         });
   }
 
