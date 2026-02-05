@@ -64,19 +64,19 @@ public final class Constants {
   }
 
   public static class ClimberConstants {
-    public static final int CLIMBERID = 12;
+    public static final int CLIMBERID = 51;
     public static final double CLIMBER_SPEED = 1;
     public static final double CLIMBER_SPEED_DOWN = -1;
   }
 
   public final class HopperConstants {
 
-    public static final int HOPPERID = 13;
+    public static final int HOPPERID = 21;
   }
 
   public static class IntakeConstants {
-    public static final int SPINTAKEID = 10;
-    public static final int DEPLOYID = 11;
+    public static final int SPINTAKEID = 41;
+    public static final int DEPLOYID = 42;
 
     public static final double INTAKE_SPEED = 1;
     public static final double SPITAKE_SPEED = -1;
@@ -93,9 +93,9 @@ public final class Constants {
 
   public static class ShooterConstants {
 
-    public static final int SHOOTERID = 8;
-    public static final int HOODID = 9;
-    public static final int KICKERID = 14;
+    public static final int SHOOTERID = 31;
+    //public static final int HOODID = 9;
+    public static final int KICKERID = 32;
   }
 
   public static enum Mode {

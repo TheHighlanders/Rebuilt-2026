@@ -19,7 +19,7 @@ import frc.robot.Constants;
 
 public class Hood extends SubsystemBase {
   /** Creates a new Hood. */
-  SparkMax hoodMax = new SparkMax(Constants.ShooterConstants.HOODID, MotorType.kBrushless);
+  SparkMax hoodMax = new SparkMax(4, MotorType.kBrushless);
 
   // To use a SparkMax, we create a SparkMax object. To use PID, we have to use the PID Object.
   // REVLib have their own PID Object called SparkClosedLoopController.
