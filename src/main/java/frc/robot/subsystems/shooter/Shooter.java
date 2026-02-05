@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.shooter;
 
+import java.util.function.DoubleSupplier;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -16,17 +18,20 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
-  SparkMax Flywheel = new SparkMax(Constants.ShooterConstants.SHOOTERID, MotorType.kBrushless);
+  SparkMax flywheel = new SparkMax(Constants.ShooterConstants.SHOOTERID, MotorType.kBrushless);
+  SparkMax kicker = new SparkMax(Constants.ShooterConstants.SHOOTERID, MotorType.kBrushless);
 
-  SparkMaxSim FlywheelSim = new SparkMaxSim(Flywheel, DCMotor.getNEO(1));
+  SparkMaxSim flywheelSim = new SparkMaxSim(flywheel, DCMotor.getNEO(1));
+  SparkMaxSim kickerSim = new SparkMaxSim(kicker, DCMotor.getNEO(1));
 
   // pid
-  SparkClosedLoopController shootController = Flywheel.getClosedLoopController();
+  SparkClosedLoopController shootController = flywheel.getClosedLoopController();
 
   // Encoder: A sensor that measures the amount of rotations
   RelativeEncoder flywheelEncoder;
@@ -42,13 +47,13 @@ public class Shooter extends SubsystemBase {
 
   public Shooter() {
     // initialize encoder
-    flywheelEncoder = Flywheel.getEncoder();
+    flywheelEncoder = flywheel.getEncoder();
 
     // Set PID gains
     ShooterConfig.closedLoop.p(kP).i(kI).d(kD);
 
     // dropper config
-    Flywheel.configure(
+    flywheel.configure(
         ShooterConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 
     // For Elastic and Advantage
@@ -58,15 +63,48 @@ public class Shooter extends SubsystemBase {
     SmartDashboard.putNumber("PID/Shooter/Target RPM", 0.0);
   }
 
-  public Command PIDCMD(double newTargetRPM) {
+  private double calculate(double asDouble) {
+    // TODO Auto-generated method stub
 
-    targetRPM = newTargetRPM;
+    return asDouble;
+  }
+
+  public boolean atSpeed() {
+    return shootController.isAtSetpoint();
+  }
+
+  public Command flywheelCMD(DoubleSupplier distance) {
+
+    return Commands.run(
+        () -> {
+
+          targetRPM = calculate(distance.getAsDouble());
+          SmartDashboard.putNumber("PID/Shooter/Target RPM", targetRPM);
+
+          shootController.setSetpoint(targetRPM, ControlType.kVelocity);
+
+        }, this);
+  }
+
+  public Command kickerCMD() {
+
+    return Commands.runOnce(
+      () -> kicker.set(1)
+      , this);
+    
+  }
+          
+          
+  public Command stopCMD() {
+
+    targetRPM = 0;
     //SmartDashboard.putNumber("PID/Shooter/Target RPM", newTargetRPM);
 
-    return runOnce(
+    return Commands.runOnce(
         () -> {
-          shootController.setSetpoint(newTargetRPM, ControlType.kVelocity);
-        });
+          shootController.setSetpoint(targetRPM, ControlType.kVelocity);
+          kicker.set(0);
+        }, this);
   }
 
   @SuppressWarnings("unused")
@@ -97,8 +135,8 @@ public class Shooter extends SubsystemBase {
     // Next, we update it. The standard loop time is 20ms.
 
     // Now, we update the Spark MAX
-    FlywheelSim.iterate(
-        FlywheelSim.getSetpoint(),
+    flywheelSim.iterate(
+        flywheelSim.getSetpoint(),
         12, // Simulated battery voltage, in Volts
         0.02); // Time interval, in Seconds
 
