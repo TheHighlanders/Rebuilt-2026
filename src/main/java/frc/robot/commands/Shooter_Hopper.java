@@ -17,6 +17,6 @@ public class Shooter_Hopper extends ParallelCommandGroup {
 
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    addCommands(mHopper.SpinCMD(), mShooter.PIDCMD(0));
+    addCommands(mHopper.SpinCMD(), mShooter.kickerCMD());
   }
 }
