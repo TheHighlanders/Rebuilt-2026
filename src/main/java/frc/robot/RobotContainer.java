@@ -22,9 +22,9 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Hopper.Hopper;
-import frc.robot.subsystems.deploy.Deploy;
 import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.deploy.Deploy;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
@@ -242,15 +242,20 @@ public class RobotContainer {
     operator.x().onFalse(climber.stopClimbCMD());
     // activates the shooter without the hopper, meant for unclogging the shooter or if something
     // goes wrong.
-    controller.leftBumper().onFalse(m_Shooter.PIDCMD(500));
-    controller.leftBumper().onTrue(m_Shooter.PIDCMD(0));
+    controller.leftBumper().onFalse(m_Shooter.flywheelCMD(500));
+    controller.leftBumper().onTrue(m_Shooter.flywheelCMD(0));
     // activates the shooter and hopper, meant for shooting fuel.
-    controller.rightBumper().onFalse(Commands.parallel(hopper.StopCMD(), m_Shooter.PIDCMD(0)));
-    controller.rightBumper().onTrue(Commands.parallel(hopper.SpinCMD(), m_Shooter.PIDCMD(500)));
-  }
+    controller.rightBumper().onFalse(Commands.parallel(hopper.StopCMD(), m_Shooter.stopCMD()));
+    controller.rightBumper().onTrue(Commands.parallel(hopper.SpinCMD(), m_Shooter.flywheelCMD(0)));
 
+    // activates the kicker and the hopper if the flywheel is at the right speed
+    operator.a().onTrue(Commands.parallel(m_Shooter.kickerCMD(), hopper.SpinCMD()));
+    operator.a().onFalse(Commands.parallel(m_Shooter.stopCMD(), hopper.StopCMD()));
+  }
   /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
+   * }
+   *
+   * <p>/** Use this to pass the autonomous command to the main {@link Robot} class.
    *
    * @return the command to run in autonomous
    */
