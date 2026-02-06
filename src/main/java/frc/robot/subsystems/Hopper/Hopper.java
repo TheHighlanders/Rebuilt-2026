@@ -31,7 +31,7 @@ public class Hopper extends SubsystemBase {
  
     return runOnce(
         () -> {
-          Hopper.set(1);
+          Hopper.set(0.5);
           //speed can be changed
           DriverStation.reportWarning("StartHopper", false);
         });
