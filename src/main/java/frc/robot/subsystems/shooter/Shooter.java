@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.shooter;
 
+import static frc.robot.Constants.VisionConstants.*;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -13,13 +15,15 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import java.util.function.Supplier;
 
 public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
@@ -42,7 +46,11 @@ public class Shooter extends SubsystemBase {
   // pid config
   SparkMaxConfig ShooterConfig = new SparkMaxConfig();
 
-  public Shooter() {
+  Supplier<Pose2d> getPose;
+
+  public Shooter(Supplier<Pose2d> getPose) {
+    this.getPose = getPose;
+
     // initialize encoder
     flywheelEncoder = Flywheel.getEncoder();
 
@@ -60,29 +68,32 @@ public class Shooter extends SubsystemBase {
     SmartDashboard.putNumber("PID/KickWheel/Target RPM", 0.0);
   }
 
-  public Command shootCMD(double newTargetRPM) {
-    /**
-     * spin the flywheel untill it reaches speed once it reaches speed, activate the kicker wheel.
-     * then it stops both
-     */
-    return Commands.none();
-  }
-
-  public Command PIDCMD(double newTargetRPM) {
-
-    targetRPM = newTargetRPM;
-    // SmartDashboard.putNumber("PID/Shooter/Target RPM", newTargetRPM);
-
+  public Command AutoSetSpeedCMD() {    
     return runOnce(
         () -> {
           DriverStation.reportWarning("Shooter", false);
-          shootController.setSetpoint(newTargetRPM, ControlType.kVelocity);
+          shootController.setSetpoint(targetRPM, ControlType.kVelocity);
         });
   }
 
   @SuppressWarnings("unused")
   @Override
   public void periodic() {
+
+    // if within 5 ft of AprilTag 25, then set targetRPM to low number. else shoot far-ish;
+    Translation2d robot = getPose.get().getTranslation();
+    Translation2d hub = aprilTagLayout.getTagPose(25).get().toPose2d().getTranslation();
+
+    double distFromHub = hub.getDistance(robot);
+
+    SmartDashboard.putNumber("Shooter/distanceFromHub", distFromHub);
+    if (distFromHub < 1.524) {
+      targetRPM = 500;
+    } else {
+      targetRPM = 2000;
+    }
+
+    SmartDashboard.putNumber("Shooter/targetRPM", targetRPM);
     // For Elastic and Advtange Scope
     double newP = SmartDashboard.getNumber("PID/Shooter/kP", kP);
     double newI = SmartDashboard.getNumber("PID/Shooter/kI", kI);

@@ -67,8 +67,6 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
 
-    // Define Shooter
-    m_Shooter = new Shooter();
     // Define Hopper
     hopper = new Hopper();
     // Define Climber
@@ -141,6 +139,8 @@ public class RobotContainer {
 
         break;
     }
+    // Define Shooter
+    m_Shooter = new Shooter(drive::getPose);
     intake = new Intake(); // Fits outside because it's the same in both Real and Sim.
     deploy = new Deploy();
     // Set up auto routines
@@ -242,11 +242,11 @@ public class RobotContainer {
     operator.x().onFalse(climber.stopClimbCMD());
     // activates the shooter without the hopper, meant for unclogging the shooter or if something
     // goes wrong.
-    operator.leftBumper().onFalse(m_Shooter.PIDCMD(500));
-    operator.leftBumper().onTrue(m_Shooter.PIDCMD(0));
     // activates the shooter and hopper, meant for shooting fuel.
     operator.rightBumper().onTrue(hopper.SpinCMD());
     operator.rightBumper().onFalse(hopper.StopCMD());
+
+    operator.povUp().onFalse(m_Shooter.AutoSetSpeedCMD());
   }
 
   /**
