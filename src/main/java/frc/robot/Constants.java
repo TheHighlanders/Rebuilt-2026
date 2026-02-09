@@ -107,6 +107,7 @@ public final class Constants {
     public static final double INTAKE_SPEED = 1;
     public static final double SPITAKE_SPEED = -1;
     public static final double DEPLOY_SPEED = 1;
+    public static final double DEPLOY_POSITION = 3;//rotations
 
     public static final double kP1 = 0.1;
     public static final double kI1 = 0;
