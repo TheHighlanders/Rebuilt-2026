@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems.shooter;
 
-import java.util.function.DoubleSupplier;
-
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -21,10 +19,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import java.util.function.DoubleSupplier;
 
 public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
   SparkMax flywheel = new SparkMax(Constants.ShooterConstants.SHOOTERID, MotorType.kBrushless);
+
   SparkMax kicker = new SparkMax(Constants.ShooterConstants.SHOOTERID, MotorType.kBrushless);
 
   SparkMaxSim flywheelSim = new SparkMaxSim(flywheel, DCMotor.getNEO(1));
@@ -64,7 +64,7 @@ public class Shooter extends SubsystemBase {
   }
 
   private double calculate(double asDouble) {
-    // TODO Auto-generated method stub
+    // TODO: wait until shooter is finalized
 
     return asDouble;
   }
@@ -77,34 +77,30 @@ public class Shooter extends SubsystemBase {
 
     return Commands.run(
         () -> {
-
           targetRPM = calculate(distance.getAsDouble());
           SmartDashboard.putNumber("PID/Shooter/Target RPM", targetRPM);
 
           shootController.setSetpoint(targetRPM, ControlType.kVelocity);
-
-        }, this);
+        },
+        this);
   }
 
   public Command kickerCMD() {
 
-    return Commands.runOnce(
-      () -> kicker.set(1)
-      , this);
-    
+    return Commands.runOnce(() -> kicker.set(1), this);
   }
-          
-          
+
   public Command stopCMD() {
 
     targetRPM = 0;
-    //SmartDashboard.putNumber("PID/Shooter/Target RPM", newTargetRPM);
+    // SmartDashboard.putNumber("PID/Shooter/Target RPM", newTargetRPM);
 
     return Commands.runOnce(
         () -> {
           shootController.setSetpoint(targetRPM, ControlType.kVelocity);
           kicker.set(0);
-        }, this);
+        },
+        this);
   }
 
   @SuppressWarnings("unused")

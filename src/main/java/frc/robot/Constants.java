@@ -7,6 +7,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
@@ -22,6 +23,11 @@ public final class Constants {
 
     public static final int SHOOTERID = 8;
     public static final int HOODID = 9;
+  }
+
+  public static class FieldConstants {
+    public static final Translation2d HUB_POSE_BLUE = new Translation2d(4, 5); // LIES FIX PLS
+    public static final Translation2d HUB_POSE_RED = new Translation2d(4, 5); // LIES FIX PLS
   }
 
   public static enum Mode {
