@@ -12,13 +12,28 @@ import frc.robot.Constants.ClimberConstants;
 
 public class Climber extends SubsystemBase {
   SparkMax climbMotor = new SparkMax(ClimberConstants.CLIMBERID, MotorType.kBrushless);
+  double climberspeed = 0.6;
   /** Creates a new Climber. */
   public Climber() {}
 
-  public Command climberCMD() {
+  public Command climbCMD() {
     return runOnce(
         () -> {
-          climbMotor.set(ClimberConstants.CLIMBERID);
+          climbMotor.set(climberspeed);
+        });
+  }
+
+  public Command downclimbCMD() {
+    return runOnce(
+        () -> {
+          climbMotor.set(0-climberspeed);
+        });
+  }
+
+  public Command stopCMD() {
+    return runOnce(
+        () -> {
+          climbMotor.set(0);
         });
   }
 
