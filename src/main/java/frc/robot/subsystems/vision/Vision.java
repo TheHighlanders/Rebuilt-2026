@@ -18,6 +18,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import java.util.LinkedList;
@@ -71,6 +72,13 @@ public class Vision extends SubsystemBase {
      *
      * <p>return prevPose;
      */
+  }
+
+  public boolean hasTarget() {
+    for (var input : inputs) {
+      if (input.tagIds.length > 0) return true;
+    }
+    return false;
   }
 
   @Override
@@ -168,6 +176,7 @@ public class Vision extends SubsystemBase {
       Logger.recordOutput(
           "Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesRejected",
           robotPosesRejected.toArray(new Pose3d[0]));
+      SmartDashboard.putBoolean("has target", hasTarget());
       allTagPoses.addAll(tagPoses);
       allRobotPoses.addAll(robotPoses);
       allRobotPosesAccepted.addAll(robotPosesAccepted);

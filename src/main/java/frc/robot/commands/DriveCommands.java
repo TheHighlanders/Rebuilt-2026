@@ -20,6 +20,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
@@ -33,16 +34,15 @@ import java.util.function.Supplier;
 
 public class DriveCommands {
   private static final double DEADBAND = 0.1;
-  private static final double ANGLE_KP = 5.0;
-  private static final double ANGLE_KD = 0.4;
+  private static final double ANGLE_KP = 50.0;
+  private static final double ANGLE_KI = 0.5;
+  private static final double ANGLE_KD = 1;
   private static final double ANGLE_MAX_VELOCITY = 8.0;
   private static final double ANGLE_MAX_ACCELERATION = 20.0;
   private static final double FF_START_DELAY = 2.0; // Secs
   private static final double FF_RAMP_RATE = 0.1; // Volts/Sec
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
-
-  private DriveCommands() {}
 
   private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
     // Apply deadband
@@ -118,10 +118,11 @@ public class DriveCommands {
     ProfiledPIDController angleController =
         new ProfiledPIDController(
             ANGLE_KP,
-            0.0,
+            ANGLE_KI,
             ANGLE_KD,
             new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
     angleController.enableContinuousInput(-Math.PI, Math.PI);
+    angleController.setTolerance(Units.degreesToRadians(5));
 
     // Construct command
     return Commands.run(
@@ -154,6 +155,12 @@ public class DriveCommands {
                           isFlipped
                               ? drive.getRotation().plus(new Rotation2d(Math.PI))
                               : drive.getRotation()));
+
+              SmartDashboard.putNumber(
+                  "drive angle error",
+                  (rotationSupplier.get().getDegrees() - drive.getRotation().getDegrees() + 180)
+                          % (360)
+                      - 180);
             },
             drive)
 
@@ -174,16 +181,24 @@ public class DriveCommands {
       Pose2d target,
       BooleanSupplier robotRelative) {
 
-    return joystickDriveAtAngle(
-        drive,
-        xSupplier,
-        ySupplier,
-        () ->
-            Rotation2d.fromRadians(
-                Math.atan2(
-                    target.getY() - drive.getPose().getY(),
-                    target.getX() - drive.getPose().getX())),
-        robotRelative);
+    return Commands.parallel(
+        joystickDriveAtAngle(
+            drive,
+            xSupplier,
+            ySupplier,
+            () ->
+                Rotation2d.fromRadians(
+                    Math.atan2(
+                        target.getY() - drive.getPose().getY(),
+                        target.getX() - drive.getPose().getX())),
+            robotRelative),
+        Commands.run(
+            () ->
+                SmartDashboard.putNumber(
+                    "orbit radius",
+                    Math.hypot(
+                        target.getY() - drive.getPose().getY(),
+                        target.getX() - drive.getPose().getX()))));
   }
 
   // create angle PID controller
