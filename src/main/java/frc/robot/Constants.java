@@ -88,7 +88,7 @@ public final class Constants {
   public static class ClimberConstants {
     public static final int CLIMBERID = 51;
     public static final double CLIMBER_SPEED = 1;
-    public static final double UP_POSITION = 5;//Rptations. TODO
+    public static final double UP_POSITION = 5; // Rptations. TODO
 
     public static final double RAISE_SPEED = 1;
     public static final double PULL_SPEED = -1;
@@ -107,7 +107,7 @@ public final class Constants {
     public static final double INTAKE_SPEED = 1;
     public static final double SPITAKE_SPEED = -1;
     public static final double DEPLOY_SPEED = 1;
-    public static final double DEPLOY_POSITION = 3;//rotations
+    public static final double DEPLOY_POSITION = 3; // rotations
 
     public static final double kP1 = 0.1;
     public static final double kI1 = 0;
@@ -121,7 +121,7 @@ public final class Constants {
   public static class ShooterConstants {
 
     public static final int SHOOTERID = 31;
-    //public static final int HOODID = 9;
+    // public static final int HOODID = 9;
     public static final int KICKERID = 32;
   }
 

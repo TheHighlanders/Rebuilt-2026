@@ -24,9 +24,9 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Hopper.Hopper;
-import frc.robot.subsystems.deploy.Deploy;
 import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.deploy.Deploy;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
@@ -132,8 +132,7 @@ public class RobotContainer {
                 new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose),
                 new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose),
                 new VisionIOPhotonVisionSim(camera2Name, robotToCamera2, drive::getPose),
-                new VisionIOPhotonVisionSim(camera3Name, robotToCamera3, drive::getPose)
-                );
+                new VisionIOPhotonVisionSim(camera3Name, robotToCamera3, drive::getPose));
         break;
 
       default:
@@ -152,27 +151,37 @@ public class RobotContainer {
     intake = new Intake(); // Fits outside because it's the same in both Real and Sim.
     deploy = new Deploy();
 
-    testVisionSim = Commands.runOnce(
-                        () -> SmartDashboard.putNumber("failed tests", 0)
-                    )
-                    .andThen(Commands.run(
-                        () -> {
-                            if (drive.getPose().getMeasureX().in(Meters) > 10) {
-                                
-                            }
-                            else if (drive.getPose().getMeasureY().in(Meters) > 8.5) {
-                                drive.setPose(new Pose2d(drive.getPose().getX() + 0.5, 0, Rotation2d.fromDegrees(0)));
-                                
-                            }
-                            else if (drive.getPose().getRotation().getDegrees() < -15 && drive.getPose().getRotation().getDegrees() > -45) {
-                                drive.setPose(new Pose2d(drive.getPose().getX(), drive.getPose().getY() + 0.5, Rotation2d.fromDegrees(0)));
-                                
-                            }
-                            else drive.setPose(drive.getPose().plus(new Transform2d(0, 0, Rotation2d.fromDegrees(36))));
-                            if (!vision.hasTarget()) {
-                                SmartDashboard.putNumber("failed tests", SmartDashboard.getNumber("failed tests", 0) + 1);
-                            }
-                    }, drive, vision));
+    testVisionSim =
+        Commands.runOnce(() -> SmartDashboard.putNumber("failed tests", 0))
+            .andThen(
+                Commands.run(
+                    () -> {
+                      if (drive.getPose().getMeasureX().in(Meters) > 10) {
+
+                      } else if (drive.getPose().getMeasureY().in(Meters) > 8.5) {
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getX() + 0.5, 0, Rotation2d.fromDegrees(0)));
+
+                      } else if (drive.getPose().getRotation().getDegrees() < -15
+                          && drive.getPose().getRotation().getDegrees() > -45) {
+                        drive.setPose(
+                            new Pose2d(
+                                drive.getPose().getX(),
+                                drive.getPose().getY() + 0.5,
+                                Rotation2d.fromDegrees(0)));
+
+                      } else
+                        drive.setPose(
+                            drive
+                                .getPose()
+                                .plus(new Transform2d(0, 0, Rotation2d.fromDegrees(36))));
+                      if (!vision.hasTarget()) {
+                        SmartDashboard.putNumber(
+                            "failed tests", SmartDashboard.getNumber("failed tests", 0) + 1);
+                      }
+                    },
+                    drive,
+                    vision));
 
     // Set up auto routines
     autos = new Autos(drive);
@@ -263,14 +272,14 @@ public class RobotContainer {
     operator.y().onFalse(intake.stoptakeCMD());
 
     operator.a().onTrue(deploy.deployCMD());
-    operator.a().onFalse(deploy.stopDeployCMD());
+    // operator.a().onFalse(deploy.stopDeployCMD());
 
-    operator.rightStick().onTrue(climber.downCMD());
-    operator.rightStick().onFalse(climber.stopClimbCMD());
+    // operator.rightStick().onTrue(climber.downCMD());
+    // operator.rightStick().onFalse(climber.stopClimbCMD());
 
-    // Hold down the button to climb.
-    operator.x().onTrue(climber.climberCMD());
-    operator.x().onFalse(climber.stopClimbCMD());
+    // // Hold down the button to climb.
+    // operator.x().onTrue(climber.climberCMD());
+    // operator.x().onFalse(climber.stopClimbCMD());
     // activates the shooter without the hopper, meant for unclogging the shooter or if something
     // goes wrong.
     controller.leftBumper().onFalse(m_Shooter.PIDCMD(500));
