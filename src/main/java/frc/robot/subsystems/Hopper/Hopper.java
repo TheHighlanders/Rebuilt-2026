@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.Hopper;
+package frc.robot.subsystems.hopper;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
@@ -27,7 +27,7 @@ public class Hopper extends SubsystemBase {
     Hopper.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
   // spins the motor inside the hopper
-  public Command SpinCMD() {
+  public Command spinCMD() {
 
     return runOnce(
         () -> {
@@ -37,7 +37,7 @@ public class Hopper extends SubsystemBase {
         });
   }
   // stops the hopper
-  public Command StopCMD() {
+  public Command stopCMD() {
 
     return runOnce(
         () -> {

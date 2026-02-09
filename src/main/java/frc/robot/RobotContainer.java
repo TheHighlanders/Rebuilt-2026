@@ -13,9 +13,9 @@ import static frc.robot.Constants.VisionConstants.*;
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -26,16 +26,16 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Constants.*;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Hopper.Hopper;
-import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.climber.Climber;
-import frc.robot.subsystems.deploy.Deploy;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.intake.Deploy;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
@@ -217,79 +217,8 @@ public class RobotContainer {
             () -> -controller.getRightX(),
             () -> robotRelative));
 
-    // Lock to 0° when A button is held
-    controller
-        .a()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
-                () -> Rotation2d.kZero,
-                () -> robotRelative));
-
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-
-    // Reset gyro to 0° when B button is pressed
-    controller
-        .b()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                    drive)
-                .ignoringDisable(true));
-    controller
-        .x()
-        .whileTrue(
-            DriveCommands.joystickOrbitDrive(
-                drive,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
-                aprilTagLayout.getTagPose(25).get().toPose2d(),
-                () -> robotRelative) // / get position of april tag on blue basket
-            );
-
-    controller
-        .povDown()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  robotRelative = !robotRelative;
-                  SmartDashboard.putBoolean("Robot Relative Drive", robotRelative);
-                }));
-    /**
-     * DriveCommands.joystickOrbitDrive( drive, () -> -controller.getLeftY(), () ->
-     * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
-     * Rotation2d.kZero)));
-     */
-
-    /* operator controlls port 1 */
-
-    operator.b().onTrue(intake.intakeCMD());
-    operator.b().onFalse(intake.stoptakeCMD());
-
-    operator.y().onTrue(intake.spitakeCMD());
-    operator.y().onFalse(intake.stoptakeCMD());
-
-    operator.a().onTrue(deploy.deployCMD());
-    // operator.a().onFalse(deploy.stopDeployCMD());
-
-    // operator.rightStick().onTrue(climber.downCMD());
-    // operator.rightStick().onFalse(climber.stopClimbCMD());
-
-    // // Hold down the button to climb.
-    // operator.x().onTrue(climber.climberCMD());
-    // operator.x().onFalse(climber.stopClimbCMD());
-    // activates the shooter without the hopper, meant for unclogging the shooter or if something
-    // goes wrong.
-    controller.leftBumper().onFalse(shooter.PIDCMD(500));
-    controller.leftBumper().onTrue(shooter.PIDCMD(0));
-    // activates the shooter and hopper, meant for shooting fuel.
-    controller.rightBumper().onFalse(Commands.parallel(hopper.StopCMD(), shooter.PIDCMD(0)));
-    controller.rightBumper().onTrue(Commands.parallel(hopper.SpinCMD(), shooter.PIDCMD(500)));
 
     controller
         .rightBumper()
@@ -305,8 +234,81 @@ public class RobotContainer {
                               ? FieldConstants.HUB_POSE_BLUE
                               : FieldConstants.HUB_POSE_RED);
                 }));
-    controller.leftBumper().onTrue(shooter.kickerCMD());
-    controller.leftBumper().onFalse(shooter.stopCMD());
+
+    // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, spits out
+    // fuel.
+    controller
+        .leftBumper()
+        .onTrue(
+            Commands.either(
+                Commands.either(
+                    Commands.parallel(shooter.kickerCMD(), hopper.spinCMD()),
+                    Commands.none(),
+                    shooter::atSpeed),
+                Commands.parallel(
+                    shooter.flywheelCMD(() -> 10), shooter.kickerCMD(), hopper.spinCMD()),
+                controller.rightBumper()::getAsBoolean));
+
+    controller.leftBumper().onFalse(Commands.parallel(shooter.stopCMD(), hopper.stopCMD()));
+    /**
+     * DriveCommands.joystickOrbitDrive( drive, () -> -controller.getLeftY(), () ->
+     * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
+     * Rotation2d.kZero)));
+     */
+
+    /* operator controlls port 1 */
+
+    // runs intake
+    operator.b().onTrue(intake.intakeCMD());
+    operator.b().onFalse(intake.stoptakeCMD());
+
+    // runs intake backwards
+    operator.y().onTrue(intake.spitakeCMD());
+    operator.y().onFalse(intake.stoptakeCMD());
+
+    // deploys intake
+    operator.povRight().toggleOnTrue(deploy.deployCMD());
+    operator.povRight().toggleOnFalse(deploy.undeployCMD());
+
+    // Hold down the button to climb.
+    operator.povUp().onTrue(climber.raiseCMD());
+    operator.povUp().onFalse(climber.pullCMD());
+
+    // runs auto-align command on the hub
+    operator
+        .leftTrigger()
+        .whileTrue(
+            DriveCommands.joystickOrbitDrive(
+                drive,
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                aprilTagLayout.getTagPose(25).get().toPose2d(),
+                () -> robotRelative) // / get position of april tag on blue basket
+            );
+
+    // toggles between robot- and field-relative drive
+    operator
+        .povDown()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  robotRelative = !robotRelative;
+                  SmartDashboard.putBoolean("Robot Relative Drive", robotRelative);
+                }));
+
+    // Reset gyro to 0° when X button is pressed
+    controller
+        .x()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                    drive)
+                .ignoringDisable(true));
+    // activates the shooter without the hopper, meant for unclogging the shooter or if something
+    // goes wrong.
+    // TODO
   }
 
   /**
