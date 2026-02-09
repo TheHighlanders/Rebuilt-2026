@@ -13,6 +13,8 @@ import static frc.robot.Constants.VisionConstants.*;
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -21,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.robot.Constants.*;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Hopper.Hopper;
@@ -64,7 +67,7 @@ public class RobotContainer {
 
   private boolean robotRelative;
 
-  private final Shooter m_Shooter;
+  private final Shooter shooter;
 
   private Command testVisionSim;
 
@@ -72,7 +75,7 @@ public class RobotContainer {
   public RobotContainer() {
 
     // Define Shooter
-    m_Shooter = new Shooter();
+    shooter = new Shooter();
     // Define Hopper
     hopper = new Hopper();
     // Define Climber
@@ -282,11 +285,28 @@ public class RobotContainer {
     // operator.x().onFalse(climber.stopClimbCMD());
     // activates the shooter without the hopper, meant for unclogging the shooter or if something
     // goes wrong.
-    controller.leftBumper().onFalse(m_Shooter.PIDCMD(500));
-    controller.leftBumper().onTrue(m_Shooter.PIDCMD(0));
+    controller.leftBumper().onFalse(shooter.PIDCMD(500));
+    controller.leftBumper().onTrue(shooter.PIDCMD(0));
     // activates the shooter and hopper, meant for shooting fuel.
-    controller.rightBumper().onFalse(Commands.parallel(hopper.StopCMD(), m_Shooter.PIDCMD(0)));
-    controller.rightBumper().onTrue(Commands.parallel(hopper.SpinCMD(), m_Shooter.PIDCMD(500)));
+    controller.rightBumper().onFalse(Commands.parallel(hopper.StopCMD(), shooter.PIDCMD(0)));
+    controller.rightBumper().onTrue(Commands.parallel(hopper.SpinCMD(), shooter.PIDCMD(500)));
+
+    controller
+        .rightBumper()
+        .onTrue(
+            shooter.flywheelCMD(
+                () -> {
+                  return drive
+                      .getPose()
+                      .getTranslation()
+                      .getDistance(
+                          DriverStation.getAlliance().isPresent()
+                                  && DriverStation.getAlliance().get() == Alliance.Red
+                              ? FieldConstants.HUB_POSE_BLUE
+                              : FieldConstants.HUB_POSE_RED);
+                }));
+    controller.leftBumper().onTrue(shooter.kickerCMD());
+    controller.leftBumper().onFalse(shooter.stopCMD());
   }
 
   /**

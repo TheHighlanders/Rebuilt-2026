@@ -12,6 +12,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
@@ -88,7 +89,7 @@ public final class Constants {
   public static class ClimberConstants {
     public static final int CLIMBERID = 51;
     public static final double CLIMBER_SPEED = 1;
-    public static final double UP_POSITION = 5; // Rptations. TODO
+    public static final double UP_POSITION = 5; // Rotations. TODO
 
     public static final double RAISE_SPEED = 1;
     public static final double PULL_SPEED = -1;
@@ -123,6 +124,11 @@ public final class Constants {
     public static final int SHOOTERID = 31;
     // public static final int HOODID = 9;
     public static final int KICKERID = 32;
+  }
+
+  public static class FieldConstants {
+    public static final Translation2d HUB_POSE_BLUE = new Translation2d(4, 5); // LIES FIX PLS
+    public static final Translation2d HUB_POSE_RED = new Translation2d(4, 5); // LIES FIX PLS
   }
 
   public static enum Mode {
