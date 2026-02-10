@@ -25,7 +25,7 @@ public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
   SparkMax flywheel = new SparkMax(Constants.ShooterConstants.SHOOTERID, MotorType.kBrushless);
 
-  SparkMax kicker = new SparkMax(Constants.ShooterConstants.SHOOTERID, MotorType.kBrushless);
+  SparkMax kicker = new SparkMax(Constants.ShooterConstants.KICKERID, MotorType.kBrushless);
 
   SparkMaxSim flywheelSim = new SparkMaxSim(flywheel, DCMotor.getNEO(1));
   SparkMaxSim kickerSim = new SparkMaxSim(kicker, DCMotor.getNEO(1));

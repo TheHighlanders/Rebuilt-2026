@@ -242,14 +242,14 @@ public class RobotContainer {
         .onTrue(
             Commands.either(
                 Commands.either(
-                    Commands.parallel(shooter.kickerCMD(), hopper.spinCMD()),
+                    Commands.sequence(shooter.kickerCMD(), hopper.spinCMD()),
                     Commands.none(),
                     shooter::atSpeed),
-                Commands.parallel(
+                Commands.sequence(
                     shooter.flywheelCMD(() -> 10), shooter.kickerCMD(), hopper.spinCMD()),
                 controller.rightBumper()::getAsBoolean));
 
-    controller.leftBumper().onFalse(Commands.parallel(shooter.stopCMD(), hopper.stopCMD()));
+    controller.leftBumper().onFalse(Commands.sequence(shooter.stopCMD(), hopper.stopCMD()));
     /**
      * DriveCommands.joystickOrbitDrive( drive, () -> -controller.getLeftY(), () ->
      * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
