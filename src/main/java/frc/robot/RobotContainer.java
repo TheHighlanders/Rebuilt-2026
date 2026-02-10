@@ -26,6 +26,9 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Constants.*;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Hopper.Hopper;
+import frc.robot.subsystems.Intake.Deploy;
+import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -33,9 +36,6 @@ import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
-import frc.robot.subsystems.hopper.Hopper;
-import frc.robot.subsystems.intake.Deploy;
-import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
@@ -152,6 +152,8 @@ public class RobotContainer {
 
         break;
     }
+    // Define Shooter
+    m_Shooter = new Shooter(drive::getPose);
     intake = new Intake(); // Fits outside because it's the same in both Real and Sim.
     deploy = new Deploy();
 
@@ -218,6 +220,17 @@ public class RobotContainer {
             () -> -controller.getRightX(),
             () -> robotRelative));
 
+    // Lock to 0° when A button is held
+    controller
+        .y()
+        .whileTrue(
+            DriveCommands.joystickDriveAtAngle(
+                drive,
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                () -> Rotation2d.kZero,
+                () -> robotRelative));
+
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
@@ -241,7 +254,6 @@ public class RobotContainer {
     controller
         .leftBumper()
         .onTrue(
-            Commands.either(
                 Commands.either(
                     Commands.sequence(shooter.kickerCMD(), hopper.spinCMD()),
                     Commands.none(),
@@ -278,9 +290,8 @@ public class RobotContainer {
     // runs auto-align command on the hub
     operator
         .leftTrigger()
-        .whileTrue(
+        .a()
             DriveCommands.joystickOrbitDrive(
-                drive,
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
                 aprilTagLayout.getTagPose(25).get().toPose2d(),
@@ -309,7 +320,11 @@ public class RobotContainer {
                 .ignoringDisable(true));
     // activates the shooter without the hopper, meant for unclogging the shooter or if something
     // goes wrong.
-    // TODO
+    // activates the shooter and hopper, meant for shooting fuel.
+    operator.rightBumper().onTrue(hopper.SpinCMD());
+    operator.rightBumper().onFalse(hopper.StopCMD());
+
+    operator.povUp().onFalse(m_Shooter.AutoSetSpeedCMD());
   }
 
   /**
