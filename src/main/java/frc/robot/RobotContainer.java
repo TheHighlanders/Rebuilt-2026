@@ -16,8 +16,6 @@ import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -211,14 +209,14 @@ public class RobotContainer {
 
     // Register an intake to remove fuel from the field as a rectangular bounding box
     fuelSim.registerIntake(
-        -0.3,
-        0.3,
-        0.3,
-        0.4, // robot-centric coordinates for bounding box in meters
-        intake::isOut);
+        0.35,
+        0.45,
+        -0.35,
+        0.35); // robot-centric coordinates for bounding box in meters
+        
 
     fuelSim.setSubticks(
-        5); // sets the number of physics iterations to perform per 20ms loop. Default = 5
+        3); // sets the number of physics iterations to perform per 20ms loop. Default = 5
 
     fuelSim.enableAirResistance(); // an additional drag force will be applied to fuel in physics
     // update step
@@ -252,37 +250,6 @@ public class RobotContainer {
     controller
         .rightBumper()
         .onTrue(
-            shooter.flywheelCMD(
-                () -> {
-                  return drive
-                      .getPose()
-                      .getTranslation()
-                      .getDistance(
-                          DriverStation.getAlliance().isPresent()
-                                  && DriverStation.getAlliance().get() == Alliance.Red
-                              ? FieldConstants.HUB_POSE_BLUE
-                              : FieldConstants.HUB_POSE_RED);
-                }));
-
-    // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, spits out
-    // fuel.
-    // controller
-    //     .leftBumper()
-    //     .onTrue(
-    //         Commands.either(
-    //             Commands.either(
-    //                 Commands.parallel(shooter.kickerCMD(), hopper.spinCMD()),
-    //                 Commands.none(),
-    //                 shooter::atSpeed),
-    //             Commands.parallel(
-    //                 shooter.flywheelCMD(() -> 10), shooter.kickerCMD(), hopper.spinCMD()),
-    //             controller.rightBumper()::getAsBoolean));
-
-    // controller.leftBumper().onFalse(Commands.parallel(shooter.stopCMD(), hopper.stopCMD()));
-    // lmao, get simulated
-    controller
-        .rightBumper()
-        .onTrue(
             Commands.repeatingSequence(
                     Commands.waitSeconds(0.2),
                     Commands.runOnce(
@@ -296,36 +263,14 @@ public class RobotContainer {
                     () -> {
                       return !controller.rightBumper().getAsBoolean();
                     }));
-    // fuelSim.launchFuel(LinearVelocity launchVelocity, Angle hoodAngle, Angle turretYaw, Distance
-    // launchHeight);
-
-    /**
-     * DriveCommands.joystickOrbitDrive( drive, () -> -controller.getLeftY(), () ->
-     * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
-     * Rotation2d.kZero)));
-     */
-
-    /* operator controlls port 1 */
-
-    // runs intake
-    operator.b().onTrue(intake.intakeCMD());
-    operator.b().onFalse(intake.stoptakeCMD());
-
-    // runs intake backwards
-    operator.y().onTrue(intake.spitakeCMD());
-    operator.y().onFalse(intake.stoptakeCMD());
 
     // deploys intake
-    operator.povRight().toggleOnTrue(deploy.deployCMD());
-    operator.povRight().toggleOnFalse(deploy.undeployCMD());
-
-    // Hold down the button to climb.
-    operator.povUp().onTrue(climber.raiseCMD());
-    operator.povUp().onFalse(climber.pullCMD());
+    controller.povRight().toggleOnTrue(deploy.deployCMD());
+    controller.povRight().toggleOnFalse(deploy.undeployCMD());
 
     // runs auto-align command on the hub
-    operator
-        .leftTrigger()
+    controller
+        .b()
         .whileTrue(
             DriveCommands.joystickOrbitDrive(
                 drive,
@@ -336,7 +281,7 @@ public class RobotContainer {
             );
 
     // toggles between robot- and field-relative drive
-    operator
+    controller
         .povDown()
         .onTrue(
             Commands.runOnce(
@@ -344,17 +289,6 @@ public class RobotContainer {
                   robotRelative = !robotRelative;
                   SmartDashboard.putBoolean("Robot Relative Drive", robotRelative);
                 }));
-
-    // Reset gyro to 0° when X button is pressed
-    controller
-        .x()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                    drive)
-                .ignoringDisable(true));
     // activates the shooter without the hopper, meant for unclogging the shooter or if something
     // goes wrong.
     // TODO

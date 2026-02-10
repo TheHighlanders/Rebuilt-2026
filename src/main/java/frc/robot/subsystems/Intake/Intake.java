@@ -94,10 +94,6 @@ public class Intake extends SubsystemBase {
         });
   }
 
-  public boolean isOut() {
-    return encoder.getPosition() > 1;
-  }
-
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
