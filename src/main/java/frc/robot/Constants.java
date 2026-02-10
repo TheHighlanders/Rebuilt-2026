@@ -122,7 +122,6 @@ public final class Constants {
   public static class ShooterConstants {
 
     public static final int SHOOTERID = 31;
-    // public static final int HOODID = 9;
     public static final int KICKERID = 32;
   }
 

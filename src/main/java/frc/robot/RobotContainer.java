@@ -7,7 +7,9 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static frc.robot.Constants.VisionConstants.*;
 
 import choreo.auto.AutoChooser;
@@ -57,17 +59,18 @@ public class RobotContainer {
   private final Deploy deploy;
   private final Hopper hopper;
   private final Climber climber;
+  private final Shooter shooter;
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
   private final CommandXboxController operator = new CommandXboxController(1);
+
+  private boolean robotRelative;
 
   // Dashboard inputs
   //  private final LoggedDashboardChooser<Command> autoChooser;
   private final AutoChooser autoChooser;
 
-  private boolean robotRelative;
-
-  private final Shooter shooter;
+  public FuelSim fuelSim = new FuelSim("fuelsim"); // creates a new fuelSim of FuelSim
 
   private Command testVisionSim;
 
@@ -196,6 +199,32 @@ public class RobotContainer {
     SmartDashboard.putData("CHOREO", autoChooser);
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
 
+    fuelSim.spawnStartingFuel();
+
+    // Register a robot for collision with fuel
+    fuelSim.registerRobot(
+        0.6858, // from left to right in meters
+        0.6858, // from front to back in meters
+        0.1, // from floor to top of bumpers in meters
+        drive::getPose, // Supplier<Pose2d> of robot pose
+        drive::getSpeeds); // Supplier<ChassisSpeeds> of field-centric chassis speeds
+
+    // Register an intake to remove fuel from the field as a rectangular bounding box
+    fuelSim.registerIntake(
+        -0.3,
+        0.3,
+        0.3,
+        0.4, // robot-centric coordinates for bounding box in meters
+        intake::isOut);
+
+    fuelSim.setSubticks(
+        5); // sets the number of physics iterations to perform per 20ms loop. Default = 5
+
+    fuelSim.enableAirResistance(); // an additional drag force will be applied to fuel in physics
+    // update step
+
+    fuelSim.start(); // enables the simulation to run (updateSim must still be called periodically)
+
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -237,19 +266,39 @@ public class RobotContainer {
 
     // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, spits out
     // fuel.
-    controller
-        .leftBumper()
-        .onTrue(
-            Commands.either(
-                Commands.either(
-                    Commands.parallel(shooter.kickerCMD(), hopper.spinCMD()),
-                    Commands.none(),
-                    shooter::atSpeed),
-                Commands.parallel(
-                    shooter.flywheelCMD(() -> 10), shooter.kickerCMD(), hopper.spinCMD()),
-                controller.rightBumper()::getAsBoolean));
+    // controller
+    //     .leftBumper()
+    //     .onTrue(
+    //         Commands.either(
+    //             Commands.either(
+    //                 Commands.parallel(shooter.kickerCMD(), hopper.spinCMD()),
+    //                 Commands.none(),
+    //                 shooter::atSpeed),
+    //             Commands.parallel(
+    //                 shooter.flywheelCMD(() -> 10), shooter.kickerCMD(), hopper.spinCMD()),
+    //             controller.rightBumper()::getAsBoolean));
 
-    controller.leftBumper().onFalse(Commands.parallel(shooter.stopCMD(), hopper.stopCMD()));
+    // controller.leftBumper().onFalse(Commands.parallel(shooter.stopCMD(), hopper.stopCMD()));
+    // lmao, get simulated
+    controller
+        .rightBumper()
+        .onTrue(
+            Commands.repeatingSequence(
+                    Commands.waitSeconds(0.2),
+                    Commands.runOnce(
+                        () ->
+                            fuelSim.launchFuel(
+                                MetersPerSecond.of(10),
+                                Degrees.of(70),
+                                Degrees.of(0),
+                                Meters.of(0.27))))
+                .until(
+                    () -> {
+                      return !controller.rightBumper().getAsBoolean();
+                    }));
+    // fuelSim.launchFuel(LinearVelocity launchVelocity, Angle hoodAngle, Angle turretYaw, Distance
+    // launchHeight);
+
     /**
      * DriveCommands.joystickOrbitDrive( drive, () -> -controller.getLeftY(), () ->
      * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
