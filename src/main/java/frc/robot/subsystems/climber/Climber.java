@@ -21,34 +21,30 @@ public class Climber extends SubsystemBase {
     climbEncoder.setPosition(0);
   }
 
+  private Command runCMD(double speed) {
+    return run(
+        () -> {
+          climbMotor.set(speed);
+        });
+  }
+
   public Command raiseCMD() {
     // Deploys fuel
     return Commands.deadline(
-            Commands.waitUntil(() -> climbEncoder.getPosition() == ClimberConstants.UP_POSITION),
-            run(
-                () -> {
-                  climbMotor.set(ClimberConstants.RAISE_SPEED);
-                }))
-        .andThen(
-            run(
-                () -> {
-                  climbMotor.set(0);
-                }));
+            Commands.waitUntil(
+                () ->
+                    climbEncoder.getPosition()
+                        >= ClimberConstants.UP_POSITION - ClimberConstants.POS_TOLERANCE),
+            runCMD(ClimberConstants.RAISE_SPEED))
+        .andThen(runCMD(0));
   }
 
   public Command pullCMD() {
     // Deploys fuel
     return Commands.deadline(
-            Commands.waitUntil(() -> climbEncoder.getPosition() == 0),
-            run(
-                () -> {
-                  climbMotor.set(ClimberConstants.PULL_SPEED);
-                }))
-        .andThen(
-            run(
-                () -> {
-                  climbMotor.set(0);
-                }));
+            Commands.waitUntil(() -> climbEncoder.getPosition() <= ClimberConstants.POS_TOLERANCE),
+            runCMD(ClimberConstants.PULL_SPEED))
+        .andThen(runCMD(0));
   }
 
   @Override
