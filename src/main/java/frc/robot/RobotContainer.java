@@ -69,6 +69,7 @@ public class RobotContainer {
 
   private final Shooter shooter;
 
+  @SuppressWarnings("unused")
   private Command testVisionSim;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
