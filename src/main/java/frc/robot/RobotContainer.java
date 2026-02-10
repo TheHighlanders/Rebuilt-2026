@@ -75,8 +75,6 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
 
-    // Define Shooter
-    shooter = new Shooter();
     // Define Hopper
     hopper = new Hopper();
     // Define Climber
@@ -152,8 +150,9 @@ public class RobotContainer {
 
         break;
     }
-    // Define Shooter
-    m_Shooter = new Shooter(drive::getPose);
+
+    shooter = new Shooter(drive::getPose);
+
     intake = new Intake(); // Fits outside because it's the same in both Real and Sim.
     deploy = new Deploy();
 
@@ -220,7 +219,7 @@ public class RobotContainer {
             () -> -controller.getRightX(),
             () -> robotRelative));
 
-    // Lock to 0° when A button is held
+    // Lock to 0° when Y button is held
     controller
         .y()
         .whileTrue(
@@ -234,35 +233,31 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-    controller
-        .rightBumper()
-        .onTrue(
-            shooter.flywheelCMD(
-                () -> {
-                  return drive
-                      .getPose()
-                      .getTranslation()
-                      .getDistance(
-                          DriverStation.getAlliance().isPresent()
-                                  && DriverStation.getAlliance().get() == Alliance.Red
-                              ? FieldConstants.HUB_POSE_BLUE
-                              : FieldConstants.HUB_POSE_RED);
-                }));
+        controller
+    .rightBumper()
+    .onTrue(
+        shooter.flywheelCMD(
+            () -> {
+              return drive
+                  .getPose()
+                  .getTranslation()
+                  .getDistance(
+                      DriverStation.getAlliance().isPresent()
+                              && DriverStation.getAlliance().get() == Alliance.Red
+                          ? FieldConstants.HUB_POSE_BLUE
+                          : FieldConstants.HUB_POSE_RED);
+            }));
 
     // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, spits out
     // fuel.
     controller
         .leftBumper()
         .onTrue(
-                Commands.either(
-                    Commands.sequence(shooter.kickerCMD(), hopper.spinCMD()),
-                    Commands.none(),
-                    shooter::atSpeed),
-                Commands.sequence(
-                    shooter.flywheelCMD(() -> 10), shooter.kickerCMD(), hopper.spinCMD()),
-                controller.rightBumper()::getAsBoolean));
+            Commands.either(Command.runOnce(hopper.SpinCMD()), Commands.none(), shooter::atSpeed),
+            Commands.sequence(shooter.flywheelCMD(() -> 10), hopper.SpinCMD()),
+            controller.rightBumper()::getAsBoolean);
 
-    controller.leftBumper().onFalse(Commands.sequence(shooter.stopCMD(), hopper.stopCMD()));
+    controller.leftBumper().onFalse(Commands.sequence(hopper.StopCMD()));
     /**
      * DriveCommands.joystickOrbitDrive( drive, () -> -controller.getLeftY(), () ->
      * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
@@ -288,9 +283,9 @@ public class RobotContainer {
     operator.povUp().onFalse(climber.pullCMD());
 
     // runs auto-align command on the hub
-    operator
-        .leftTrigger()
+    controller
         .a()
+        .onTrue(
             DriveCommands.joystickOrbitDrive(
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
@@ -299,7 +294,7 @@ public class RobotContainer {
             );
 
     // toggles between robot- and field-relative drive
-    operator
+    controller
         .povDown()
         .onTrue(
             Commands.runOnce(

@@ -21,9 +21,11 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class Shooter extends SubsystemBase {
@@ -47,6 +49,7 @@ public class Shooter extends SubsystemBase {
   // pid config
   SparkMaxConfig ShooterConfig = new SparkMaxConfig();
 
+  public Shooter () {}
   Supplier<Pose2d> getPose;
 
   public Shooter(Supplier<Pose2d> getPose) {
@@ -59,24 +62,53 @@ public class Shooter extends SubsystemBase {
     ShooterConfig.closedLoop.p(kP).i(kI).d(kD);
     // dropper config
     Flywheel.configure(
-      ShooterConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+        ShooterConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     SmartDashboard.putNumber("PID/Shooter/kP", kP);
+    SmartDashboard.putNumber("PID/Shooter/kI", kI);
     SmartDashboard.putNumber("PID/Shooter/kD", kD);
     SmartDashboard.putNumber("PID/Shooter/Target RPM", 0.0);
     SmartDashboard.putNumber("PID/KickWheel/Target RPM", 0.0);
   }
+  public Command shootCMD(double newTargetRPM) {
+    /**
+     * spin the flywheel untill it reaches speed once it reaches speed, activate the kicker wheel.
+     * then it stops both
+     */
+    return Commands.none();
+  }
 
-  public Command AutoSetSpeedCMD() {    
+  private double calculate(double asDouble) {
+    // TODO: wait until shooter is finalized
+
+    return asDouble;
+  }
+
+  public boolean atSpeed() {
+    return shootController.isAtSetpoint();
+  }
+
+  public Command flywheelCMD(DoubleSupplier distance) {
+
+    return Commands.run(
+      () -> {
+                targetRPM = calculate(distance.getAsDouble());
+          SmartDashboard.putNumber("PID/Shooter/Target RPM", targetRPM);
+          shootController.setSetpoint(targetRPM, ControlType.kVelocity);
+}
+          );
+
+}
+  public Command AutoSetSpeedCMD() {
     return runOnce(
         () -> {
           DriverStation.reportWarning("Shooter", false);
           shootController.setSetpoint(targetRPM, ControlType.kVelocity);
         });
   }
-
+  
   @SuppressWarnings("unused")
   @Override
-  public void periodic() {
+  public void periodic () {
 
     // if within 5 ft of AprilTag 25, then set targetRPM to low number. else shoot far-ish;
     Translation2d robot = getPose.get().getTranslation();
