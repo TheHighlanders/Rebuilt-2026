@@ -26,9 +26,6 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Constants.*;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Hopper.Hopper;
-import frc.robot.subsystems.Intake.Deploy;
-import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -36,6 +33,9 @@ import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.intake.Deploy;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
@@ -151,7 +151,7 @@ public class RobotContainer {
         break;
     }
 
-    shooter = new Shooter(drive::getPose);
+    shooter = new Shooter();
 
     intake = new Intake(); // Fits outside because it's the same in both Real and Sim.
     deploy = new Deploy();
@@ -233,29 +233,30 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-        controller
-    .rightBumper()
-    .onTrue(
-        shooter.flywheelCMD(
-            () -> {
-              return drive
-                  .getPose()
-                  .getTranslation()
-                  .getDistance(
-                      DriverStation.getAlliance().isPresent()
-                              && DriverStation.getAlliance().get() == Alliance.Red
-                          ? FieldConstants.HUB_POSE_BLUE
-                          : FieldConstants.HUB_POSE_RED);
-            }));
+    controller
+        .rightBumper()
+        .onTrue(
+            shooter.flywheelCMD(
+                () -> {
+                  return drive
+                      .getPose()
+                      .getTranslation()
+                      .getDistance(
+                          DriverStation.getAlliance().isPresent()
+                                  && DriverStation.getAlliance().get() == Alliance.Red
+                              ? FieldConstants.HUB_POSE_BLUE
+                              : FieldConstants.HUB_POSE_RED);
+                }));
 
     // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, spits out
     // fuel.
     controller
         .leftBumper()
         .onTrue(
-            Commands.either(Command.runOnce(hopper.SpinCMD()), Commands.none(), shooter::atSpeed),
-            Commands.sequence(shooter.flywheelCMD(() -> 10), hopper.SpinCMD()),
-            controller.rightBumper()::getAsBoolean);
+            Commands.either(
+                Commands.either(hopper.SpinCMD(), Commands.none(), shooter::atSpeed),
+                Commands.sequence(shooter.flywheelCMD(() -> 10), hopper.SpinCMD()),
+                controller.rightBumper()::getAsBoolean));
 
     controller.leftBumper().onFalse(Commands.sequence(hopper.StopCMD()));
     /**
@@ -287,6 +288,7 @@ public class RobotContainer {
         .a()
         .onTrue(
             DriveCommands.joystickOrbitDrive(
+                drive,
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
                 aprilTagLayout.getTagPose(25).get().toPose2d(),
@@ -319,7 +321,7 @@ public class RobotContainer {
     operator.rightBumper().onTrue(hopper.SpinCMD());
     operator.rightBumper().onFalse(hopper.StopCMD());
 
-    operator.povUp().onFalse(m_Shooter.AutoSetSpeedCMD());
+    operator.povUp().onFalse(shooter.AutoSetSpeedCMD());
   }
 
   /**
