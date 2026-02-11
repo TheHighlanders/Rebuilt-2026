@@ -50,35 +50,31 @@ public class Deploy extends SubsystemBase {
 
     deployEncoder.setPosition(0);
   }
+
+  private Command runCMD(double speed) {
+    return run(
+        () -> {
+          deployMotor.set(speed);
+        });
+  }
   // Adds start and stop for deploying
   public Command deployCMD() {
     // Deploys fuel
     return Commands.deadline(
             Commands.waitUntil(
-                () -> deployEncoder.getPosition() == IntakeConstants.DEPLOY_POSITION),
-            run(
-                () -> {
-                  deployMotor.set(IntakeConstants.DEPLOY_SPEED);
-                }))
-        .andThen(
-            run(
-                () -> {
-                  deployMotor.set(0);
-                }));
+                () ->
+                    deployEncoder.getPosition()
+                        >= IntakeConstants.DEPLOY_POSITION - IntakeConstants.DEPLOY_TOLERANCE),
+            runCMD(IntakeConstants.DEPLOY_SPEED))
+        .andThen(runCMD(0));
   }
   // Stops motor
   public Command undeployCMD() {
     return Commands.deadline(
-            Commands.waitUntil(() -> deployEncoder.getPosition() == 0),
-            run(
-                () -> {
-                  deployMotor.set(0 - IntakeConstants.DEPLOY_SPEED);
-                }))
-        .andThen(
-            run(
-                () -> {
-                  deployMotor.set(0);
-                }));
+            Commands.waitUntil(
+                () -> deployEncoder.getPosition() <= IntakeConstants.DEPLOY_TOLERANCE),
+            runCMD(0 - IntakeConstants.DEPLOY_SPEED))
+        .andThen(runCMD(0));
   }
 
   @Override

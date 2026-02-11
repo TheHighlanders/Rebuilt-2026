@@ -90,6 +90,7 @@ public final class Constants {
     public static final int CLIMBERID = 51;
     public static final double CLIMBER_SPEED = 1;
     public static final double UP_POSITION = 5; // Rotations. TODO
+    public static final double POS_TOLERANCE = 0.1;
 
     public static final double RAISE_SPEED = 1;
     public static final double PULL_SPEED = -1;
@@ -109,6 +110,7 @@ public final class Constants {
     public static final double SPITAKE_SPEED = -1;
     public static final double DEPLOY_SPEED = 1;
     public static final double DEPLOY_POSITION = 3; // rotations
+    public static final double DEPLOY_TOLERANCE = 0.1;
 
     public static final double kP1 = 0.1;
     public static final double kI1 = 0;

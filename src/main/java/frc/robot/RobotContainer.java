@@ -70,13 +70,12 @@ public class RobotContainer {
 
   public FuelSim fuelSim = new FuelSim("fuelsim"); // creates a new fuelSim of FuelSim
 
+  @SuppressWarnings("unused")
   private Command testVisionSim;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
 
-    // Define Shooter
-    shooter = new Shooter();
     // Define Hopper
     hopper = new Hopper();
     // Define Climber
@@ -152,6 +151,9 @@ public class RobotContainer {
 
         break;
     }
+
+    shooter = new Shooter();
+
     intake = new Intake(); // Fits outside because it's the same in both Real and Sim.
     deploy = new Deploy();
 
@@ -244,6 +246,17 @@ public class RobotContainer {
             () -> -controller.getRightX(),
             () -> robotRelative));
 
+    // Lock to 0° when Y button is held
+    controller
+        .y()
+        .whileTrue(
+            DriveCommands.joystickDriveAtAngle(
+                drive,
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                () -> Rotation2d.kZero,
+                () -> robotRelative));
+
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
@@ -263,6 +276,44 @@ public class RobotContainer {
                     () -> {
                       return !controller.rightBumper().getAsBoolean();
                     }));
+            // shooter.flywheelCMD(
+            //     () -> {
+            //       return drive
+            //           .getPose()
+            //           .getTranslation()
+            //           .getDistance(
+            //               DriverStation.getAlliance().isPresent()
+            //                       && DriverStation.getAlliance().get() == Alliance.Red
+            //                   ? FieldConstants.HUB_POSE_BLUE
+            //                   : FieldConstants.HUB_POSE_RED);
+            //     }));
+
+    // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, spits out
+    // fuel.
+    controller
+        .leftBumper()
+        .onTrue(
+            Commands.either(
+                Commands.either(hopper.SpinCMD(), Commands.none(), shooter::atSpeed),
+                Commands.sequence(shooter.flywheelCMD(() -> 10), hopper.SpinCMD()),
+                controller.rightBumper()::getAsBoolean));
+
+    controller.leftBumper().onFalse(Commands.sequence(hopper.StopCMD()));
+    /**
+     * DriveCommands.joystickOrbitDrive( drive, () -> -controller.getLeftY(), () ->
+     * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
+     * Rotation2d.kZero)));
+     */
+
+    /* operator controlls port 1 */
+
+    // runs intake
+    operator.b().onTrue(intake.intakeCMD());
+    operator.b().onFalse(intake.stoptakeCMD());
+
+    // runs intake backwards
+    operator.y().onTrue(intake.spitakeCMD());
+    operator.y().onFalse(intake.stoptakeCMD());
 
     // deploys intake
     controller.povRight().toggleOnTrue(deploy.deployCMD());
@@ -270,8 +321,8 @@ public class RobotContainer {
 
     // runs auto-align command on the hub
     controller
-        .b()
-        .whileTrue(
+        .a()
+        .onTrue(
             DriveCommands.joystickOrbitDrive(
                 drive,
                 () -> -controller.getLeftY(),
@@ -291,7 +342,11 @@ public class RobotContainer {
                 }));
     // activates the shooter without the hopper, meant for unclogging the shooter or if something
     // goes wrong.
-    // TODO
+    // activates the shooter and hopper, meant for shooting fuel.
+    operator.rightBumper().onTrue(hopper.SpinCMD());
+    operator.rightBumper().onFalse(hopper.StopCMD());
+
+    operator.povUp().onFalse(shooter.AutoSetSpeedCMD());
   }
 
   /**
