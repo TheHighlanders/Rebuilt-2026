@@ -172,13 +172,13 @@ public class DriveCommands {
    * Field relative drive command where joystick controlls linear velocity and robot is continuously
    * towards a point on the field. Useful for orbitting shooting targets
    *
-   * @param target Pose2d to look at
+   * @param target Translation2d to look at
    */
   public static Command joystickOrbitDrive(
       Drive drive,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
-      Pose2d target,
+      Translation2d target,
       BooleanSupplier robotRelative) {
 
     return Commands.parallel(

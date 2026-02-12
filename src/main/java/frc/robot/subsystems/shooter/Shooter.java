@@ -9,14 +9,11 @@ import static frc.robot.Constants.VisionConstants.*;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
-import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -29,8 +26,6 @@ public class Shooter extends SubsystemBase {
   SparkMax flywheel = new SparkMax(Constants.ShooterConstants.SHOOTERID, MotorType.kBrushless);
 
   SparkMax kicker = new SparkMax(Constants.ShooterConstants.KICKERID, MotorType.kBrushless);
-
-  SparkMaxSim flywheelSim = new SparkMaxSim(flywheel, DCMotor.getNEO(1));
 
   // pid
   SparkClosedLoopController shootController = flywheel.getClosedLoopController();
@@ -64,21 +59,12 @@ public class Shooter extends SubsystemBase {
     SmartDashboard.putNumber("PID/KickWheel/Target RPM", 0.0);
   }
 
-  public Command shootCMD(double newTargetRPM) {
-    /**
-     * spin the flywheel untill it reaches speed once it reaches speed, activate the kicker wheel.
-     * then it stops both
-     */
-    return Commands.none();
-  }
+  public void intake() {}
 
-  private double calculate(double distanceMeters) {
+  protected double calculate(double distanceMeters) {
     // TODO: wait until shooter is finalized
-    if (distanceMeters < 1) {
-      return 500;
-    } else {
-      return 2000;
-    }
+    double linearVelocity = 1.4 * distanceMeters + 6.1;
+    return linearVelocity * 193; // trust that makes it angular i did the (?) math: https://www.desmos.com/calculator/zroouacb64
   }
 
   public boolean atSpeed() {
@@ -92,15 +78,21 @@ public class Shooter extends SubsystemBase {
           targetRPM = calculate(distance.getAsDouble());
           SmartDashboard.putNumber("PID/Shooter/Target RPM", targetRPM);
           shootController.setSetpoint(targetRPM, ControlType.kVelocity);
-        });
+        },
+        this);
   }
 
-  public Command AutoSetSpeedCMD() {
-    return runOnce(
+  public Command kickerCMD() {
+    return runOnce(() -> kicker.set(1));
+  }
+
+  public Command stopCMD() {
+    return Commands.runOnce(
         () -> {
-          DriverStation.reportWarning("Shooter", false);
-          shootController.setSetpoint(targetRPM, ControlType.kVelocity);
-        });
+          kicker.set(0);
+          targetRPM = 0;
+        },
+        this);
   }
 
   @SuppressWarnings("unused")
@@ -120,6 +112,8 @@ public class Shooter extends SubsystemBase {
     //   targetRPM = 2000;
     // }
 
+    shootController.setSetpoint(targetRPM, ControlType.kVelocity);
+
     SmartDashboard.putNumber("Shooter/targetRPM", targetRPM);
     // For Elastic and Advtange Scope
     double newP = SmartDashboard.getNumber("PID/Shooter/kP", kP);
@@ -136,23 +130,5 @@ public class Shooter extends SubsystemBase {
         "PID/Shooter/Dropper Velocity", flywheelEncoder.getVelocity()); // Actual velocity
 
     // SmartDashboard.updateValues();
-  }
-
-  @Override
-  public void simulationPeriodic() {
-    // In this method, we update our simulation of what our arm is doing
-    // First, we set our "inputs" (voltages)
-
-    // Next, we update it. The standard loop time is 20ms.
-
-    // Now, we update the Spark MAX
-    flywheelSim.iterate(
-        flywheelSim.getSetpoint(),
-        12, // Simulated battery voltage, in Volts
-        0.02); // Time interval, in Seconds
-
-    // SimBattery estimates loaded battery voltages
-    // This should include all motors being simulated
-
   }
 }

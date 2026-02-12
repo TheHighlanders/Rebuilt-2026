@@ -535,7 +535,7 @@ public class FuelSim {
    * @throws IllegalStateException if robot is not registered
    */
   public void launchFuel(
-      LinearVelocity launchVelocity, Angle hoodAngle, Angle turretYaw, Distance launchHeight) {
+      LinearVelocity launchVelocity, Angle hoodAngle, Angle turretYaw, Translation3d launchPos) {
     if (robotPoseSupplier == null || robotFieldSpeedsSupplier == null) {
       throw new IllegalStateException("Robot must be registered before launching fuel.");
     }
@@ -544,7 +544,7 @@ public class FuelSim {
         new Pose3d(this.robotPoseSupplier.get())
             .plus(
                 new Transform3d(
-                    new Translation3d(Meters.zero(), Meters.zero(), launchHeight),
+                    launchPos, // .rotateBy(new Rotation3d(robotPoseSupplier.get().getRotation())),
                     Rotation3d.kZero));
     ChassisSpeeds fieldSpeeds = this.robotFieldSpeedsSupplier.get();
 

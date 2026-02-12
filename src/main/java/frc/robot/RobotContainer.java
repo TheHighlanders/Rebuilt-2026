@@ -7,15 +7,15 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static frc.robot.Constants.VisionConstants.*;
 
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -37,6 +37,7 @@ import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.intake.Deploy;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
@@ -76,11 +77,6 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
 
-    // Define Hopper
-    hopper = new Hopper();
-    // Define Climber
-    climber = new Climber();
-
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
@@ -100,6 +96,7 @@ public class RobotContainer {
                 new VisionIOPhotonVision(camera1Name, robotToCamera1),
                 new VisionIOPhotonVision(camera2Name, robotToCamera2),
                 new VisionIOPhotonVision(camera3Name, robotToCamera3));
+        shooter = new Shooter();
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -136,6 +133,7 @@ public class RobotContainer {
                 new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose),
                 new VisionIOPhotonVisionSim(camera2Name, robotToCamera2, drive::getPose),
                 new VisionIOPhotonVisionSim(camera3Name, robotToCamera3, drive::getPose));
+        shooter = new ShooterSim(fuelSim);
         break;
 
       default:
@@ -148,13 +146,18 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        shooter = new Shooter();
 
         break;
     }
 
-    shooter = new Shooter();
-
+    // Define Hopper
+    hopper = new Hopper();
+    // Define Climber
+    climber = new Climber();
+    // Define Intake
     intake = new Intake(); // Fits outside because it's the same in both Real and Sim.
+    // Define Intake Deployer
     deploy = new Deploy();
 
     testVisionSim =
@@ -214,8 +217,8 @@ public class RobotContainer {
         0.35,
         0.45,
         -0.35,
-        0.35); // robot-centric coordinates for bounding box in meters
-        
+        0.35,
+        () -> shooter.intake()); // robot-centric coordinates for bounding box in meters
 
     fuelSim.setSubticks(
         3); // sets the number of physics iterations to perform per 20ms loop. Default = 5
@@ -263,30 +266,17 @@ public class RobotContainer {
     controller
         .rightBumper()
         .onTrue(
-            Commands.repeatingSequence(
-                    Commands.waitSeconds(0.2),
-                    Commands.runOnce(
-                        () ->
-                            fuelSim.launchFuel(
-                                MetersPerSecond.of(10),
-                                Degrees.of(70),
-                                Degrees.of(0),
-                                Meters.of(0.27))))
-                .until(
-                    () -> {
-                      return !controller.rightBumper().getAsBoolean();
-                    }));
-            // shooter.flywheelCMD(
-            //     () -> {
-            //       return drive
-            //           .getPose()
-            //           .getTranslation()
-            //           .getDistance(
-            //               DriverStation.getAlliance().isPresent()
-            //                       && DriverStation.getAlliance().get() == Alliance.Red
-            //                   ? FieldConstants.HUB_POSE_BLUE
-            //                   : FieldConstants.HUB_POSE_RED);
-            //     }));
+            shooter.flywheelCMD(
+                () -> {
+                  return drive
+                      .getPose()
+                      .getTranslation()
+                      .getDistance(
+                          DriverStation.getAlliance().isPresent()
+                                  && DriverStation.getAlliance().get() == Alliance.Red
+                              ? FieldConstants.HUB_POSE_BLUE
+                              : FieldConstants.HUB_POSE_RED);
+                }));
 
     // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, spits out
     // fuel.
@@ -294,11 +284,15 @@ public class RobotContainer {
         .leftBumper()
         .onTrue(
             Commands.either(
-                Commands.either(hopper.SpinCMD(), Commands.none(), shooter::atSpeed),
-                Commands.sequence(shooter.flywheelCMD(() -> 10), hopper.SpinCMD()),
+                Commands.either(
+                    Commands.sequence(shooter.kickerCMD(), hopper.SpinCMD()),
+                    Commands.none(),
+                    shooter::atSpeed),
+                Commands.sequence(
+                    shooter.flywheelCMD(() -> 10), shooter.kickerCMD(), hopper.SpinCMD()),
                 controller.rightBumper()::getAsBoolean));
 
-    controller.leftBumper().onFalse(Commands.sequence(hopper.StopCMD()));
+    controller.leftBumper().onFalse(Commands.sequence(hopper.StopCMD(), shooter.stopCMD()));
     /**
      * DriveCommands.joystickOrbitDrive( drive, () -> -controller.getLeftY(), () ->
      * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
@@ -327,9 +321,13 @@ public class RobotContainer {
                 drive,
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
-                aprilTagLayout.getTagPose(25).get().toPose2d(),
+                DriverStation.getAlliance().isPresent()
+                        && DriverStation.getAlliance().get() == Alliance.Red
+                    ? FieldConstants.HUB_POSE_BLUE
+                    : FieldConstants.HUB_POSE_RED,
                 () -> robotRelative) // / get position of april tag on blue basket
-            );
+            .until(() -> !controller.a().getAsBoolean())
+        );
 
     // toggles between robot- and field-relative drive
     controller
@@ -345,8 +343,6 @@ public class RobotContainer {
     // activates the shooter and hopper, meant for shooting fuel.
     operator.rightBumper().onTrue(hopper.SpinCMD());
     operator.rightBumper().onFalse(hopper.StopCMD());
-
-    operator.povUp().onFalse(shooter.AutoSetSpeedCMD());
   }
 
   /**

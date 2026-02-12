@@ -7,11 +7,14 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Meters;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
 
@@ -125,11 +128,13 @@ public final class Constants {
 
     public static final int SHOOTERID = 31;
     public static final int KICKERID = 32;
+    public static final Translation3d SHOOTER_RR_POS =
+        new Translation3d(Meters.of(-0.1), Meters.of(0.3), Meters.of(0.27));
   }
 
   public static class FieldConstants {
-    public static final Translation2d HUB_POSE_BLUE = new Translation2d(4, 5); // LIES FIX PLS
-    public static final Translation2d HUB_POSE_RED = new Translation2d(4, 5); // LIES FIX PLS
+    public static final Translation2d HUB_POSE_BLUE = new Translation2d(4.6, 4); // LIES FIX PLS
+    public static final Translation2d HUB_POSE_RED = new Translation2d(12, 4); // LIES FIX PLS
   }
 
   public static enum Mode {
