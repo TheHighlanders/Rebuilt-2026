@@ -4,6 +4,7 @@ import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
 
@@ -24,7 +25,7 @@ public class Autos {
     this.drive = drive;
   }
 
-  public AutoRoutine shootTwiceRoutine() {
+  public AutoRoutine shootTwiceRoutine(Command shoot) {
     AutoRoutine routine = autoFactory.newRoutine("ShootTwice");
 
     AutoTrajectory align = routine.trajectory("align");
@@ -37,8 +38,10 @@ public class Autos {
                 align.resetOdometry(),
                 align.cmd(),
                 Commands.runOnce(() -> drive.stop(), drive),
-                Commands.waitSeconds(3),
-                collect.cmd()));
+                collect.cmd(),
+                shoot
+                //climb?
+                ));
 
     return routine;
   }

@@ -189,8 +189,9 @@ public class DriveCommands {
             () ->
                 Rotation2d.fromRadians(
                     Math.atan2(
-                        target.getY() - drive.getPose().getY(),
-                        target.getX() - drive.getPose().getX())),
+                            target.getY() - drive.getPose().getY(),
+                            target.getX() - drive.getPose().getX())
+                        + 1.67), // a bit more than a quarter turn
             robotRelative),
         Commands.run(
             () ->

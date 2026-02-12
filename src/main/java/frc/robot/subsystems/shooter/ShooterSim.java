@@ -1,7 +1,8 @@
 package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.InchesPerSecond;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import com.revrobotics.sim.SparkMaxSim;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -14,7 +15,7 @@ import frc.robot.FuelSim;
 public class ShooterSim extends Shooter {
   private FuelSim fuelSim;
 
-  private int ballsIn = 0;
+  private int ballsIn = 8;
 
   private int time = 0;
 
@@ -72,8 +73,12 @@ public class ShooterSim extends Shooter {
         time = 0;
         ballsIn--;
         fuelSim.launchFuel(
-            InchesPerSecond.of((flywheelSim.getVelocity() / 60) * Math.PI * 4),
-            Degrees.of(78),
+            MetersPerSecond.of(
+                (flywheelSim.getVelocity() / 60)
+                    * ShooterConstants.FLYWHEEL_RADIUS.in(Meters)
+                    * 2
+                    * Math.PI),
+            ShooterConstants.SHOOTER_HOOD,
             Degrees.of(-90),
             ShooterConstants.SHOOTER_RR_POS);
       }

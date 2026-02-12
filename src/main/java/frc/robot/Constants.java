@@ -7,6 +7,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -16,6 +18,8 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
@@ -130,6 +134,8 @@ public final class Constants {
     public static final int KICKERID = 32;
     public static final Translation3d SHOOTER_RR_POS =
         new Translation3d(Meters.of(-0.1), Meters.of(0.3), Meters.of(0.27));
+    public static final Angle SHOOTER_HOOD = Degrees.of(78);
+    public static final Distance FLYWHEEL_RADIUS = Inches.of(2);
   }
 
   public static class FieldConstants {

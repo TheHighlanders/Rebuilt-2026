@@ -74,6 +74,8 @@ public class RobotContainer {
   @SuppressWarnings("unused")
   private Command testVisionSim;
 
+  private Command alignAndShoot;
+
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
 
@@ -191,13 +193,39 @@ public class RobotContainer {
                     },
                     drive,
                     vision));
+    alignAndShoot =
+        Commands.deadline(
+                Commands.waitSeconds(8),
+                Commands.parallel(
+                    DriveCommands.joystickOrbitDrive( // /1---align
+                        drive,
+                        () -> 0,
+                        () -> 0,
+                        DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue
+                            ? FieldConstants.HUB_POSE_RED
+                            : FieldConstants.HUB_POSE_BLUE,
+                        () -> false),
+                    Commands.sequence(
+                        Commands.parallel(shooter.kickerCMD(), hopper.SpinCMD()),
+                        shooter.flywheelCMD(
+                            () -> {
+                              return drive
+                                  .getPose()
+                                  .getTranslation()
+                                  .getDistance(
+                                      DriverStation.getAlliance().orElse(Alliance.Red)
+                                              == Alliance.Blue
+                                          ? FieldConstants.HUB_POSE_BLUE
+                                          : FieldConstants.HUB_POSE_RED);
+                            }))))
+            .andThen(Commands.parallel(shooter.stopCMD(), hopper.StopCMD()));
 
     // Set up auto routines
     autos = new Autos(drive);
     //  autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoFactory.buildAutoChooser());
     autoChooser = new AutoChooser();
     autoChooser.addRoutine(
-        "THE WORKING AUTO", () -> autos.shootTwiceRoutine()); // Set up SysId routines
+        "THE WORKING AUTO", () -> autos.shootTwiceRoutine(alignAndShoot)); // Set up SysId routines
 
     SmartDashboard.putData("CHOREO", autoChooser);
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
@@ -272,8 +300,7 @@ public class RobotContainer {
                       .getPose()
                       .getTranslation()
                       .getDistance(
-                          DriverStation.getAlliance().isPresent()
-                                  && DriverStation.getAlliance().get() == Alliance.Red
+                          DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue
                               ? FieldConstants.HUB_POSE_BLUE
                               : FieldConstants.HUB_POSE_RED);
                 }));
@@ -318,16 +345,14 @@ public class RobotContainer {
         .a()
         .onTrue(
             DriveCommands.joystickOrbitDrive(
-                drive,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
-                DriverStation.getAlliance().isPresent()
-                        && DriverStation.getAlliance().get() == Alliance.Red
-                    ? FieldConstants.HUB_POSE_BLUE
-                    : FieldConstants.HUB_POSE_RED,
-                () -> robotRelative) // / get position of april tag on blue basket
-            .until(() -> !controller.a().getAsBoolean())
-        );
+                    drive,
+                    () -> -controller.getLeftY(),
+                    () -> -controller.getLeftX(),
+                    DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+                        ? FieldConstants.HUB_POSE_RED
+                        : FieldConstants.HUB_POSE_BLUE,
+                    () -> robotRelative) // / get position of april tag on blue basket
+                .until(() -> !controller.a().getAsBoolean()));
 
     // toggles between robot- and field-relative drive
     controller

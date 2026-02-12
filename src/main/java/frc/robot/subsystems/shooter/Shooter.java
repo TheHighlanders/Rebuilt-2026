@@ -64,7 +64,8 @@ public class Shooter extends SubsystemBase {
   protected double calculate(double distanceMeters) {
     // TODO: wait until shooter is finalized
     double linearVelocity = 1.4 * distanceMeters + 6.1;
-    return linearVelocity * 193; // trust that makes it angular i did the (?) math: https://www.desmos.com/calculator/zroouacb64
+    return linearVelocity * 193; // trust that makes it angular i did the (?) math:
+    // https://www.desmos.com/calculator/zroouacb64
   }
 
   public boolean atSpeed() {
