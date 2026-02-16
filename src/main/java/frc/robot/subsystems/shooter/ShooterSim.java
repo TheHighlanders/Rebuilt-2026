@@ -28,17 +28,18 @@ public class ShooterSim extends Shooter {
   }
 
   public Command shootCMD() {
-    return runOnce(() -> {
-    fuelSim.launchFuel(
-            MetersPerSecond.of(
-                (flywheelSim.getVelocity() / 60)
-                    * ShooterConstants.FLYWHEEL_RADIUS.in(Meters)
-                    * 2
-                    * Math.PI),
-            ShooterConstants.SHOOTER_HOOD,
-            Degrees.of(-90),
-            ShooterConstants.SHOOTER_RR_POS);
-    });
+    return runOnce(
+        () -> {
+          fuelSim.launchFuel(
+              MetersPerSecond.of(
+                  (flywheelSim.getVelocity() / 60)
+                      * ShooterConstants.FLYWHEEL_RADIUS.in(Meters)
+                      * 2
+                      * Math.PI),
+              ShooterConstants.SHOOTER_HOOD,
+              Degrees.of(-90),
+              ShooterConstants.SHOOTER_RR_POS);
+        });
   }
 
   @Override

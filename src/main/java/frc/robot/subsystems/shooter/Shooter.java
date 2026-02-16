@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems.shooter;
 
-import static frc.robot.Constants.VisionConstants.*;
-
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;

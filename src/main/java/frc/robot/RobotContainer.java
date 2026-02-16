@@ -11,43 +11,34 @@ import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.Constants.VisionConstants.*;
 
 import choreo.auto.AutoChooser;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
-
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-
 import frc.robot.Constants.*;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
-
 import frc.robot.subsystems.climber.Climber;
-
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
-
 import frc.robot.subsystems.intake.Deploy;
 import frc.robot.subsystems.intake.Intake;
-
 import frc.robot.subsystems.shooter.Hopper;
 import frc.robot.subsystems.shooter.HopperSim;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterSim;
-
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
@@ -146,35 +137,37 @@ public class RobotContainer {
                 new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose),
                 new VisionIOPhotonVisionSim(camera2Name, robotToCamera2, drive::getPose),
                 new VisionIOPhotonVisionSim(camera3Name, robotToCamera3, drive::getPose));
-        ShooterSim temp = new ShooterSim(fuelSim);//how do i destruct this
+        ShooterSim temp = new ShooterSim(fuelSim); // how do i destruct this
         shooter = temp;
         hopper = new HopperSim(temp);
 
         fuelSim.spawnStartingFuel();
 
-    // Register a robot for collision with fuel
-    fuelSim.registerRobot(
-        0.6858, // from left to right in meters
-        0.6858, // from front to back in meters
-        0.1, // from floor to top of bumpers in meters
-        drive::getPose, // Supplier<Pose2d> of robot pose
-        drive::getSpeeds); // Supplier<ChassisSpeeds> of field-centric chassis speeds
+        // Register a robot for collision with fuel
+        fuelSim.registerRobot(
+            0.6858, // from left to right in meters
+            0.6858, // from front to back in meters
+            0.1, // from floor to top of bumpers in meters
+            drive::getPose, // Supplier<Pose2d> of robot pose
+            drive::getSpeeds); // Supplier<ChassisSpeeds> of field-centric chassis speeds
 
-    // Register an intake to remove fuel from the field as a rectangular bounding box
-    fuelSim.registerIntake(
-        0.35,
-        0.45,
-        -0.35,
-        0.35,
-        () -> HopperSim.intake()); // robot-centric coordinates for bounding box in meters
+        // Register an intake to remove fuel from the field as a rectangular bounding box
+        fuelSim.registerIntake(
+            0.35,
+            0.45,
+            -0.35,
+            0.35,
+            () -> HopperSim.intake()); // robot-centric coordinates for bounding box in meters
 
-    fuelSim.setSubticks(
-        3); // sets the number of physics iterations to perform per 20ms loop. Default = 5
+        fuelSim.setSubticks(
+            3); // sets the number of physics iterations to perform per 20ms loop. Default = 5
 
-    fuelSim.enableAirResistance(); // an additional drag force will be applied to fuel in physics
-    // update step
+        fuelSim
+            .enableAirResistance(); // an additional drag force will be applied to fuel in physics
+        // update step
 
-    fuelSim.start(); // enables the simulation to run (updateSim must still be called periodically)
+        fuelSim
+            .start(); // enables the simulation to run (updateSim must still be called periodically)
 
         break;
 
@@ -324,12 +317,8 @@ public class RobotContainer {
         .leftBumper()
         .onTrue(
             Commands.either(
-                Commands.either(
-                    hopper.shootCMD(),
-                    Commands.none(),
-                    shooter::atSpeed),
-                Commands.sequence(
-                    shooter.flywheelCMD(() -> 10),hopper.shootCMD()),
+                Commands.either(hopper.shootCMD(), Commands.none(), shooter::atSpeed),
+                Commands.sequence(shooter.flywheelCMD(() -> 10), hopper.shootCMD()),
                 controller.rightBumper()::getAsBoolean));
 
     controller.leftBumper().onFalse(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));

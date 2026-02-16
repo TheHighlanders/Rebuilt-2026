@@ -63,19 +63,20 @@ public class Hopper extends SubsystemBase {
         () -> {
           kicker.set(-1);
           hopper.set(-1);
-          DriverStation.reportWarning("StopHopper", false);
+          DriverStation.reportWarning("BackdriveHopper", false);
         });
   }
-  
+
   // clears the hopper
   public Command clearCMD() {
     return runOnce(
         () -> {
           kicker.set(1);
           hopper.set(-1);
-          DriverStation.reportWarning("StopHopper", false);
+          DriverStation.reportWarning("ClearHopper", false);
         });
   }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
