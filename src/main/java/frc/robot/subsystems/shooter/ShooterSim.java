@@ -15,12 +15,6 @@ import frc.robot.FuelSim;
 public class ShooterSim extends Shooter {
   private FuelSim fuelSim;
 
-  private int ballsIn = 8;
-
-  private int time = 0;
-
-  private boolean kicking = false;
-
   SparkMaxSim flywheelSim = new SparkMaxSim(flywheel, DCMotor.getKrakenX60(1));
 
   public ShooterSim(FuelSim fuelSim) {
@@ -29,29 +23,22 @@ public class ShooterSim extends Shooter {
   }
 
   @Override
-  public Command kickerCMD() {
-    return runOnce(
-        () -> {
-          kicking = true;
-        });
-  }
-
-  @Override
-  public Command stopCMD() {
-    return runOnce(
-        () -> {
-          kicking = false;
-          targetRPM = 0;
-        });
-  }
-
-  @Override
   public boolean atSpeed() {
     return flywheelSim.getVelocity() >= targetRPM - 10; // tolerance, trust
   }
 
-  public void intake() {
-    ballsIn++;
+  public Command shootCMD() {
+    return runOnce(() -> {
+    fuelSim.launchFuel(
+            MetersPerSecond.of(
+                (flywheelSim.getVelocity() / 60)
+                    * ShooterConstants.FLYWHEEL_RADIUS.in(Meters)
+                    * 2
+                    * Math.PI),
+            ShooterConstants.SHOOTER_HOOD,
+            Degrees.of(-90),
+            ShooterConstants.SHOOTER_RR_POS);
+    });
   }
 
   @Override
@@ -67,24 +54,5 @@ public class ShooterSim extends Shooter {
         0.02); // Time interval, in Seconds
     SmartDashboard.putNumber("shootersim/flywheelspd", flywheelSim.getVelocity());
     SmartDashboard.putNumber("shootersim/flywheelsetpoint", targetRPM);
-
-    if (kicking) {
-      if (time >= 17 && ballsIn > 0) {
-        time = 0;
-        ballsIn--;
-        fuelSim.launchFuel(
-            MetersPerSecond.of(
-                (flywheelSim.getVelocity() / 60)
-                    * ShooterConstants.FLYWHEEL_RADIUS.in(Meters)
-                    * 2
-                    * Math.PI),
-            ShooterConstants.SHOOTER_HOOD,
-            Degrees.of(-90),
-            ShooterConstants.SHOOTER_RR_POS);
-      }
-    }
-    if (ballsIn != 0) time++;
-    SmartDashboard.putBoolean("shootersim/kicking?", kicking);
-    SmartDashboard.putNumber("shootersim/balls in", ballsIn);
   }
 }

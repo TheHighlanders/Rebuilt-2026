@@ -11,33 +11,43 @@ import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.Constants.VisionConstants.*;
 
 import choreo.auto.AutoChooser;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+
 import frc.robot.Constants.*;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+
 import frc.robot.subsystems.climber.Climber;
+
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
-import frc.robot.subsystems.hopper.Hopper;
+
 import frc.robot.subsystems.intake.Deploy;
 import frc.robot.subsystems.intake.Intake;
+
+import frc.robot.subsystems.shooter.Hopper;
+import frc.robot.subsystems.shooter.HopperSim;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterSim;
+
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
@@ -99,6 +109,7 @@ public class RobotContainer {
                 new VisionIOPhotonVision(camera2Name, robotToCamera2),
                 new VisionIOPhotonVision(camera3Name, robotToCamera3));
         shooter = new Shooter();
+        hopper = new Hopper();
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -135,7 +146,36 @@ public class RobotContainer {
                 new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose),
                 new VisionIOPhotonVisionSim(camera2Name, robotToCamera2, drive::getPose),
                 new VisionIOPhotonVisionSim(camera3Name, robotToCamera3, drive::getPose));
-        shooter = new ShooterSim(fuelSim);
+        ShooterSim temp = new ShooterSim(fuelSim);//how do i destruct this
+        shooter = temp;
+        hopper = new HopperSim(temp);
+
+        fuelSim.spawnStartingFuel();
+
+    // Register a robot for collision with fuel
+    fuelSim.registerRobot(
+        0.6858, // from left to right in meters
+        0.6858, // from front to back in meters
+        0.1, // from floor to top of bumpers in meters
+        drive::getPose, // Supplier<Pose2d> of robot pose
+        drive::getSpeeds); // Supplier<ChassisSpeeds> of field-centric chassis speeds
+
+    // Register an intake to remove fuel from the field as a rectangular bounding box
+    fuelSim.registerIntake(
+        0.35,
+        0.45,
+        -0.35,
+        0.35,
+        () -> HopperSim.intake()); // robot-centric coordinates for bounding box in meters
+
+    fuelSim.setSubticks(
+        3); // sets the number of physics iterations to perform per 20ms loop. Default = 5
+
+    fuelSim.enableAirResistance(); // an additional drag force will be applied to fuel in physics
+    // update step
+
+    fuelSim.start(); // enables the simulation to run (updateSim must still be called periodically)
+
         break;
 
       default:
@@ -149,12 +189,11 @@ public class RobotContainer {
                 new ModuleIO() {});
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         shooter = new Shooter();
+        hopper = new Hopper();
 
         break;
     }
 
-    // Define Hopper
-    hopper = new Hopper();
     // Define Climber
     climber = new Climber();
     // Define Intake
@@ -206,7 +245,7 @@ public class RobotContainer {
                             : FieldConstants.HUB_POSE_BLUE,
                         () -> false),
                     Commands.sequence(
-                        Commands.parallel(shooter.kickerCMD(), hopper.SpinCMD()),
+                        hopper.shootCMD(),
                         shooter.flywheelCMD(
                             () -> {
                               return drive
@@ -218,7 +257,7 @@ public class RobotContainer {
                                           ? FieldConstants.HUB_POSE_BLUE
                                           : FieldConstants.HUB_POSE_RED);
                             }))))
-            .andThen(Commands.parallel(shooter.stopCMD(), hopper.StopCMD()));
+            .andThen(Commands.parallel(shooter.stopCMD(), hopper.stopCMD()));
 
     // Set up auto routines
     autos = new Autos(drive);
@@ -229,32 +268,6 @@ public class RobotContainer {
 
     SmartDashboard.putData("CHOREO", autoChooser);
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
-
-    fuelSim.spawnStartingFuel();
-
-    // Register a robot for collision with fuel
-    fuelSim.registerRobot(
-        0.6858, // from left to right in meters
-        0.6858, // from front to back in meters
-        0.1, // from floor to top of bumpers in meters
-        drive::getPose, // Supplier<Pose2d> of robot pose
-        drive::getSpeeds); // Supplier<ChassisSpeeds> of field-centric chassis speeds
-
-    // Register an intake to remove fuel from the field as a rectangular bounding box
-    fuelSim.registerIntake(
-        0.35,
-        0.45,
-        -0.35,
-        0.35,
-        () -> shooter.intake()); // robot-centric coordinates for bounding box in meters
-
-    fuelSim.setSubticks(
-        3); // sets the number of physics iterations to perform per 20ms loop. Default = 5
-
-    fuelSim.enableAirResistance(); // an additional drag force will be applied to fuel in physics
-    // update step
-
-    fuelSim.start(); // enables the simulation to run (updateSim must still be called periodically)
 
     // Configure the button bindings
     configureButtonBindings();
@@ -312,14 +325,14 @@ public class RobotContainer {
         .onTrue(
             Commands.either(
                 Commands.either(
-                    Commands.sequence(shooter.kickerCMD(), hopper.SpinCMD()),
+                    hopper.shootCMD(),
                     Commands.none(),
                     shooter::atSpeed),
                 Commands.sequence(
-                    shooter.flywheelCMD(() -> 10), shooter.kickerCMD(), hopper.SpinCMD()),
+                    shooter.flywheelCMD(() -> 10),hopper.shootCMD()),
                 controller.rightBumper()::getAsBoolean));
 
-    controller.leftBumper().onFalse(Commands.sequence(hopper.StopCMD(), shooter.stopCMD()));
+    controller.leftBumper().onFalse(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
     /**
      * DriveCommands.joystickOrbitDrive( drive, () -> -controller.getLeftY(), () ->
      * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
@@ -366,8 +379,8 @@ public class RobotContainer {
     // activates the shooter without the hopper, meant for unclogging the shooter or if something
     // goes wrong.
     // activates the shooter and hopper, meant for shooting fuel.
-    operator.rightBumper().onTrue(hopper.SpinCMD());
-    operator.rightBumper().onFalse(hopper.StopCMD());
+    operator.rightBumper().onTrue(hopper.clearCMD().andThen(shooter.flywheelCMD(() -> 10)));
+    operator.rightBumper().onFalse(hopper.stopCMD());
   }
 
   /**

@@ -25,8 +25,6 @@ public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
   SparkMax flywheel = new SparkMax(Constants.ShooterConstants.SHOOTERID, MotorType.kBrushless);
 
-  SparkMax kicker = new SparkMax(Constants.ShooterConstants.KICKERID, MotorType.kBrushless);
-
   // pid
   SparkClosedLoopController shootController = flywheel.getClosedLoopController();
 
@@ -83,14 +81,9 @@ public class Shooter extends SubsystemBase {
         this);
   }
 
-  public Command kickerCMD() {
-    return runOnce(() -> kicker.set(1));
-  }
-
   public Command stopCMD() {
     return Commands.runOnce(
         () -> {
-          kicker.set(0);
           targetRPM = 0;
         },
         this);
