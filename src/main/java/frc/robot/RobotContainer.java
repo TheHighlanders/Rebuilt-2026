@@ -147,7 +147,7 @@ public class RobotContainer {
         shooter = temp;
         hopper = new HopperSim(temp);
 
-        // fuelSim.spawnStartingFuel(false);
+        fuelSim.spawnStartingFuel(false);
 
         // Register a robot for collision with fuel
         fuelSim.registerRobot(
@@ -239,7 +239,10 @@ public class RobotContainer {
     autos = new Autos(drive, deploy, intake, hopper, shooter, climber);
     //  autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoFactory.buildAutoChooser());
     autoChooser = new AutoChooser();
-    autoChooser.addRoutine("Depot + Climb", () -> autos.depotAndClimb()); // Set up SysId routines
+    autoChooser.addRoutine("Depot + Climb", () -> autos.depotAndClimb(true));
+    autoChooser.addRoutine("Depot", () -> autos.depotAndClimb(false));
+    autoChooser.addRoutine("Outpost + Climb", () -> autos.outpostAndClimb(true));
+    autoChooser.addRoutine("Outpost", () -> autos.outpostAndClimb(false));
 
     SmartDashboard.putData("CHOREO", autoChooser);
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());

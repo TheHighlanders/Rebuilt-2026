@@ -1,5 +1,5 @@
 {
- "name":"climb",
+ "name":"climbFromDepot",
  "version":3,
  "snapshot":{
   "waypoints":[

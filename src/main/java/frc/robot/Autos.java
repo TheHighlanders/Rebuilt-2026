@@ -47,11 +47,11 @@ public class Autos {
     return Commands.runOnce(() -> SmartDashboard.putString("Auto/Auto State", state));
   }
 
-  public AutoRoutine depotAndClimb() {
+  public AutoRoutine depotAndClimb(boolean addClimb) {
     AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
 
-    AutoTrajectory collect = routine.trajectory("collect");
-    AutoTrajectory climb = routine.trajectory("climb");
+    AutoTrajectory collect = routine.trajectory("collectDepot");
+    AutoTrajectory climb = routine.trajectory("climbFromDepot");
 
     routine
         .active()
@@ -73,26 +73,70 @@ public class Autos {
 
     collect.doneDelayed(1).onTrue(hopper.shootCMD());
 
-    collect
-        .doneDelayed(8)
-        .onTrue(
-            Commands.parallel(
-                sendState("Aligning!"),
-                climb.cmd(), 
-                climber.raiseCMD(), 
-                hopper.stopCMD(), 
-                shooter.stopCMD()));
+    if (addClimb) {
+      collect
+          .doneDelayed(8)
+          .onTrue(
+              Commands.parallel(
+                  sendState("Aligning!"),
+                  climb.cmd(),
+                  climber.raiseCMD(),
+                  hopper.stopCMD(),
+                  shooter.stopCMD(),
+                  deploy.undeployCMD()));
 
-    climb.atTime("aligning").onTrue(Commands.sequence(
-      Commands.waitSeconds(1),
-      sendState("Pulling!"),
-      climber.pullCMD()));
+      climb
+          .atTime("aligning")
+          .onTrue(
+              Commands.sequence(Commands.waitSeconds(1), sendState("Pulling!"), climber.pullCMD()));
+    } 
+    else {
+      collect
+          .doneDelayed(12)
+          .onTrue(
+              Commands.parallel(
+                hopper.stopCMD(), shooter.stopCMD()));
+    }
 
     return routine;
   }
 
-  public AutoRoutine humanAndClimb() {
-    return null;
+  public AutoRoutine outpostAndClimb(boolean addClimb) {
+    AutoRoutine routine = autoFactory.newRoutine("OutpostAndClimb");
+
+    AutoTrajectory collect = routine.trajectory("collectOutpost");
+    AutoTrajectory shoot = routine.trajectory("shootFromOutpost");
+    AutoTrajectory climb = routine.trajectory("climbFromOutpost");
+
+    routine
+        .active()
+        .onTrue(
+            Commands.sequence(collect.resetOdometry(), sendState("Auto started!"), collect.cmd()));
+
+    collect
+        .doneDelayed(4)
+        .onTrue(
+            Commands.sequence(
+                shoot.cmd(),
+                DriveCommands.joystickAlignDrive(drive, shooter, () -> 0, () -> 0, () -> true)));
+
+    shoot.doneDelayed(1).onTrue(hopper.shootCMD());
+
+    if (addClimb) {
+      shoot
+          .doneDelayed(8)
+          .onTrue(
+              Commands.sequence(
+                  shooter.stopCMD(),
+                  hopper.stopCMD(),
+                  Commands.parallel(climber.raiseCMD(), climb.cmd())));
+
+      climb.atTimeBeforeEnd(0.1).onTrue(climber.pullCMD());
+    } else {
+      shoot.doneDelayed(12).onTrue(Commands.sequence(shooter.stopCMD(), hopper.stopCMD()));
+    }
+
+    return routine;
   }
 
   public AutoRoutine midClimbLeft() {
