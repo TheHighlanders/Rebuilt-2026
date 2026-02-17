@@ -31,9 +31,11 @@ public final class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
-  public static final class DriveConstants {}
+  public static final class DriveConstants {
+    public static final double SLOWMODE = 0.7;
+  }
 
-  public final class VisionConstants {
+  public static final class VisionConstants {
     // AprilTag layout
     public static AprilTagFieldLayout aprilTagLayout =
         AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);

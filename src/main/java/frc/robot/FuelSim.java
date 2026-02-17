@@ -363,24 +363,29 @@ public class FuelSim {
   }
 
   /** Spawns fuel in the neutral zone and depots */
-  public void spawnStartingFuel() {
+  public void spawnStartingFuel(boolean spawnCenter) {
     // Center fuel
-    Translation3d center = new Translation3d(FIELD_LENGTH / 2, FIELD_WIDTH / 2, FUEL_RADIUS);
-    for (int i = 0; i < 15; i++) {
-      for (int j = 0; j < 6; j++) {
-        fuels.add(
-            new Fuel(
-                center.plus(new Translation3d(0.076 + 0.152 * j, 0.0254 + 0.076 + 0.152 * i, 0))));
-        fuels.add(
-            new Fuel(
-                center.plus(new Translation3d(-0.076 - 0.152 * j, 0.0254 + 0.076 + 0.152 * i, 0))));
-        fuels.add(
-            new Fuel(
-                center.plus(new Translation3d(0.076 + 0.152 * j, -0.0254 - 0.076 - 0.152 * i, 0))));
-        fuels.add(
-            new Fuel(
-                center.plus(
-                    new Translation3d(-0.076 - 0.152 * j, -0.0254 - 0.076 - 0.152 * i, 0))));
+    if (spawnCenter) {
+      Translation3d center = new Translation3d(FIELD_LENGTH / 2, FIELD_WIDTH / 2, FUEL_RADIUS);
+      for (int i = 0; i < 15; i++) {
+        for (int j = 0; j < 6; j++) {
+          fuels.add(
+              new Fuel(
+                  center.plus(
+                      new Translation3d(0.076 + 0.152 * j, 0.0254 + 0.076 + 0.152 * i, 0))));
+          fuels.add(
+              new Fuel(
+                  center.plus(
+                      new Translation3d(-0.076 - 0.152 * j, 0.0254 + 0.076 + 0.152 * i, 0))));
+          fuels.add(
+              new Fuel(
+                  center.plus(
+                      new Translation3d(0.076 + 0.152 * j, -0.0254 - 0.076 - 0.152 * i, 0))));
+          fuels.add(
+              new Fuel(
+                  center.plus(
+                      new Translation3d(-0.076 - 0.152 * j, -0.0254 - 0.076 - 0.152 * i, 0))));
+        }
       }
     }
 

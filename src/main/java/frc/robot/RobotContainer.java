@@ -8,7 +8,6 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Meters;
-import static frc.robot.Constants.VisionConstants.*;
 
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -23,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.robot.Constants.*;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climber.Climber;
@@ -74,8 +74,6 @@ public class RobotContainer {
   @SuppressWarnings("unused")
   private Command testVisionSim;
 
-  private Command alignAndShoot;
-
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
 
@@ -94,10 +92,14 @@ public class RobotContainer {
         vision =
             new Vision(
                 drive::addVisionMeasurement,
-                new VisionIOPhotonVision(camera0Name, robotToCamera0),
-                new VisionIOPhotonVision(camera1Name, robotToCamera1),
-                new VisionIOPhotonVision(camera2Name, robotToCamera2),
-                new VisionIOPhotonVision(camera3Name, robotToCamera3));
+                new VisionIOPhotonVision(
+                    VisionConstants.camera0Name, VisionConstants.robotToCamera0),
+                new VisionIOPhotonVision(
+                    VisionConstants.camera1Name, VisionConstants.robotToCamera1),
+                new VisionIOPhotonVision(
+                    VisionConstants.camera2Name, VisionConstants.robotToCamera2),
+                new VisionIOPhotonVision(
+                    VisionConstants.camera3Name, VisionConstants.robotToCamera3));
         shooter = new Shooter();
         hopper = new Hopper();
         configureButtonBindings();
@@ -133,15 +135,19 @@ public class RobotContainer {
         vision =
             new Vision(
                 drive::addVisionMeasurement,
-                new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose),
-                new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose),
-                new VisionIOPhotonVisionSim(camera2Name, robotToCamera2, drive::getPose),
-                new VisionIOPhotonVisionSim(camera3Name, robotToCamera3, drive::getPose));
+                new VisionIOPhotonVisionSim(
+                    VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
+                new VisionIOPhotonVisionSim(
+                    VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose),
+                new VisionIOPhotonVisionSim(
+                    VisionConstants.camera2Name, VisionConstants.robotToCamera2, drive::getPose),
+                new VisionIOPhotonVisionSim(
+                    VisionConstants.camera3Name, VisionConstants.robotToCamera3, drive::getPose));
         ShooterSim temp = new ShooterSim(fuelSim); // how do i destruct this
         shooter = temp;
         hopper = new HopperSim(temp);
 
-        fuelSim.spawnStartingFuel();
+        // fuelSim.spawnStartingFuel(false);
 
         // Register a robot for collision with fuel
         fuelSim.registerRobot(
@@ -228,22 +234,12 @@ public class RobotContainer {
                     },
                     drive,
                     vision));
-    alignAndShoot =
-        Commands.deadline(
-                Commands.waitSeconds(8),
-                Commands.sequence(
-                    DriveCommands.joystickAlignDrive(drive, shooter, () -> 0, () -> 0, () -> false),
-                    Commands.sequence(
-                        // Commands.waitUntil(() -> shooter.atSpeed()),
-                        hopper.shootCMD())))
-            .andThen(Commands.parallel(shooter.stopCMD(), hopper.stopCMD()));
 
     // Set up auto routines
-    autos = new Autos(drive);
+    autos = new Autos(drive, deploy, intake, hopper, shooter, climber);
     //  autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoFactory.buildAutoChooser());
     autoChooser = new AutoChooser();
-    autoChooser.addRoutine(
-        "THE WORKING AUTO", () -> autos.shootTwiceRoutine(alignAndShoot)); // Set up SysId routines
+    autoChooser.addRoutine("Depot + Climb", () -> autos.depotAndClimb()); // Set up SysId routines
 
     SmartDashboard.putData("CHOREO", autoChooser);
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
@@ -282,7 +278,7 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-    // align to shoot on right bumper 
+    // align to shoot on right bumper
     controller
         .rightBumper()
         .onTrue(
@@ -306,14 +302,14 @@ public class RobotContainer {
     // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, spits out
     // fuel.
     controller
-        .b()
+        .a()
         .onTrue(
             Commands.either(
                 Commands.either(hopper.shootCMD(), Commands.none(), shooter::atSpeed),
                 Commands.sequence(shooter.flywheelCMD(() -> 10), hopper.shootCMD()),
                 controller.rightBumper()::getAsBoolean));
 
-    controller.b().onFalse(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
+    controller.a().onFalse(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
     /**
      * DriveCommands.joystickOrbitDrive( drive, () -> -controller.getLeftY(), () ->
      * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
@@ -334,7 +330,7 @@ public class RobotContainer {
     operator.povRight().toggleOnTrue(deploy.deployCMD());
     operator.povRight().toggleOnFalse(deploy.undeployCMD());
 
-    //climbs
+    // climbs
     operator.povUp().onTrue(climber.raiseCMD());
     operator.povDown().onTrue(climber.pullCMD());
 
@@ -347,6 +343,24 @@ public class RobotContainer {
                   robotRelative = !robotRelative;
                   SmartDashboard.putBoolean("Robot Relative Drive", robotRelative);
                 }));
+
+    // slow mode
+    controller
+        .povLeft()
+        .onTrue(
+            DriveCommands.joystickDrive(
+                    drive,
+                    () -> {
+                      return controller.getLeftY() * DriveConstants.SLOWMODE;
+                    },
+                    () -> {
+                      return controller.getLeftX() * DriveConstants.SLOWMODE;
+                    },
+                    () -> {
+                      return controller.getRightX() * DriveConstants.SLOWMODE;
+                    },
+                    () -> robotRelative)
+                .until(() -> !controller.rightBumper().getAsBoolean()));
     // activates the shooter without the hopper, meant for unclogging the shooter or if something
     // goes wrong.
     // activates the shooter and hopper, meant for shooting fuel.
@@ -376,7 +390,7 @@ public class RobotContainer {
                 () -> Rotation2d.kZero,
                 () -> robotRelative));
 
-    // align to shoot on right bumper 
+    // align to shoot on right bumper
     controller
         .rightBumper()
         .onTrue(
