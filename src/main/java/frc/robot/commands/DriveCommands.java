@@ -23,7 +23,9 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.shooter.Shooter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -174,12 +176,18 @@ public class DriveCommands {
    *
    * @param target Translation2d to look at
    */
-  public static Command joystickOrbitDrive(
+  public static Command joystickAlignDrive(
       Drive drive,
+      Shooter shooter,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
-      Translation2d target,
       BooleanSupplier robotRelative) {
+
+    Supplier<Translation2d> target =
+        () ->
+            DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+                ? FieldConstants.HUB_POSE_RED
+                : FieldConstants.HUB_POSE_BLUE;
 
     return Commands.parallel(
         joystickDriveAtAngle(
@@ -189,17 +197,21 @@ public class DriveCommands {
             () ->
                 Rotation2d.fromRadians(
                     Math.atan2(
-                            target.getY() - drive.getPose().getY(),
-                            target.getX() - drive.getPose().getX())
+                            target.get().getY() - drive.getPose().getY(),
+                            target.get().getX() - drive.getPose().getX())
                         + 1.67), // a bit more than a quarter turn
             robotRelative),
+        shooter.flywheelCMD(
+            () -> {
+              return drive.getPose().getTranslation().getDistance(target.get());
+            }),
         Commands.run(
             () ->
                 SmartDashboard.putNumber(
                     "orbit radius",
                     Math.hypot(
-                        target.getY() - drive.getPose().getY(),
-                        target.getX() - drive.getPose().getX()))));
+                        target.get().getY() - drive.getPose().getY(),
+                        target.get().getX() - drive.getPose().getX()))));
   }
 
   // create angle PID controller

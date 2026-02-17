@@ -139,8 +139,8 @@ public final class Constants {
   }
 
   public static class FieldConstants {
-    public static final Translation2d HUB_POSE_BLUE = new Translation2d(4.6, 4); // LIES FIX PLS
-    public static final Translation2d HUB_POSE_RED = new Translation2d(12, 4); // LIES FIX PLS
+    public static final Translation2d HUB_POSE_BLUE = new Translation2d(4.6, 4);
+    public static final Translation2d HUB_POSE_RED = new Translation2d(12, 4); // only slightly lies
   }
 
   public static enum Mode {

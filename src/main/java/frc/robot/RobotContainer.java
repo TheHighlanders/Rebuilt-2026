@@ -23,7 +23,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import frc.robot.Constants.*;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climber.Climber;
@@ -101,6 +100,7 @@ public class RobotContainer {
                 new VisionIOPhotonVision(camera3Name, robotToCamera3));
         shooter = new Shooter();
         hopper = new Hopper();
+        configureButtonBindings();
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -169,6 +169,8 @@ public class RobotContainer {
         fuelSim
             .start(); // enables the simulation to run (updateSim must still be called periodically)
 
+        configureAutoButtonBindings();
+
         break;
 
       default:
@@ -183,6 +185,7 @@ public class RobotContainer {
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         shooter = new Shooter();
         hopper = new Hopper();
+        configureButtonBindings();
 
         break;
     }
@@ -228,28 +231,11 @@ public class RobotContainer {
     alignAndShoot =
         Commands.deadline(
                 Commands.waitSeconds(8),
-                Commands.parallel(
-                    DriveCommands.joystickOrbitDrive( // /1---align
-                        drive,
-                        () -> 0,
-                        () -> 0,
-                        DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue
-                            ? FieldConstants.HUB_POSE_RED
-                            : FieldConstants.HUB_POSE_BLUE,
-                        () -> false),
+                Commands.sequence(
+                    DriveCommands.joystickAlignDrive(drive, shooter, () -> 0, () -> 0, () -> false),
                     Commands.sequence(
-                        hopper.shootCMD(),
-                        shooter.flywheelCMD(
-                            () -> {
-                              return drive
-                                  .getPose()
-                                  .getTranslation()
-                                  .getDistance(
-                                      DriverStation.getAlliance().orElse(Alliance.Red)
-                                              == Alliance.Blue
-                                          ? FieldConstants.HUB_POSE_BLUE
-                                          : FieldConstants.HUB_POSE_RED);
-                            }))))
+                        // Commands.waitUntil(() -> shooter.atSpeed()),
+                        hopper.shootCMD())))
             .andThen(Commands.parallel(shooter.stopCMD(), hopper.stopCMD()));
 
     // Set up auto routines
@@ -263,7 +249,6 @@ public class RobotContainer {
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
 
     // Configure the button bindings
-    configureButtonBindings();
   }
 
   /**
@@ -283,7 +268,7 @@ public class RobotContainer {
             () -> -controller.getRightX(),
             () -> robotRelative));
 
-    // Lock to 0° when Y button is held
+    // Lock to 0° when Y button is held - why?
     controller
         .y()
         .whileTrue(
@@ -297,31 +282,38 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
+    // align to shoot on right bumper 
     controller
         .rightBumper()
         .onTrue(
-            shooter.flywheelCMD(
-                () -> {
-                  return drive
-                      .getPose()
-                      .getTranslation()
-                      .getDistance(
-                          DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue
-                              ? FieldConstants.HUB_POSE_BLUE
-                              : FieldConstants.HUB_POSE_RED);
-                }));
+            Commands.parallel(
+                    DriveCommands.joystickAlignDrive(
+                        drive,
+                        shooter,
+                        () -> -controller.getLeftY(),
+                        () -> -controller.getLeftX(),
+                        () -> robotRelative), // / get position of april tag on blue basket,
+                    Commands.runOnce(
+                        () -> {
+                          SmartDashboard.putString(
+                              "shooter/aim",
+                              DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+                                  ? "RED"
+                                  : "BLUE");
+                        }))
+                .until(() -> !controller.rightBumper().getAsBoolean()));
 
     // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, spits out
     // fuel.
     controller
-        .leftBumper()
+        .b()
         .onTrue(
             Commands.either(
                 Commands.either(hopper.shootCMD(), Commands.none(), shooter::atSpeed),
                 Commands.sequence(shooter.flywheelCMD(() -> 10), hopper.shootCMD()),
                 controller.rightBumper()::getAsBoolean));
 
-    controller.leftBumper().onFalse(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
+    controller.b().onFalse(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
     /**
      * DriveCommands.joystickOrbitDrive( drive, () -> -controller.getLeftY(), () ->
      * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
@@ -339,25 +331,15 @@ public class RobotContainer {
     operator.y().onFalse(intake.stoptakeCMD());
 
     // deploys intake
-    controller.povRight().toggleOnTrue(deploy.deployCMD());
-    controller.povRight().toggleOnFalse(deploy.undeployCMD());
+    operator.povRight().toggleOnTrue(deploy.deployCMD());
+    operator.povRight().toggleOnFalse(deploy.undeployCMD());
 
-    // runs auto-align command on the hub
-    controller
-        .a()
-        .onTrue(
-            DriveCommands.joystickOrbitDrive(
-                    drive,
-                    () -> -controller.getLeftY(),
-                    () -> -controller.getLeftX(),
-                    DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-                        ? FieldConstants.HUB_POSE_RED
-                        : FieldConstants.HUB_POSE_BLUE,
-                    () -> robotRelative) // / get position of april tag on blue basket
-                .until(() -> !controller.a().getAsBoolean()));
+    //climbs
+    operator.povUp().onTrue(climber.raiseCMD());
+    operator.povDown().onTrue(climber.pullCMD());
 
     // toggles between robot- and field-relative drive
-    controller
+    operator
         .povDown()
         .onTrue(
             Commands.runOnce(
@@ -370,6 +352,72 @@ public class RobotContainer {
     // activates the shooter and hopper, meant for shooting fuel.
     operator.rightBumper().onTrue(hopper.clearCMD().andThen(shooter.flywheelCMD(() -> 10)));
     operator.rightBumper().onFalse(hopper.stopCMD());
+  }
+
+  public void configureAutoButtonBindings() {
+    robotRelative = false;
+    // Default command, normal field-relative drive
+    drive.setDefaultCommand(
+        DriveCommands.joystickDrive(
+            drive,
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () -> -controller.getRightX(),
+            () -> robotRelative));
+
+    // Lock to 0° when Y button is held - why?
+    controller
+        .y()
+        .whileTrue(
+            DriveCommands.joystickDriveAtAngle(
+                drive,
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                () -> Rotation2d.kZero,
+                () -> robotRelative));
+
+    // align to shoot on right bumper 
+    controller
+        .rightBumper()
+        .onTrue(
+            Commands.parallel(
+                    DriveCommands.joystickAlignDrive(
+                        drive,
+                        shooter,
+                        () -> -controller.getLeftY(),
+                        () -> -controller.getLeftX(),
+                        () -> robotRelative), // / get position of april tag on blue basket,
+                    Commands.runOnce(
+                        () -> {
+                          SmartDashboard.putString(
+                              "shooter/aim",
+                              DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+                                  ? "RED"
+                                  : "BLUE");
+                        }))
+                .until(() -> !controller.rightBumper().getAsBoolean()));
+
+    // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, spits out
+    // fuel.
+    controller
+        .b()
+        .onTrue(
+            Commands.either(
+                Commands.either(hopper.shootCMD(), Commands.none(), shooter::atSpeed),
+                Commands.sequence(shooter.flywheelCMD(() -> 10), hopper.shootCMD()),
+                controller.rightBumper()::getAsBoolean));
+
+    controller.b().onFalse(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
+
+    // toggles between robot- and field-relative drive
+    controller
+        .povDown()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  robotRelative = !robotRelative;
+                  SmartDashboard.putBoolean("Robot Relative Drive", robotRelative);
+                }));
   }
 
   /**
