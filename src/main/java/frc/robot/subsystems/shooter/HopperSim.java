@@ -27,9 +27,9 @@ public class HopperSim extends Hopper {
                           return ballsIn > 0;
                         }),
                     Commands.waitSeconds(0.3),
-                    shooter.shootCMD(),
                     runOnce(
                         () -> {
+                          shooter.shoot();
                           ballsIn--;
                         }))
                 .until(

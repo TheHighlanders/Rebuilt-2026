@@ -4,57 +4,59 @@
 
 package frc.robot.subsystems.shooter;
 
+import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import frc.robot.Constants.ShooterConstants;
 import java.util.function.DoubleSupplier;
 
 public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
-  TalonFX flywheel = new TalonFX(Constants.ShooterConstants.SHOOTERID);
-
-  // pid
-   TalonFXConfiguration shootController = new TalonFXConfiguration();
-
-  // Encoder: A sensor that measures the amount of rotations
-  RelativeEncoder flywheelEncoder;
+  TalonFX flywheel = new TalonFX(ShooterConstants.SHOOTERID);
 
   // PID
-  double kP = 0.1;
-  double kI = 0.0;
-  double kD = 3.0;
-  double targetRPM = 0.0;
+  TalonFXConfiguration config = new TalonFXConfiguration();
 
-  // pid config
-  SparkMaxConfig ShooterConfig = new SparkMaxConfig();
+  VelocityVoltage velocityVoltage = new VelocityVoltage(0).withSlot(0);
+  NeutralOut brake = new NeutralOut();
+
+  CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
+
+  double targetRPS;
 
   public Shooter() {
 
-    // initialize encoder
-    flywheelEncoder = flywheel.getEncoder();
+    config.Slot0.kS = 0.1;
+    config.Slot0.kV = 0.12;
+    config.Slot0.kP = ShooterConstants.kP;
+    config.Slot0.kI = ShooterConstants.kI;
+    config.Slot0.kD = ShooterConstants.kD;
 
-    // Set PID gains
-    ShooterConfig.closedLoop.p(kP).i(kI).d(kD);
-    // dropper config
-    flywheel.configure(
-        ShooterConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-    SmartDashboard.putNumber("PID/Shooter/kP", kP);
-    SmartDashboard.putNumber("PID/Shooter/kI", kI);
-    SmartDashboard.putNumber("PID/Shooter/kD", kD);
-    SmartDashboard.putNumber("PID/Shooter/Target RPM", 0.0);
-    SmartDashboard.putNumber("PID/KickWheel/Target RPM", 0.0);
+    config.Voltage.withPeakForwardVoltage(8).withPeakReverseVoltage(8);
+
+    currentLimits.StatorCurrentLimit = 80;
+    currentLimits.SupplyCurrentLowerLimit = -80;
+    currentLimits.StatorCurrentLimitEnable = true;
+
+    StatusCode status1 = StatusCode.StatusCodeNotInitialized;
+    StatusCode status2 = StatusCode.StatusCodeNotInitialized;
+    for (int i = 0; i < 6; ++i) {
+      status1 = flywheel.getConfigurator().apply(config);
+      status2 = flywheel.getConfigurator().apply(currentLimits);
+      if (status1.isOK() && status2.isOK()) break;
+      if (i > 5 && RobotBase.isReal())
+        throw new RuntimeException("Failed to apply flywheel config");
+    }
+
+    SmartDashboard.putNumber("Shooter/Target RPS", 0.0);
   }
 
   public void intake() {}
@@ -62,21 +64,27 @@ public class Shooter extends SubsystemBase {
   protected double calculate(double distanceMeters) {
     // TODO: wait until shooter is finalized
     double linearVelocity = 1.4 * distanceMeters + 6.1;
-    return linearVelocity * 193; // trust that makes it angular i did the (?) math:
+    return linearVelocity * 193 / 60; // trust that makes it angular i did the (?) math:
     // https://www.desmos.com/calculator/zroouacb64
   }
 
   public boolean atSpeed() {
-    return shootController.isAtSetpoint();
+    return Math.abs(flywheel.getVelocity().getValueAsDouble() - targetRPS) < 1;
   }
 
   public Command flywheelCMD(DoubleSupplier distance) {
 
     return Commands.run(
         () -> {
-          targetRPM = calculate(distance.getAsDouble());
-          SmartDashboard.putNumber("PID/Shooter/Target RPM", targetRPM);
-          shootController.setSetpoint(targetRPM, ControlType.kVelocity);
+          targetRPS = calculate(distance.getAsDouble());
+          flywheel.setControl(velocityVoltage.withVelocity(targetRPS));
+          SmartDashboard.putNumber(
+              "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
+          SmartDashboard.putNumber(
+              "Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
+          SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
+          SmartDashboard.putNumber(
+              "Shooter/Flywheel RPS", flywheel.getVelocity().getValueAsDouble());
         },
         this);
   }
@@ -84,45 +92,18 @@ public class Shooter extends SubsystemBase {
   public Command stopCMD() {
     return Commands.runOnce(
         () -> {
-          targetRPM = 0;
+          flywheel.setControl(brake);
         },
         this);
   }
 
-  @SuppressWarnings("unused")
   @Override
-  public void periodic() {
-
-    // if within 5 ft of AprilTag 25, then set targetRPM to low number. else shoot far-ish;
-    // Translation2d robot = getPose.get().getTranslation();
-    // Translation2d hub = aprilTagLayout.getTagPose(25).get().toPose2d().getTranslation();
-
-    // double distFromHub = hub.getDistance(robot);
-
-    // SmartDashboard.putNumber("Shooter/distanceFromHub", distFromHub);
-    // if (distFromHub < 1.524) {
-    //   targetRPM = 500;
-    // } else {
-    //   targetRPM = 2000;
-    // }
-
-    shootController.setSetpoint(targetRPM, ControlType.kVelocity);
-
-    SmartDashboard.putNumber("Shooter/targetRPM", targetRPM);
-    // For Elastic and Advtange Scope
-    double newP = SmartDashboard.getNumber("PID/Shooter/kP", kP);
-    double newI = SmartDashboard.getNumber("PID/Shooter/kI", kI);
-    double newD = SmartDashboard.getNumber("PID/Shooter/kD", kD);
-    // double newTTargetRPM = SmartDashboard.getNumber("PID/Shooter/Target RPM", targetRPM);
-
+  public void simulationPeriodic() {
     SmartDashboard.putNumber(
-        "PID/Shooter/Dropper Output", flywheelEncoder.getPosition()); // Setpoint
-
-    SmartDashboard.putNumber("PID/Shooter/Target RPM", shootController.getSetpoint()); //
-    // Setpoint
+        "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
     SmartDashboard.putNumber(
-        "PID/Shooter/Dropper Velocity", flywheelEncoder.getVelocity()); // Actual velocity
-
-    // SmartDashboard.updateValues();
+        "Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
+    SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
+    SmartDashboard.putNumber("Shooter/Flywheel RPS", flywheel.getVelocity().getValueAsDouble());
   }
 }

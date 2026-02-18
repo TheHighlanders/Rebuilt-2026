@@ -4,56 +4,53 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
-import com.revrobotics.sim.SparkMaxSim;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 // to implement
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.FuelSim;
 
 public class ShooterSim extends Shooter {
   private FuelSim fuelSim;
 
-  SparkMaxSim flywheelSim = new SparkMaxSim(flywheel, DCMotor.getKrakenX60(1));
+  private TalonFXSimState flywheelSimState = flywheel.getSimState();
+  private DCMotorSim flywheelSim =
+      new DCMotorSim(
+          LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60Foc(1), 0.01, 1),
+          DCMotor.getKrakenX60Foc(1));
 
   public ShooterSim(FuelSim fuelSim) {
     super();
     this.fuelSim = fuelSim;
+    flywheelSimState.setMotorType(TalonFXSimState.MotorType.KrakenX60);
   }
 
-  @Override
-  public boolean atSpeed() {
-    return flywheelSim.getVelocity() >= targetRPM - 10; // tolerance, trust
-  }
-
-  public Command shootCMD() {
-    return runOnce(
-        () -> {
-          fuelSim.launchFuel(
-              MetersPerSecond.of(
-                  (flywheelSim.getVelocity() / 60)
-                      * ShooterConstants.FLYWHEEL_RADIUS.in(Meters)
-                      * 2
-                      * Math.PI),
-              ShooterConstants.SHOOTER_HOOD,
-              Degrees.of(-90),
-              ShooterConstants.SHOOTER_RR_POS);
-        });
+  public void shoot() {
+    fuelSim.launchFuel(
+        MetersPerSecond.of(
+            flywheel.getVelocity().getValueAsDouble()
+                * ShooterConstants.FLYWHEEL_RADIUS.in(Meters)
+                * 2
+                * Math.PI),
+        ShooterConstants.SHOOTER_HOOD,
+        Degrees.of(-90),
+        ShooterConstants.SHOOTER_RR_POS);
   }
 
   @Override
   public void simulationPeriodic() {
-    // In this method, we update our simulation of what our arm is doing
-    // First, we set our "inputs" (voltages)
+    flywheelSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
 
-    // Next, we update it. The standard loop time is 20ms.
+    flywheelSim.setInputVoltage(
+        flywheelSimState.getMotorVoltage()
+            * Math.signum(
+                flywheelSimState.getTorqueCurrent())); // this is a terrible solution but idgaf atp
+    flywheelSim.update(0.02);
 
-    // Now, we update the Spark MAX
-    flywheelSim.iterate(
-        targetRPM, 12, // Simulated battery voltage, in Volts
-        0.02); // Time interval, in Seconds
-    SmartDashboard.putNumber("shootersim/flywheelspd", flywheelSim.getVelocity());
-    SmartDashboard.putNumber("shootersim/flywheelsetpoint", targetRPM);
+    flywheelSimState.setRawRotorPosition(flywheelSim.getAngularPosition());
+    flywheelSimState.setRotorVelocity(flywheelSim.getAngularVelocityRadPerSec());
   }
 }

@@ -239,6 +239,7 @@ public class RobotContainer {
     autos = new Autos(drive, deploy, intake, hopper, shooter, climber);
     //  autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoFactory.buildAutoChooser());
     autoChooser = new AutoChooser();
+    autoChooser.addRoutine("Simple Shoot", () -> autos.simpleShoot());
     autoChooser.addRoutine("Depot + Climb", () -> autos.depotAndClimb(true));
     autoChooser.addRoutine("Depot", () -> autos.depotAndClimb(false));
     autoChooser.addRoutine("Outpost + Climb", () -> autos.outpostAndClimb(true));

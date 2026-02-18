@@ -4,6 +4,8 @@ import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -45,6 +47,23 @@ public class Autos {
 
   private Command sendState(String state) {
     return Commands.runOnce(() -> SmartDashboard.putString("Auto/Auto State", state));
+  }
+
+  public AutoRoutine simpleShoot() {
+    AutoRoutine routine = autoFactory.newRoutine("");
+
+    routine
+        .active()
+        .onTrue(
+            Commands.runOnce(() -> drive.setPose(new Pose2d(2, 2, Rotation2d.fromDegrees(0))))//remove
+                .andThen(
+                    Commands.parallel(
+                        DriveCommands.joystickAlignDrive(
+                            drive, shooter, () -> 0, () -> 0, () -> true),
+                        Commands.sequence(
+                            Commands.waitUntil(shooter::atSpeed), hopper.shootCMD()))));
+
+    return routine;
   }
 
   public AutoRoutine depotAndClimb(boolean addClimb) {
@@ -89,13 +108,8 @@ public class Autos {
           .atTime("aligning")
           .onTrue(
               Commands.sequence(Commands.waitSeconds(1), sendState("Pulling!"), climber.pullCMD()));
-    } 
-    else {
-      collect
-          .doneDelayed(12)
-          .onTrue(
-              Commands.parallel(
-                hopper.stopCMD(), shooter.stopCMD()));
+    } else {
+      collect.doneDelayed(12).onTrue(Commands.parallel(hopper.stopCMD(), shooter.stopCMD()));
     }
 
     return routine;

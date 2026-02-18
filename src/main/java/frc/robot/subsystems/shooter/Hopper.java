@@ -10,16 +10,17 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import frc.robot.Constants.HopperConstants;
 
 public class Hopper extends SubsystemBase {
   /** Creates a new Hopper. */
-  SparkMax hopper = new SparkMax(Constants.HopperConstants.HOPPERID, MotorType.kBrushless);
+  SparkMax hopper = new SparkMax(HopperConstants.HOPPERID, MotorType.kBrushless);
 
-  SparkMax kicker = new SparkMax(Constants.ShooterConstants.KICKERID, MotorType.kBrushless);
+  SparkMax kicker = new SparkMax(HopperConstants.KICKERID, MotorType.kBrushless);
 
   double kP = 0.1;
   double kI = 0.0;
@@ -39,42 +40,44 @@ public class Hopper extends SubsystemBase {
   }
   // spins the motor inside the hopper
   public Command shootCMD() {
-    return runOnce(
+    return Commands.runOnce(
         () -> {
           kicker.set(1);
           hopper.set(1);
           // speed can be changed
-          DriverStation.reportWarning("StartHopper", false);
-        });
+          SmartDashboard.putString("Shooter/Hopper State", "Shooting");
+        },
+        this);
   }
   // stops the hopper
   public Command stopCMD() {
-    return runOnce(
+    return Commands.runOnce(
         () -> {
           kicker.set(0);
           hopper.set(0);
-          DriverStation.reportWarning("StopHopper", false);
-        });
+          SmartDashboard.putString("Shooter/Hopper State", "Stopped");
+        },
+        this);
   }
 
   // backdrives the hopper
   public Command backdriveCMD() {
-    return runOnce(
+    return Commands.runOnce(
         () -> {
           kicker.set(-1);
           hopper.set(-1);
-          DriverStation.reportWarning("BackdriveHopper", false);
-        });
+          SmartDashboard.putString("Shooter/Hopper State", "Backdriving");
+        }, this);
   }
 
   // clears the hopper
   public Command clearCMD() {
-    return runOnce(
+    return Commands.runOnce(
         () -> {
           kicker.set(1);
           hopper.set(-1);
-          DriverStation.reportWarning("ClearHopper", false);
-        });
+          SmartDashboard.putString("Shooter/Hopper State", "Clearing");
+        }, this);
   }
 
   @Override
