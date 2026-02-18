@@ -67,7 +67,8 @@ public class Hopper extends SubsystemBase {
           kicker.set(-1);
           hopper.set(-1);
           SmartDashboard.putString("Shooter/Hopper State", "Backdriving");
-        }, this);
+        },
+        this);
   }
 
   // clears the hopper
@@ -77,7 +78,8 @@ public class Hopper extends SubsystemBase {
           kicker.set(1);
           hopper.set(-1);
           SmartDashboard.putString("Shooter/Hopper State", "Clearing");
-        }, this);
+        },
+        this);
   }
 
   @Override

@@ -44,13 +44,10 @@ public class ShooterSim extends Shooter {
   public void simulationPeriodic() {
     flywheelSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
 
-    flywheelSim.setInputVoltage(
-        flywheelSimState.getMotorVoltage()
-            * Math.signum(
-                flywheelSimState.getTorqueCurrent())); // this is a terrible solution but idgaf atp
+    flywheelSim.setInputVoltage(flywheelSimState.getMotorVoltage());
     flywheelSim.update(0.02);
 
-    flywheelSimState.setRawRotorPosition(flywheelSim.getAngularPosition());
-    flywheelSimState.setRotorVelocity(flywheelSim.getAngularVelocityRadPerSec());
+    // flywheelSimState.setRawRotorPosition(flywheelSim.getAngularPosition());
+    flywheelSimState.setRotorVelocity(targetRPS); // not true but works for now
   }
 }

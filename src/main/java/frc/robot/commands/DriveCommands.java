@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double DEADBAND = 0.1;
@@ -45,6 +47,17 @@ public class DriveCommands {
   private static final double FF_RAMP_RATE = 0.1; // Volts/Sec
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
+
+  private static final ProfiledPIDController angleController =
+      new ProfiledPIDController(
+          ANGLE_KP,
+          ANGLE_KI,
+          ANGLE_KD,
+          new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+
+  public static Trigger aligned() {
+    return new Trigger(angleController::atSetpoint);
+  }
 
   private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
     // Apply deadband
@@ -115,14 +128,6 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       Supplier<Rotation2d> rotationSupplier,
       BooleanSupplier robotRelative) {
-
-    // Create PID controller
-    ProfiledPIDController angleController =
-        new ProfiledPIDController(
-            ANGLE_KP,
-            ANGLE_KI,
-            ANGLE_KD,
-            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
     angleController.enableContinuousInput(-Math.PI, Math.PI);
     angleController.setTolerance(Units.degreesToRadians(5));
 
@@ -186,8 +191,13 @@ public class DriveCommands {
     Supplier<Translation2d> target =
         () ->
             DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-                ? FieldConstants.HUB_POSE_RED
-                : FieldConstants.HUB_POSE_BLUE;
+                ? FieldConstants.HUB_POSE_RED.minus(
+                    new Translation2d(
+                        drive.getSpeeds().vxMetersPerSecond, drive.getSpeeds().vyMetersPerSecond))
+                : FieldConstants.HUB_POSE_BLUE.minus(
+                    new Translation2d(
+                        drive.getSpeeds().vxMetersPerSecond,
+                        drive.getSpeeds().vyMetersPerSecond)); // TEST
 
     return Commands.parallel(
         joystickDriveAtAngle(
@@ -205,13 +215,7 @@ public class DriveCommands {
             () -> {
               return drive.getPose().getTranslation().getDistance(target.get());
             }),
-        Commands.run(
-            () ->
-                SmartDashboard.putNumber(
-                    "orbit radius",
-                    Math.hypot(
-                        target.get().getY() - drive.getPose().getY(),
-                        target.get().getX() - drive.getPose().getX()))));
+        Commands.run(() -> Logger.recordOutput("Auto/Align Target", target.get())));
   }
 
   // create angle PID controller

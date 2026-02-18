@@ -55,13 +55,20 @@ public class Autos {
     routine
         .active()
         .onTrue(
-            Commands.runOnce(() -> drive.setPose(new Pose2d(2, 2, Rotation2d.fromDegrees(0))))//remove
+            Commands.runOnce(
+                    () -> drive.setPose(new Pose2d(2, 2, Rotation2d.fromDegrees(0)))) // remove
                 .andThen(
                     Commands.parallel(
                         DriveCommands.joystickAlignDrive(
                             drive, shooter, () -> 0, () -> 0, () -> true),
                         Commands.sequence(
-                            Commands.waitUntil(shooter::atSpeed), hopper.shootCMD()))));
+                            Commands.waitSeconds(10),
+                            Commands.waitUntil(
+                                () -> {
+                                  return shooter.atSpeed()
+                                      && DriveCommands.aligned().getAsBoolean();
+                                }),
+                            hopper.shootCMD()))));
 
     return routine;
   }
