@@ -77,6 +77,13 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
 
+    // Define Climber
+    climber = new Climber();
+    // Define Intake
+    intake = new Intake();
+    // Define Intake Deployer
+    deploy = new Deploy();
+
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
@@ -195,13 +202,6 @@ public class RobotContainer {
 
         break;
     }
-
-    // Define Climber
-    climber = new Climber();
-    // Define Intake
-    intake = new Intake(); // Fits outside because it's the same in both Real and Sim.
-    // Define Intake Deployer
-    deploy = new Deploy();
 
     testVisionSim =
         Commands.runOnce(() -> SmartDashboard.putNumber("failed tests", 0))

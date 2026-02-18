@@ -78,15 +78,15 @@ public class Autos {
         .onTrue(
             Commands.parallel(
                 sendState("Aligning!"),
-                climb.cmd(), 
-                climber.raiseCMD(), 
-                hopper.stopCMD(), 
+                climb.cmd(),
+                climber.raiseCMD(),
+                hopper.stopCMD(),
                 shooter.stopCMD()));
 
-    climb.atTime("aligning").onTrue(Commands.sequence(
-      Commands.waitSeconds(1),
-      sendState("Pulling!"),
-      climber.pullCMD()));
+    climb
+        .atTime("aligning")
+        .onTrue(
+            Commands.sequence(Commands.waitSeconds(1), sendState("Pulling!"), climber.pullCMD()));
 
     return routine;
   }
