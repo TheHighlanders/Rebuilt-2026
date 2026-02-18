@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.shooter;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -21,10 +23,10 @@ import java.util.function.DoubleSupplier;
 
 public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
-  SparkMax flywheel = new SparkMax(Constants.ShooterConstants.SHOOTERID, MotorType.kBrushless);
+  TalonFX flywheel = new TalonFX(Constants.ShooterConstants.SHOOTERID);
 
   // pid
-  SparkClosedLoopController shootController = flywheel.getClosedLoopController();
+   TalonFXConfiguration shootController = new TalonFXConfiguration();
 
   // Encoder: A sensor that measures the amount of rotations
   RelativeEncoder flywheelEncoder;
