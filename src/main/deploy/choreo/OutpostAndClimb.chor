@@ -76,7 +76,7 @@
  },
  "generationFeatures":[],
  "codegen":{
-  "root":"..\\C:\\Users\\Swick\\Documents\\GitHub\\Rebuilt-2026\\src\\main\\java",
+  "root":"",
   "genVars":true,
   "genTrajData":true,
   "useChoreoLib":true

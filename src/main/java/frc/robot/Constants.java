@@ -132,8 +132,8 @@ public final class Constants {
 
   public static class ShooterConstants {
 
-    public static final int SHOOTERID = 31;
-    public static final int KICKERID = 32;
+    public static final int SHOOTERID = 30;
+    public static final int KICKERID = 31;
     public static final Translation3d SHOOTER_RR_POS =
         new Translation3d(Meters.of(-0.1), Meters.of(0.3), Meters.of(0.27));
     public static final Angle SHOOTER_HOOD = Degrees.of(78);
