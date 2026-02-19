@@ -27,9 +27,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
-
-import static edu.wpi.first.units.Units.Radians;
-
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -65,7 +62,7 @@ public class DriveCommands {
                 drive.getSpeeds().vxMetersPerSecond,
                 drive.getSpeeds().vyMetersPerSecond)
                 .rotateBy(drive.getPose().getRotation())
-                .div(2);
+                .div(3);
 
     return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
         ? FieldConstants.HUB_POSE_RED
