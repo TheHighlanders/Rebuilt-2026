@@ -13,6 +13,8 @@ import static edu.wpi.first.units.Units.Meters;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -33,6 +35,8 @@ public final class Constants {
 
   public static final class DriveConstants {
     public static final double SLOWMODE = 0.7;
+    public static final Pose2d initialEstPose =
+        new Pose2d(Meters.of(2), Meters.of(2), Rotation2d.kZero);
   }
 
   public static final class VisionConstants {

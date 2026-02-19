@@ -62,7 +62,7 @@ public class Autos {
                         DriveCommands.joystickAlignDrive(
                             drive, shooter, () -> 0, () -> 0, () -> true),
                         Commands.sequence(
-                            Commands.waitSeconds(10),
+                            Commands.waitSeconds(1),
                             Commands.waitUntil(
                                 () -> {
                                   return shooter.atSpeed()

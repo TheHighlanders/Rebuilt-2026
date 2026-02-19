@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
@@ -54,6 +55,17 @@ public class DriveCommands {
           ANGLE_KI,
           ANGLE_KD,
           new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+
+  //@AutoLogOutput(key = "Auto/Target")
+  private static Translation2d getAlignTarget(ChassisSpeeds speeds) {
+    return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+        ? FieldConstants.HUB_POSE_RED
+        // .plus(
+        //     new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond))
+        : FieldConstants.HUB_POSE_BLUE;
+        // .plus(
+        //     new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond));
+  }
 
   public static Trigger aligned() {
     return new Trigger(angleController::atSetpoint);
@@ -188,16 +200,7 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       BooleanSupplier robotRelative) {
 
-    Supplier<Translation2d> target =
-        () ->
-            DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-                ? FieldConstants.HUB_POSE_RED.minus(
-                    new Translation2d(
-                        drive.getSpeeds().vxMetersPerSecond, drive.getSpeeds().vyMetersPerSecond))
-                : FieldConstants.HUB_POSE_BLUE.minus(
-                    new Translation2d(
-                        drive.getSpeeds().vxMetersPerSecond,
-                        drive.getSpeeds().vyMetersPerSecond)); // TEST
+    Supplier<Translation2d> target = () -> DriveCommands.getAlignTarget(drive.getSpeeds());
 
     return Commands.parallel(
         joystickDriveAtAngle(
@@ -215,7 +218,7 @@ public class DriveCommands {
             () -> {
               return drive.getPose().getTranslation().getDistance(target.get());
             }),
-        Commands.run(() -> Logger.recordOutput("Auto/Align Target", target.get())));
+        Commands.run(() -> Logger.recordOutput("Auto/Align Target", new Pose2d(target.get(), Rotation2d.kZero))));
   }
 
   // create angle PID controller

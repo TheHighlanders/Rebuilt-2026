@@ -296,7 +296,7 @@ public class RobotContainer {
                     Commands.runOnce(
                         () -> {
                           SmartDashboard.putString(
-                              "shooter/aim",
+                              "Shooter/aim",
                               DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
                                   ? "RED"
                                   : "BLUE");
@@ -408,7 +408,7 @@ public class RobotContainer {
                     Commands.runOnce(
                         () -> {
                           SmartDashboard.putString(
-                              "shooter/aim",
+                              "Shooter/aim",
                               DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
                                   ? "RED"
                                   : "BLUE");
