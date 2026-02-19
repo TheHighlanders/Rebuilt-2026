@@ -27,6 +27,9 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
+
+import static edu.wpi.first.units.Units.Radians;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -57,14 +60,18 @@ public class DriveCommands {
           new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
 
   //@AutoLogOutput(key = "Auto/Target")
-  private static Translation2d getAlignTarget(ChassisSpeeds speeds) {
+  private static Translation2d getAlignTarget(Drive drive) {
+    Translation2d movementComp = new Translation2d(
+                drive.getSpeeds().vxMetersPerSecond,
+                drive.getSpeeds().vyMetersPerSecond)
+                .rotateBy(drive.getPose().getRotation())
+                .div(2);
+
     return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
         ? FieldConstants.HUB_POSE_RED
-        // .plus(
-        //     new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond))
-        : FieldConstants.HUB_POSE_BLUE;
-        // .plus(
-        //     new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond));
+        .minus(movementComp)
+        : FieldConstants.HUB_POSE_BLUE
+        .minus(movementComp);
   }
 
   public static Trigger aligned() {
@@ -200,7 +207,8 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       BooleanSupplier robotRelative) {
 
-    Supplier<Translation2d> target = () -> DriveCommands.getAlignTarget(drive.getSpeeds());
+    Supplier<Translation2d> target = () -> 
+        DriveCommands.getAlignTarget(drive);
 
     return Commands.parallel(
         joystickDriveAtAngle(
