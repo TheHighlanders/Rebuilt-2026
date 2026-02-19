@@ -34,8 +34,8 @@ public final class Constants {
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
   public static final class DriveConstants {
-    public static final double SLOWMODE = 0.7;
-    public static final Pose2d initialEstPose =
+    public static final double SLOWMODE = 0.5;
+    public static final Pose2d POSE_RESET =
         new Pose2d(Meters.of(2), Meters.of(2), Rotation2d.kZero);
   }
 

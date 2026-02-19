@@ -34,14 +34,13 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double DEADBAND = 0.1;
-  private static final double ANGLE_KP = 50.0;
-  private static final double ANGLE_KI = 0.5;
-  private static final double ANGLE_KD = 1;
+  private static final double ANGLE_KP = 30.0;
+  private static final double ANGLE_KI = 0;
+  private static final double ANGLE_KD = 0;
   private static final double ANGLE_MAX_VELOCITY = 8.0;
   private static final double ANGLE_MAX_ACCELERATION = 20.0;
   private static final double FF_START_DELAY = 2.0; // Secs
@@ -56,19 +55,16 @@ public class DriveCommands {
           ANGLE_KD,
           new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
 
-  //@AutoLogOutput(key = "Auto/Target")
+  // @AutoLogOutput(key = "Auto/Target")
   private static Translation2d getAlignTarget(Drive drive) {
-    Translation2d movementComp = new Translation2d(
-                drive.getSpeeds().vxMetersPerSecond,
-                drive.getSpeeds().vyMetersPerSecond)
-                .rotateBy(drive.getPose().getRotation())
-                .div(3);
+    Translation2d movementComp = Translation2d.kZero;
+    // new Translation2d(drive.getSpeeds().vxMetersPerSecond, drive.getSpeeds().vyMetersPerSecond)
+    //     .rotateBy(drive.getPose().getRotation())
+    //     .div(3);
 
     return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-        ? FieldConstants.HUB_POSE_RED
-        .minus(movementComp)
-        : FieldConstants.HUB_POSE_BLUE
-        .minus(movementComp);
+        ? FieldConstants.HUB_POSE_RED.minus(movementComp)
+        : FieldConstants.HUB_POSE_BLUE.minus(movementComp);
   }
 
   public static Trigger aligned() {
@@ -204,8 +200,7 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       BooleanSupplier robotRelative) {
 
-    Supplier<Translation2d> target = () -> 
-        DriveCommands.getAlignTarget(drive);
+    Supplier<Translation2d> target = () -> DriveCommands.getAlignTarget(drive);
 
     return Commands.parallel(
         joystickDriveAtAngle(
@@ -223,7 +218,10 @@ public class DriveCommands {
             () -> {
               return drive.getPose().getTranslation().getDistance(target.get());
             }),
-        Commands.run(() -> Logger.recordOutput("Auto/Align Target", new Pose2d(target.get(), Rotation2d.kZero))));
+        Commands.run(
+            () ->
+                Logger.recordOutput(
+                    "Auto/Align Target", new Pose2d(target.get(), Rotation2d.kZero))));
   }
 
   // create angle PID controller

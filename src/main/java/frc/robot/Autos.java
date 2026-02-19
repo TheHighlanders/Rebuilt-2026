@@ -49,6 +49,21 @@ public class Autos {
     return Commands.runOnce(() -> SmartDashboard.putString("Auto/Auto State", state));
   }
 
+  public AutoRoutine test() {
+    AutoRoutine routine = autoFactory.newRoutine("Test");
+
+    AutoTrajectory square = routine.trajectory("TestSquare");
+    AutoTrajectory turn = routine.trajectory("TestSquareTurn");
+
+    routine.active().onTrue(Commands.sequence(square.resetOdometry(), square.cmd()));
+
+    square
+        .done()
+        .onTrue(Commands.sequence(Commands.waitSeconds(2), turn.resetOdometry(), turn.cmd()));
+
+    return routine;
+  }
+
   public AutoRoutine simpleShoot() {
     AutoRoutine routine = autoFactory.newRoutine("");
 

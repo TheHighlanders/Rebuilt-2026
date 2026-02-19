@@ -239,6 +239,7 @@ public class RobotContainer {
     autos = new Autos(drive, deploy, intake, hopper, shooter, climber);
     //  autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoFactory.buildAutoChooser());
     autoChooser = new AutoChooser();
+    autoChooser.addRoutine("Test", () -> autos.test());
     autoChooser.addRoutine("Simple Shoot", () -> autos.simpleShoot());
     autoChooser.addRoutine("Depot + Climb", () -> autos.depotAndClimb(true));
     autoChooser.addRoutine("Depot", () -> autos.depotAndClimb(false));
@@ -314,6 +315,8 @@ public class RobotContainer {
                 controller.rightBumper()::getAsBoolean));
 
     controller.a().onFalse(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
+
+    controller.povRight().onTrue(Commands.runOnce(() -> drive.setPose(DriveConstants.POSE_RESET)));
     /**
      * DriveCommands.joystickOrbitDrive( drive, () -> -controller.getLeftY(), () ->
      * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
@@ -339,7 +342,7 @@ public class RobotContainer {
     operator.povDown().onTrue(climber.pullCMD());
 
     // toggles between robot- and field-relative drive
-    operator
+    controller // operator
         .povDown()
         .onTrue(
             Commands.runOnce(
