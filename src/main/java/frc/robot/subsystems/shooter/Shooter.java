@@ -4,13 +4,13 @@
 
 package frc.robot.subsystems.shooter;
 
-import com.ctre.phoenix6.StatusCode;
+import static frc.robot.util.PhoenixUtil.*;
+
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -46,15 +46,8 @@ public class Shooter extends SubsystemBase {
     currentLimits.SupplyCurrentLowerLimit = -80;
     currentLimits.StatorCurrentLimitEnable = true;
 
-    StatusCode status1 = StatusCode.StatusCodeNotInitialized;
-    StatusCode status2 = StatusCode.StatusCodeNotInitialized;
-    for (int i = 0; i < 6; ++i) {
-      status1 = flywheel.getConfigurator().apply(config);
-      status2 = flywheel.getConfigurator().apply(currentLimits);
-      if (status1.isOK() && status2.isOK()) break;
-      if (i > 5 && RobotBase.isReal())
-        throw new RuntimeException("Failed to apply flywheel config");
-    }
+    tryUntilOk(5, () -> flywheel.getConfigurator().apply(config));
+    tryUntilOk(5, () -> flywheel.getConfigurator().apply(currentLimits));
 
     SmartDashboard.putNumber("Shooter/Target RPS", 0.0);
   }

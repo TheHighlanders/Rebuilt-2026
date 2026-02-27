@@ -182,7 +182,7 @@ public class RobotContainer {
         fuelSim
             .start(); // enables the simulation to run (updateSim must still be called periodically)
 
-        configureAutoButtonBindings();
+        configureButtonBindingsOneController();
 
         break;
 
@@ -269,17 +269,10 @@ public class RobotContainer {
             () -> -controller.getRightX(),
             () -> robotRelative));
 
-    // Lock to 0° when Y button is held - why?
-    controller
-        .y()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
-                () -> Rotation2d.kZero,
-                () -> robotRelative));
 
+    /* DRIVER BINDINGS */
+
+    /* RIGHT SIDE---SHOOTING */
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
@@ -287,44 +280,41 @@ public class RobotContainer {
     controller
         .rightBumper()
         .onTrue(
-            Commands.parallel(
-                    DriveCommands.joystickAlignDrive(
-                        drive,
-                        shooter,
-                        () -> -controller.getLeftY(),
-                        () -> -controller.getLeftX(),
-                        () -> robotRelative), // / get position of april tag on blue basket,
-                    Commands.runOnce(
-                        () -> {
-                          SmartDashboard.putString(
-                              "Shooter/aim",
-                              DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-                                  ? "RED"
-                                  : "BLUE");
-                        }))
+                DriveCommands.joystickAlignDrive(
+                    drive,
+                    shooter,
+                    () -> -controller.getLeftY(),
+                    () -> -controller.getLeftX(),
+                    () -> robotRelative)
                 .until(() -> !controller.rightBumper().getAsBoolean()));
 
-    // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, spits out
-    // fuel.
+    // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, clears hopper.
     controller
         .a()
         .onTrue(
             Commands.either(
                 Commands.either(hopper.shootCMD(), Commands.none(), shooter::atSpeed),
-                Commands.sequence(shooter.flywheelCMD(() -> 10), hopper.shootCMD()),
+                Commands.parallel(shooter.flywheelCMD(() -> 10), hopper.backdriveCMD()),
                 controller.rightBumper()::getAsBoolean));
 
     controller.a().onFalse(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
 
-    controller.povRight().onTrue(Commands.runOnce(() -> drive.setPose(DriveConstants.POSE_RESET)));
-    /**
-     * DriveCommands.joystickOrbitDrive( drive, () -> -controller.getLeftY(), () ->
-     * -controller.getLeftX(), aprilTagLayout.getTagPose(28).get().toPose2d()));// Pose2d(5, 5,
-     * Rotation2d.kZero)));
-     */
+    // spits out fuel manually
+    controller
+        .rightTrigger()
+        .onTrue(
+            Commands.parallel(
+                shooter.flywheelCMD(() -> controller.getRightTriggerAxis() * 15),
+                Commands.sequence(
+                    Commands.waitUntil(shooter::atSpeed),
+                    hopper.shootCMD()
+                )
+            )
+        );
 
-    /* operator controlls port 1 */
+    /* OPERATOR BINDINGS */
 
+    /* RIGHT SIDE---INTAKE */
     // runs intake
     operator.b().onTrue(intake.intakeCMD());
     operator.b().onFalse(intake.stoptakeCMD());
@@ -334,16 +324,14 @@ public class RobotContainer {
     operator.y().onFalse(intake.stoptakeCMD());
 
     // deploys intake
-    operator.povRight().toggleOnTrue(deploy.deployCMD());
-    operator.povRight().toggleOnFalse(deploy.undeployCMD());
+    operator.a().toggleOnTrue(deploy.deployCMD());
+    operator.a().toggleOnFalse(deploy.undeployCMD());
 
-    // climbs
-    operator.povUp().onTrue(climber.raiseCMD());
-    operator.povDown().onTrue(climber.pullCMD());
+    /* LEFT SIDE---DRIVE CONFIG */
 
     // toggles between robot- and field-relative drive
-    controller // operator
-        .povDown()
+    operator
+        .povLeft()
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -352,30 +340,49 @@ public class RobotContainer {
                 }));
 
     // slow mode
-    controller
-        .povLeft()
-        .onTrue(
+    operator
+        .povDown()
+        .toggleOnTrue(
             DriveCommands.joystickDrive(
-                    drive,
-                    () -> {
-                      return controller.getLeftY() * DriveConstants.SLOWMODE;
-                    },
-                    () -> {
-                      return controller.getLeftX() * DriveConstants.SLOWMODE;
-                    },
-                    () -> {
-                      return controller.getRightX() * DriveConstants.SLOWMODE;
-                    },
-                    () -> robotRelative)
-                .until(() -> !controller.rightBumper().getAsBoolean()));
-    // activates the shooter without the hopper, meant for unclogging the shooter or if something
-    // goes wrong.
-    // activates the shooter and hopper, meant for shooting fuel.
-    operator.rightBumper().onTrue(hopper.clearCMD().andThen(shooter.flywheelCMD(() -> 10)));
-    operator.rightBumper().onFalse(hopper.stopCMD());
+                drive,
+                () -> -controller.getLeftY() * DriveConstants.SLOWMODE,
+                () -> -controller.getLeftX() * DriveConstants.SLOWMODE,
+                () -> -controller.getRightX() * DriveConstants.SLOWMODE,
+                () -> robotRelative));
+    operator
+        .povDown()
+        .toggleOnFalse(
+            DriveCommands.joystickDrive(
+                drive,
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                () -> -controller.getRightX(),
+                () -> robotRelative));
+
+    /* TRIGGERS---CLIMBING */
+
+    // hold left and right triggers for 0.5 seconds to auto-climb
+    operator.leftBumper()
+        .and(operator.rightBumper())
+        .onTrue(
+            Commands.sequence(
+                Commands.waitSeconds(0.5),
+                Commands.either(
+                    climber.raiseCMD(),//auto climb command
+                    Commands.none(),
+                    operator.leftBumper()
+                        .and(operator.rightBumper())::getAsBoolean)
+            ));
+
+    // backup---raise and lower climber with trigger
+    operator.leftTrigger(0.95)
+        .onTrue(climber.raiseCMD());
+    operator.leftTrigger(0.1)
+        .onFalse(climber.pullCMD());
+
   }
 
-  public void configureAutoButtonBindings() {
+  public void configureButtonBindingsOneController() {
     robotRelative = false;
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
@@ -386,59 +393,101 @@ public class RobotContainer {
             () -> -controller.getRightX(),
             () -> robotRelative));
 
-    // Lock to 0° when Y button is held - why?
-    controller
-        .y()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
-                () -> Rotation2d.kZero,
-                () -> robotRelative));
-
     // align to shoot on right bumper
     controller
         .rightBumper()
         .onTrue(
-            Commands.parallel(
-                    DriveCommands.joystickAlignDrive(
-                        drive,
-                        shooter,
-                        () -> -controller.getLeftY(),
-                        () -> -controller.getLeftX(),
-                        () -> robotRelative), // / get position of april tag on blue basket,
-                    Commands.runOnce(
-                        () -> {
-                          SmartDashboard.putString(
-                              "Shooter/aim",
-                              DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-                                  ? "RED"
-                                  : "BLUE");
-                        }))
+                DriveCommands.joystickAlignDrive(
+                    drive,
+                    shooter,
+                    () -> -controller.getLeftY(),
+                    () -> -controller.getLeftX(),
+                    () -> robotRelative)
                 .until(() -> !controller.rightBumper().getAsBoolean()));
 
-    // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, spits out
-    // fuel.
+    // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, clears shooter
     controller
         .b()
         .onTrue(
             Commands.either(
-                Commands.either(hopper.shootCMD(), Commands.none(), shooter::atSpeed),
-                Commands.sequence(shooter.flywheelCMD(() -> 10), hopper.shootCMD()),
+                Commands.either(
+                    hopper.shootCMD(), 
+                    Commands.none(), 
+                    shooter::atSpeed),
+                Commands.sequence(shooter.flywheelCMD(() -> 10), hopper.backdriveCMD()),
                 controller.rightBumper()::getAsBoolean));
 
     controller.b().onFalse(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
 
+    // spits out fuel manually
+    controller
+        .rightTrigger()
+        .onTrue(
+            Commands.parallel(
+                shooter.flywheelCMD(() -> controller.getRightTriggerAxis() * 15),
+                Commands.sequence(
+                    Commands.waitUntil(shooter::atSpeed),
+                    hopper.shootCMD()
+                )
+            )
+        );
+
+    
+    // runs intake
+    controller.x().onTrue(intake.intakeCMD());
+    controller.x().onFalse(intake.stoptakeCMD());
+
+    // runs intake backwards
+    controller.y().onTrue(intake.spitakeCMD());
+    controller.y().onFalse(intake.stoptakeCMD());
+
+    // deploys intake
+    controller.a().toggleOnTrue(deploy.deployCMD());
+    controller.a().toggleOnFalse(deploy.undeployCMD());
+
     // toggles between robot- and field-relative drive
     controller
-        .povDown()
+        .povLeft()
         .onTrue(
             Commands.runOnce(
                 () -> {
                   robotRelative = !robotRelative;
                   SmartDashboard.putBoolean("Robot Relative Drive", robotRelative);
                 }));
+    //slowmode
+    controller
+        .povDown()
+        .toggleOnTrue(
+            DriveCommands.joystickDrive(
+                drive,
+                () -> -controller.getLeftY() * DriveConstants.SLOWMODE,
+                () -> -controller.getLeftX() * DriveConstants.SLOWMODE,
+                () -> -controller.getRightX() * DriveConstants.SLOWMODE,
+                () -> robotRelative));
+    controller
+        .povDown()
+        .toggleOnFalse(DriveCommands.joystickDrive(
+                drive,
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                () -> -controller.getRightX(),
+                () -> robotRelative));
+    
+    //climbing on the left trigger side
+    controller
+        .leftBumper()
+        .onTrue(
+            Commands.sequence(
+                Commands.waitSeconds(0.5),
+                Commands.either(
+                    climber.raiseCMD(), 
+                    Commands.none(), 
+                    controller.leftBumper()::getAsBoolean)));
+                    
+    controller.leftTrigger(0.95)
+        .onTrue(climber.raiseCMD());
+    controller.leftTrigger(0.1)
+        .onFalse(climber.pullCMD());
   }
 
   /**

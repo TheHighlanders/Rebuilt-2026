@@ -30,7 +30,7 @@ public class Deploy extends SubsystemBase {
 
   public Deploy() {
     config.smartCurrentLimit(50).idleMode(IdleMode.kBrake);
-    config.encoder.positionConversionFactor(0).velocityConversionFactor(0);
+    config.encoder.positionConversionFactor(1).velocityConversionFactor(1);
     config
         .closedLoop
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
