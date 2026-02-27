@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
@@ -224,79 +225,40 @@ public class DriveCommands {
                     "Auto/Align Target", new Pose2d(target.get(), Rotation2d.kZero))));
   }
 
-  // create angle PID controller
   /**
-   * ProfiledPIDController angleController = new ProfiledPIDController( 1, 0, 0.5, new
-   * TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+   * Field relative drive command where joystick controlls linear velocity and robot is continuously
+   * towards a point on the field. Useful for orbitting shooting targets
    *
-   * <p>angleController.enableContinuousInput(-Math.PI, Math.PI);
-   * angleController.setTolerance(Units.degreesToRadians(5));
-   *
-   * <p>return Commands.run( () -> { Rotation2d rotationTarget = Rotation2d.fromRadians( Math.atan2(
-   * // find relative angle of robot to orbit pose target.getY() - drive.getPose().getY(),
-   * target.getX() - drive.getPose().getX()));
-   *
-   * <p>double radiansOff = drive.getPose().getRotation().getRadians() -
-   * rotationTarget.getRadians();
-   *
-   * <p>double orbitControllerOutput = angleController.calculate(radiansOff, 0); double orbitPIDXOut
-   * = xSupplier.getAsDouble(); double orbitPIDYOut = ySupplier.getAsDouble();
-   *
-   * <p>drive.runVelocity( ChassisSpeeds.fromRobotRelativeSpeeds( orbitPIDXOut, orbitPIDYOut,
-   * orbitControllerOutput, drive.getPose().getRotation())); }, drive)
-   *
-   * <p>// Reset PID controller when command starts .beforeStarting(() ->
-   * angleController.reset(drive.getRotation().getRadians())); }
+   * @param target Translation2d to look at
    */
-  /** pid look at thingy */
-  public static Command lookAt(
+  public static Command joystickPointDrive(
       Drive drive,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
-      Supplier<Rotation2d> rotationSupplier) {
+      DoubleSupplier angleXSupplier,
+      DoubleSupplier angleYSupplier,
+      BooleanSupplier robotRelative) {
 
-    // Create PID controller
-    ProfiledPIDController angleController =
-        new ProfiledPIDController(
-            1,
-            0,
-            0.02,
-            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
-    angleController.enableContinuousInput(-Math.PI, Math.PI);
-
-    // Construct command
-    return Commands.run(
+    return Commands.either(
+            joystickDriveAtAngle(
+                drive,
+                xSupplier,
+                ySupplier,
+                () ->
+                    Rotation2d.fromRadians(
+                        Math.atan2(
+                                angleYSupplier.getAsDouble(),
+                                angleXSupplier.getAsDouble())),
+                robotRelative),
+            joystickDrive(
+                drive,
+                xSupplier,
+                ySupplier,
+                () -> { return 0;},
+                robotRelative),
             () -> {
-
-              // Get linear velocity
-              Translation2d linearVelocity =
-                  getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
-
-              // Calculate angular speed
-              double omega =
-                  angleController.calculate(
-                      drive.getRotation().getRadians(), rotationSupplier.get().getRadians());
-
-              // Convert to field relative speeds & send command
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                      omega);
-              boolean isFlipped =
-                  DriverStation.getAlliance().isPresent()
-                      && DriverStation.getAlliance().get() == Alliance.Red;
-              drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds,
-                      isFlipped
-                          ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                          : drive.getRotation()));
-            },
-            drive)
-
-        // Reset PID controller when command starts
-        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+                return Math.hypot(angleXSupplier.getAsDouble(), angleYSupplier.getAsDouble()) > DriveConstants.POINT_DEADBAND;
+            });
   }
 
   /**

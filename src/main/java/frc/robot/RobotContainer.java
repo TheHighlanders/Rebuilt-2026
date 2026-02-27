@@ -13,8 +13,6 @@ import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -64,6 +62,7 @@ public class RobotContainer {
   private final CommandXboxController operator = new CommandXboxController(1);
 
   private boolean robotRelative;
+  private double speed;
 
   // Dashboard inputs
   //  private final LoggedDashboardChooser<Command> autoChooser;
@@ -260,13 +259,14 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     robotRelative = false;
+    speed = 1;
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightX(),
+            () -> -controller.getLeftY() * speed,
+            () -> -controller.getLeftX() * speed,
+            () -> -controller.getRightX() * speed,
             () -> robotRelative));
 
 
@@ -283,8 +283,8 @@ public class RobotContainer {
                 DriveCommands.joystickAlignDrive(
                     drive,
                     shooter,
-                    () -> -controller.getLeftY(),
-                    () -> -controller.getLeftX(),
+                    () -> -controller.getLeftY() * speed,
+                    () -> -controller.getLeftX() * speed,// maybe implement a hard cap here, we'll see
                     () -> robotRelative)
                 .until(() -> !controller.rightBumper().getAsBoolean()));
 
@@ -342,22 +342,27 @@ public class RobotContainer {
     // slow mode
     operator
         .povDown()
-        .toggleOnTrue(
-            DriveCommands.joystickDrive(
-                drive,
-                () -> -controller.getLeftY() * DriveConstants.SLOWMODE,
-                () -> -controller.getLeftX() * DriveConstants.SLOWMODE,
-                () -> -controller.getRightX() * DriveConstants.SLOWMODE,
-                () -> robotRelative));
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                    speed -= 0.1;
+                    if (speed < DriveConstants.SLOWMODE) speed = 1;
+                  SmartDashboard.putNumber("Drive/Speed", speed);
+                }));
+    
+    // point turn mode
     operator
-        .povDown()
-        .toggleOnFalse(
-            DriveCommands.joystickDrive(
+        .povRight()
+        .onTrue(
+            DriveCommands.joystickPointDrive(
                 drive,
-                () -> -controller.getLeftY(),
+                () -> -controller.getLeftY() * speed,
+                () -> -controller.getLeftX() * speed,
+                () -> -controller.getRightY(),
                 () -> -controller.getLeftX(),
-                () -> -controller.getRightX(),
-                () -> robotRelative));
+                () -> robotRelative)
+                .until(() -> !operator.povRight().getAsBoolean()));
+
 
     /* TRIGGERS---CLIMBING */
 
@@ -388,9 +393,9 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightX(),
+            () -> -controller.getLeftY() * speed,
+            () -> -controller.getLeftX() * speed,
+            () -> -controller.getRightX() * speed,
             () -> robotRelative));
 
     // align to shoot on right bumper
@@ -400,8 +405,8 @@ public class RobotContainer {
                 DriveCommands.joystickAlignDrive(
                     drive,
                     shooter,
-                    () -> -controller.getLeftY(),
-                    () -> -controller.getLeftX(),
+                    () -> -controller.getLeftY() * speed,
+                    () -> -controller.getLeftX() * speed,
                     () -> robotRelative)
                 .until(() -> !controller.rightBumper().getAsBoolean()));
 
@@ -454,24 +459,29 @@ public class RobotContainer {
                   robotRelative = !robotRelative;
                   SmartDashboard.putBoolean("Robot Relative Drive", robotRelative);
                 }));
-    //slowmode
+    // slowmode
     controller
         .povDown()
-        .toggleOnTrue(
-            DriveCommands.joystickDrive(
-                drive,
-                () -> -controller.getLeftY() * DriveConstants.SLOWMODE,
-                () -> -controller.getLeftX() * DriveConstants.SLOWMODE,
-                () -> -controller.getRightX() * DriveConstants.SLOWMODE,
-                () -> robotRelative));
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                    speed -= 0.1;
+                    if (speed < DriveConstants.SLOWMODE) speed = 1;
+                  SmartDashboard.putNumber("Drive/Speed", speed);
+                }));
+    
+    // point turn mode
     controller
-        .povDown()
-        .toggleOnFalse(DriveCommands.joystickDrive(
+        .povRight()
+        .onTrue(
+            DriveCommands.joystickPointDrive(
                 drive,
-                () -> -controller.getLeftY(),
+                () -> -controller.getLeftY() * speed,
+                () -> -controller.getLeftX() * speed,
+                () -> -controller.getRightY(),
                 () -> -controller.getLeftX(),
-                () -> -controller.getRightX(),
-                () -> robotRelative));
+                () -> robotRelative)
+                .until(() -> !controller.povRight().getAsBoolean()));
     
     //climbing on the left trigger side
     controller
