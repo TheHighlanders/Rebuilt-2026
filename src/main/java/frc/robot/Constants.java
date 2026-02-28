@@ -113,7 +113,7 @@ public final class Constants {
   public final class HopperConstants {
 
     public static final int HOPPERID = 21;
-    public static final int KICKERID = 32;
+    public static final int KICKERID = 31;
   }
 
   public static class IntakeConstants {
@@ -137,7 +137,7 @@ public final class Constants {
 
   public static class ShooterConstants {
 
-    public static final int SHOOTERID = 31;
+    public static final int SHOOTERID = 32;
 
     public static final double kP = 0.11;
     public static final double kI = 0;
