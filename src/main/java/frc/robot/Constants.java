@@ -102,7 +102,6 @@ public final class Constants {
 
   public static class ClimberConstants {
     public static final int CLIMBERID = 51;
-    public static final double CLIMBER_SPEED = 1;
     public static final double UP_POSITION = 5; // Rotations. TODO
     public static final double POS_TOLERANCE = 0.1;
 
@@ -114,7 +113,7 @@ public final class Constants {
   public final class HopperConstants {
 
     public static final int HOPPERID = 21;
-    public static final int KICKERID = 31;
+    public static final int KICKERID = 32;
   }
 
   public static class IntakeConstants {
@@ -138,11 +137,13 @@ public final class Constants {
 
   public static class ShooterConstants {
 
-    public static final int SHOOTERID = 30;
+    public static final int SHOOTERID = 31;
 
     public static final double kP = 0.11;
     public static final double kI = 0;
     public static final double kD = 0;
+    public static final double kS = 0.1;
+    public static final double kV = 0.12;
 
     public static final Translation3d SHOOTER_RR_POS =
         new Translation3d(Meters.of(-0.1), Meters.of(0.3), Meters.of(0.27));

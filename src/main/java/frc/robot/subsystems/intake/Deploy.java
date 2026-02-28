@@ -17,6 +17,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Constants.IntakeConstants;
 
 public class Deploy extends SubsystemBase {
@@ -34,18 +35,14 @@ public class Deploy extends SubsystemBase {
     config
         .closedLoop
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        .p(0.1)
-        .i(0.0)
-        .d(0.0)
+        .p(IntakeConstants.kP1)
+        .i(IntakeConstants.kI1)
+        .d(IntakeConstants.kD1)
         .outputRange(-1, 1)
-        .p(0.0001, ClosedLoopSlot.kSlot1)
-        .i(0, ClosedLoopSlot.kSlot1)
-        .d(0, ClosedLoopSlot.kSlot1)
-        .outputRange(-1, 1, ClosedLoopSlot.kSlot1)
-        .feedForward
-        .kV(12.0 / 5767, ClosedLoopSlot.kSlot1);
-    deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
+        .p(IntakeConstants.kP2, ClosedLoopSlot.kSlot1)
+        .i(IntakeConstants.kI2, ClosedLoopSlot.kSlot1)
+        .d(IntakeConstants.kD2, ClosedLoopSlot.kSlot1)
+        .outputRange(-1, 1, ClosedLoopSlot.kSlot1);
     deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     deployEncoder.setPosition(0);

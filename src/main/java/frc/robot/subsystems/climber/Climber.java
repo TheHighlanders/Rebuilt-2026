@@ -6,6 +6,8 @@ package frc.robot.subsystems.climber;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -15,9 +17,11 @@ import frc.robot.Constants.ClimberConstants;
 public class Climber extends SubsystemBase {
   SparkMax climbMotor = new SparkMax(ClimberConstants.CLIMBERID, MotorType.kBrushless);
   RelativeEncoder climbEncoder = climbMotor.getEncoder();
-  double climberspeed = 0.6;
+  SparkMaxConfig config = new SparkMaxConfig();
+
   /** Creates a new Climber. */
   public Climber() {
+    config.idleMode(IdleMode.kBrake);
     climbEncoder.setPosition(0);
   }
 
@@ -29,18 +33,14 @@ public class Climber extends SubsystemBase {
   }
 
   public Command raiseCMD() {
-    // Deploys fuel
     return Commands.deadline(
             Commands.waitUntil(
-                () ->
-                    climbEncoder.getPosition()
-                        >= ClimberConstants.UP_POSITION - ClimberConstants.POS_TOLERANCE),
+                () -> climbEncoder.getPosition() >= ClimberConstants.UP_POSITION - ClimberConstants.POS_TOLERANCE),
             runCMD(ClimberConstants.RAISE_SPEED))
         .andThen(runCMD(0));
   }
 
   public Command pullCMD() {
-    // Deploys fuel
     return Commands.deadline(
             Commands.waitUntil(() -> climbEncoder.getPosition() <= ClimberConstants.POS_TOLERANCE),
             runCMD(ClimberConstants.PULL_SPEED))

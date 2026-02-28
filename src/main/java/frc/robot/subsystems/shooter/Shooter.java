@@ -22,7 +22,7 @@ public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
   TalonFX flywheel = new TalonFX(ShooterConstants.SHOOTERID);
 
-  // PID
+  // Config for PID
   TalonFXConfiguration config = new TalonFXConfiguration();
 
   VelocityVoltage velocityVoltage = new VelocityVoltage(0).withSlot(0);
@@ -34,8 +34,8 @@ public class Shooter extends SubsystemBase {
 
   public Shooter() {
 
-    config.Slot0.kS = 0.1;
-    config.Slot0.kV = 0.12;
+    config.Slot0.kS = ShooterConstants.kS;
+    config.Slot0.kV = ShooterConstants.kV;
     config.Slot0.kP = ShooterConstants.kP;
     config.Slot0.kI = ShooterConstants.kI;
     config.Slot0.kD = ShooterConstants.kD;
@@ -66,7 +66,6 @@ public class Shooter extends SubsystemBase {
   }
 
   public Command flywheelCMD(DoubleSupplier distance) {
-
     return Commands.run(
         () -> {
           targetRPS = calculate(distance.getAsDouble());
