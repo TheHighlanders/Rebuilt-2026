@@ -245,7 +245,7 @@ public class RobotContainer {
     autoChooser.addRoutine("Outpost + Climb", () -> autos.outpostAndClimb(true));
     autoChooser.addRoutine("Outpost", () -> autos.outpostAndClimb(false));
 
-    SmartDashboard.putData("CHOREO", autoChooser);
+    SmartDashboard.putData("Auto Chooser", autoChooser);
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
 
     // Configure the button bindings

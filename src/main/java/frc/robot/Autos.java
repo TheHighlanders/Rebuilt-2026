@@ -55,7 +55,57 @@ public class Autos {
     AutoTrajectory square = routine.trajectory("TestSquare");
     AutoTrajectory turn = routine.trajectory("TestSquareTurn");
 
-    routine.active().onTrue(Commands.sequence(square.resetOdometry(), square.cmd()));
+    routine
+        .active()
+        .onTrue(
+            Commands.sequence(
+                square.resetOdometry(),
+                square.cmd(),
+                Commands.runOnce(
+                    () -> {
+                      SmartDashboard.putBoolean("Auto/Trigger Tests/Active Trigger", false);
+                      SmartDashboard.putBoolean("Auto/Trigger Tests/Time Trigger", false);
+                      SmartDashboard.putBoolean("Auto/Trigger Tests/Marker Trigger", false);
+                      SmartDashboard.putBoolean("Auto/Trigger Tests/Position Trigger", false);
+                      SmartDashboard.putBoolean(
+                          "Auto/Trigger Tests/Time Before End Trigger", false);
+                      SmartDashboard.putBoolean("Auto/Trigger Tests/Done Trigger", false);
+                    })));
+
+    square
+        .active()
+        .onTrue(
+            Commands.runOnce(
+                () -> SmartDashboard.putBoolean("Auto/Trigger Tests/Active Trigger", true)));
+    square
+        .atTime(1)
+        .onTrue(
+            Commands.runOnce(
+                () -> SmartDashboard.putBoolean("Auto/Trigger Tests/Time Trigger", true)));
+    square
+        .atTime("halfway!")
+        .onTrue(
+            Commands.runOnce(
+                () -> SmartDashboard.putBoolean("Auto/Trigger Tests/Marker Trigger", true)));
+    square
+        .atPose(new Pose2d(0, 1, Rotation2d.kZero), 0.05, 1)
+        .onTrue(
+            Commands.runOnce(
+                () -> SmartDashboard.putBoolean("Auto/Trigger Tests/Position Trigger", true)));
+    square
+        .atTimeBeforeEnd(1)
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    SmartDashboard.putBoolean("Auto/Trigger Tests/Time Before End Trigger", true)));
+    square
+        .done()
+        .onTrue(
+            Commands.runOnce(
+                () -> SmartDashboard.putBoolean("Auto/Trigger Tests/Done Trigger", true)));
+
+    // .onTrue(Commands.runOnce(() -> SmartDashboard.putBoolean("Auto/Trigger Tests/Marker Trigger",
+    // true)));
 
     square
         .done()
