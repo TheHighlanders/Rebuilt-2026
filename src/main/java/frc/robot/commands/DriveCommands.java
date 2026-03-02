@@ -240,25 +240,26 @@ public class DriveCommands {
       BooleanSupplier robotRelative) {
 
     return Commands.either(
-            joystickDriveAtAngle(
-                drive,
-                xSupplier,
-                ySupplier,
-                () ->
-                    Rotation2d.fromRadians(
-                        Math.atan2(
-                                angleYSupplier.getAsDouble(),
-                                angleXSupplier.getAsDouble())),
-                robotRelative),
-            joystickDrive(
-                drive,
-                xSupplier,
-                ySupplier,
-                () -> { return 0;},
-                robotRelative),
+        joystickDriveAtAngle(
+            drive,
+            xSupplier,
+            ySupplier,
+            () ->
+                Rotation2d.fromRadians(
+                    Math.atan2(angleYSupplier.getAsDouble(), angleXSupplier.getAsDouble())),
+            robotRelative),
+        joystickDrive(
+            drive,
+            xSupplier,
+            ySupplier,
             () -> {
-                return Math.hypot(angleXSupplier.getAsDouble(), angleYSupplier.getAsDouble()) > DriveConstants.POINT_DEADBAND;
-            });
+              return 0;
+            },
+            robotRelative),
+        () -> {
+          return Math.hypot(angleXSupplier.getAsDouble(), angleYSupplier.getAsDouble())
+              > DriveConstants.POINT_DEADBAND;
+        });
   }
 
   /**

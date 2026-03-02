@@ -16,8 +16,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
 
 public class Intake extends SubsystemBase {
-  SparkMax intakeMotor =
-      new SparkMax(IntakeConstants.SPINTAKEID, MotorType.kBrushless);
+  SparkMax intakeMotor = new SparkMax(IntakeConstants.SPINTAKEID, MotorType.kBrushless);
   SparkMaxConfig config = new SparkMaxConfig();
   SparkClosedLoopController controller = intakeMotor.getClosedLoopController();
 

@@ -38,6 +38,7 @@ public final class Constants {
     public static final double POINT_DEADBAND = 0.5;
     public static final Pose2d POSE_RESET =
         new Pose2d(Meters.of(2), Meters.of(2), Rotation2d.kZero);
+    public static final int GYRO_ID = 0; // TODO
   }
 
   public static final class VisionConstants {

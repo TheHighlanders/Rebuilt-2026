@@ -26,7 +26,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
-import frc.robot.subsystems.drive.GyroIONavX;
+import frc.robot.subsystems.drive.GyroIOBoron;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
@@ -90,7 +90,7 @@ public class RobotContainer {
         // a CANcoder
         drive =
             new Drive(
-                new GyroIONavX(),
+                new GyroIOBoron(),
                 new ModuleIOTalonFX(TunerConstants.FrontLeft),
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
@@ -269,7 +269,6 @@ public class RobotContainer {
             () -> -controller.getRightX() * speed,
             () -> robotRelative));
 
-
     /* DRIVER BINDINGS */
 
     /* RIGHT SIDE---SHOOTING */
@@ -280,15 +279,18 @@ public class RobotContainer {
     controller
         .rightBumper()
         .onTrue(
-                DriveCommands.joystickAlignDrive(
+            DriveCommands.joystickAlignDrive(
                     drive,
                     shooter,
                     () -> -controller.getLeftY() * speed,
-                    () -> -controller.getLeftX() * speed,// maybe implement a hard cap here, we'll see
+                    () ->
+                        -controller.getLeftX()
+                            * speed, // maybe implement a hard cap here, we'll see
                     () -> robotRelative)
                 .until(() -> !controller.rightBumper().getAsBoolean()));
 
-    // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, clears hopper.
+    // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, clears
+    // hopper.
     controller
         .a()
         .onTrue(
@@ -305,12 +307,7 @@ public class RobotContainer {
         .onTrue(
             Commands.parallel(
                 shooter.flywheelCMD(() -> controller.getRightTriggerAxis() * 15),
-                Commands.sequence(
-                    Commands.waitUntil(shooter::atSpeed),
-                    hopper.shootCMD()
-                )
-            )
-        );
+                Commands.sequence(Commands.waitUntil(shooter::atSpeed), hopper.shootCMD())));
 
     /* OPERATOR BINDINGS */
 
@@ -345,46 +342,41 @@ public class RobotContainer {
         .onTrue(
             Commands.runOnce(
                 () -> {
-                    speed -= 0.1;
-                    if (speed < DriveConstants.SLOWMODE) speed = 1;
+                  speed -= 0.1;
+                  if (speed < DriveConstants.SLOWMODE) speed = 1;
                   SmartDashboard.putNumber("Drive/Speed", speed);
                 }));
-    
+
     // point turn mode
     operator
         .povRight()
         .onTrue(
             DriveCommands.joystickPointDrive(
-                drive,
-                () -> -controller.getLeftY() * speed,
-                () -> -controller.getLeftX() * speed,
-                () -> -controller.getRightY(),
-                () -> -controller.getLeftX(),
-                () -> robotRelative)
+                    drive,
+                    () -> -controller.getLeftY() * speed,
+                    () -> -controller.getLeftX() * speed,
+                    () -> -controller.getRightY(),
+                    () -> -controller.getLeftX(),
+                    () -> robotRelative)
                 .until(() -> !operator.povRight().getAsBoolean()));
-
 
     /* TRIGGERS---CLIMBING */
 
     // hold left and right triggers for 0.5 seconds to auto-climb
-    operator.leftBumper()
+    operator
+        .leftBumper()
         .and(operator.rightBumper())
         .onTrue(
             Commands.sequence(
                 Commands.waitSeconds(0.5),
                 Commands.either(
-                    climber.raiseCMD(),//auto climb command
+                    climber.raiseCMD(), // auto climb command
                     Commands.none(),
-                    operator.leftBumper()
-                        .and(operator.rightBumper())::getAsBoolean)
-            ));
+                    operator.leftBumper().and(operator.rightBumper())::getAsBoolean)));
 
     // backup---raise and lower climber with trigger
-    operator.leftTrigger(0.95)
-        .onTrue(climber.raiseCMD());
-    operator.leftTrigger(0.1)
-        .onFalse(climber.pullCMD());
-
+    operator.leftTrigger(0.95).onTrue(climber.raiseCMD());
+    operator.leftTrigger(0.1).onFalse(climber.pullCMD());
   }
 
   public void configureButtonBindingsOneController() {
@@ -402,7 +394,7 @@ public class RobotContainer {
     controller
         .rightBumper()
         .onTrue(
-                DriveCommands.joystickAlignDrive(
+            DriveCommands.joystickAlignDrive(
                     drive,
                     shooter,
                     () -> -controller.getLeftY() * speed,
@@ -410,15 +402,13 @@ public class RobotContainer {
                     () -> robotRelative)
                 .until(() -> !controller.rightBumper().getAsBoolean()));
 
-    // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, clears shooter
+    // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, clears
+    // shooter
     controller
         .b()
         .onTrue(
             Commands.either(
-                Commands.either(
-                    hopper.shootCMD(), 
-                    Commands.none(), 
-                    shooter::atSpeed),
+                Commands.either(hopper.shootCMD(), Commands.none(), shooter::atSpeed),
                 Commands.sequence(shooter.flywheelCMD(() -> 10), hopper.backdriveCMD()),
                 controller.rightBumper()::getAsBoolean));
 
@@ -430,14 +420,8 @@ public class RobotContainer {
         .onTrue(
             Commands.parallel(
                 shooter.flywheelCMD(() -> controller.getRightTriggerAxis() * 15),
-                Commands.sequence(
-                    Commands.waitUntil(shooter::atSpeed),
-                    hopper.shootCMD()
-                )
-            )
-        );
+                Commands.sequence(Commands.waitUntil(shooter::atSpeed), hopper.shootCMD())));
 
-    
     // runs intake
     controller.x().onTrue(intake.intakeCMD());
     controller.x().onFalse(intake.stoptakeCMD());
@@ -465,39 +449,35 @@ public class RobotContainer {
         .onTrue(
             Commands.runOnce(
                 () -> {
-                    speed -= 0.1;
-                    if (speed < DriveConstants.SLOWMODE) speed = 1;
+                  speed -= 0.1;
+                  if (speed < DriveConstants.SLOWMODE) speed = 1;
                   SmartDashboard.putNumber("Drive/Speed", speed);
                 }));
-    
+
     // point turn mode
     controller
         .povRight()
         .onTrue(
             DriveCommands.joystickPointDrive(
-                drive,
-                () -> -controller.getLeftY() * speed,
-                () -> -controller.getLeftX() * speed,
-                () -> -controller.getRightY(),
-                () -> -controller.getLeftX(),
-                () -> robotRelative)
+                    drive,
+                    () -> -controller.getLeftY() * speed,
+                    () -> -controller.getLeftX() * speed,
+                    () -> -controller.getRightY(),
+                    () -> -controller.getLeftX(),
+                    () -> robotRelative)
                 .until(() -> !controller.povRight().getAsBoolean()));
-    
-    //climbing on the left trigger side
+
+    // climbing on the left trigger side
     controller
         .leftBumper()
         .onTrue(
             Commands.sequence(
                 Commands.waitSeconds(0.5),
                 Commands.either(
-                    climber.raiseCMD(), 
-                    Commands.none(), 
-                    controller.leftBumper()::getAsBoolean)));
-                    
-    controller.leftTrigger(0.95)
-        .onTrue(climber.raiseCMD());
-    controller.leftTrigger(0.1)
-        .onFalse(climber.pullCMD());
+                    climber.raiseCMD(), Commands.none(), controller.leftBumper()::getAsBoolean)));
+
+    controller.leftTrigger(0.95).onTrue(climber.raiseCMD());
+    controller.leftTrigger(0.1).onFalse(climber.pullCMD());
   }
 
   /**

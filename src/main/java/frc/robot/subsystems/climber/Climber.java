@@ -6,9 +6,9 @@ package frc.robot.subsystems.climber;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -35,7 +35,9 @@ public class Climber extends SubsystemBase {
   public Command raiseCMD() {
     return Commands.deadline(
             Commands.waitUntil(
-                () -> climbEncoder.getPosition() >= ClimberConstants.UP_POSITION - ClimberConstants.POS_TOLERANCE),
+                () ->
+                    climbEncoder.getPosition()
+                        >= ClimberConstants.UP_POSITION - ClimberConstants.POS_TOLERANCE),
             runCMD(ClimberConstants.RAISE_SPEED))
         .andThen(runCMD(0));
   }
