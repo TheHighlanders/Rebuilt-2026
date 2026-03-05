@@ -266,7 +266,7 @@ public class DriveCommands {
         });
   }
 
-  public static Command autoAlign(Drive drive, Pose2d pose) {//TODO: not working
+  public static Command autoAlign(Drive drive, Pose2d pose) { // TODO: Tune PID
 
     xController.setTolerance(0.05);
     yController.setTolerance(0.05);
@@ -274,9 +274,9 @@ public class DriveCommands {
     return Commands.run(
             () -> {
               // Get linear velocity
-              double xSpeed = xController.calculate(drive.getPose().getX(), pose.getX());
+              double xSpeed = xController.calculate(drive.getPose().getX());
 
-              double ySpeed = yController.calculate(drive.getPose().getY(), pose.getY());
+              double ySpeed = yController.calculate(drive.getPose().getY());
 
               // Calculate angular speed
               double omega =
@@ -284,16 +284,30 @@ public class DriveCommands {
                       drive.getRotation().getRadians(), pose.getRotation().getRadians());
 
               // Convert to field relative speeds & send command
-              ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, 0, omega); // ySpeed, omega);
+              ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, ySpeed, omega); // ySpeed, omega);
 
-              drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(speeds, Rotation2d.fromDegrees(0)));
+              boolean isFlipped =
+                  DriverStation.getAlliance().isPresent()
+                      && DriverStation.getAlliance().get() == Alliance.Red;
+
+              drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
               // TODO: use the Field2d
             },
             drive)
+        .until(
+            () -> {
+              return xController.atSetpoint()
+                  && yController.atSetpoint()
+                  && angleController.atSetpoint();
+            })
 
         // Reset PID controller when command starts
-        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+        .beforeStarting(
+            () -> {
+              angleController.reset(drive.getRotation().getRadians());
+              xController.setSetpoint(pose.getX());
+              yController.setSetpoint(pose.getY());
+            });
   }
 
   /**

@@ -149,6 +149,7 @@ public final class Constants {
     public static final double kD = 0;
     public static final double kS = 0.1;
     public static final double kV = 0.12;
+    public static final double GEAR_RATIO = 2;
 
     public static final Translation3d SHOOTER_RR_POS =
         new Translation3d(Meters.of(-0.1), Meters.of(0.3), Meters.of(0.27));
@@ -157,8 +158,20 @@ public final class Constants {
   }
 
   public static class FieldConstants {
-    public static final Translation2d HUB_POSE_BLUE = new Translation2d(4.6, 4);
-    public static final Translation2d HUB_POSE_RED = new Translation2d(12, 4); // only slightly lies
+    public static final Translation2d HUB_POSE_BLUE =
+        new Translation2d(
+            VisionConstants.aprilTagLayout.getTagPose(18).get().getX(),
+            VisionConstants.aprilTagLayout.getTagPose(4).get().getY());
+    public static final Translation2d HUB_POSE_RED =
+        new Translation2d(
+            VisionConstants.aprilTagLayout.getTagPose(5).get().getX(),
+            VisionConstants.aprilTagLayout.getTagPose(4).get().getY());
+    public static final Translation2d CENTER =
+        new Translation2d(
+            VisionConstants.aprilTagLayout.getTagPose(6).get().getX()
+                - VisionConstants.aprilTagLayout.getTagPose(17).get().getX(),
+            VisionConstants.aprilTagLayout.getTagPose(1).get().getX()
+                - VisionConstants.aprilTagLayout.getTagPose(6).get().getX());
   }
 
   public static enum Mode {

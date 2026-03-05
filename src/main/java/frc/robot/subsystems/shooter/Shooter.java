@@ -4,10 +4,12 @@
 
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.util.PhoenixUtil.*;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -27,6 +29,8 @@ public class Shooter extends SubsystemBase {
   TalonFXConfiguration config = new TalonFXConfiguration();
 
   VelocityVoltage velocityVoltage = new VelocityVoltage(0).withSlot(0);
+  // VelocityTorqueCurrentFOC velocityTorque = new VelocityTorqueCurrentFOC(0).withSlot(1);
+  DutyCycleOut dutyCycle = new DutyCycleOut(0);
   NeutralOut brake = new NeutralOut();
 
   CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
@@ -45,6 +49,8 @@ public class Shooter extends SubsystemBase {
 
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
+    config.Feedback.SensorToMechanismRatio = ShooterConstants.GEAR_RATIO;
+
     currentLimits.StatorCurrentLimit = 80;
     currentLimits.SupplyCurrentLowerLimit = -80;
     currentLimits.StatorCurrentLimitEnable = true;
@@ -55,25 +61,20 @@ public class Shooter extends SubsystemBase {
     SmartDashboard.putNumber("Shooter/Target RPS", 0.0);
   }
 
-  public void intake() {}
+  public void intake() {} // for sim
 
   protected double calculate(double distanceMeters) {
-    // TODO: wait until shooter is finalized
-    double linearVelocity = 1.4 * distanceMeters + 6.1;
-    return linearVelocity * 193 / 60; // trust that makes it angular i did the (?) math:
-    // https://www.desmos.com/calculator/zroouacb64
+    // TODO: wait until shooter is finalized, and tune.
+    // btw holy moly my math was bad here. It still is, but this time everything has the right
+    // units.
+    // Here's desmos:  https://www.desmos.com/calculator/l0j2qxdelx
+    double linearVelocity =
+        3 + 1.26 * distanceMeters - 0.02 * distanceMeters * distanceMeters; // estimated
+    return linearVelocity / (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 2 * Math.PI);
   }
 
   public boolean atSpeed() {
-    return Math.abs(flywheel.getVelocity().getValueAsDouble() - targetRPS) < 1;
-  }
-
-  public Command rawFlywheelCMD(DoubleSupplier drive) {
-    return Commands.run(
-        () -> {
-          flywheel.setControl(velocityVoltage.withVelocity(drive.getAsDouble()));
-        },
-        this);
+    return Math.abs(flywheel.getVelocity().getValueAsDouble() - targetRPS) < 0.4;
   }
 
   public Command flywheelCMD(DoubleSupplier distance) {
@@ -88,6 +89,15 @@ public class Shooter extends SubsystemBase {
           SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
           SmartDashboard.putNumber(
               "Shooter/Flywheel RPS", flywheel.getVelocity().getValueAsDouble());
+          SmartDashboard.putNumber("Shooter/Distance", distance.getAsDouble());
+        },
+        this);
+  }
+
+  public Command rawFlywheelCMD(DoubleSupplier drive) {
+    return Commands.run(
+        () -> {
+          flywheel.setControl(dutyCycle.withOutput(drive.getAsDouble()));
         },
         this);
   }
