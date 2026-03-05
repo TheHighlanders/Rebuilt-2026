@@ -8,6 +8,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -42,6 +43,9 @@ public class DriveCommands {
   private static final double ANGLE_KP = 30.0;
   private static final double ANGLE_KI = 0;
   private static final double ANGLE_KD = 0;
+  private static final double POS_KP = 1.0; // TODO
+  private static final double POS_KI = 0;
+  private static final double POS_KD = 0;
   private static final double ANGLE_MAX_VELOCITY = 8.0;
   private static final double ANGLE_MAX_ACCELERATION = 20.0;
   private static final double FF_START_DELAY = 2.0; // Secs
@@ -55,6 +59,8 @@ public class DriveCommands {
           ANGLE_KI,
           ANGLE_KD,
           new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+  private static final PIDController xController = new PIDController(POS_KP, POS_KI, POS_KD);
+  private static final PIDController yController = new PIDController(POS_KP, POS_KI, POS_KD);
 
   // @AutoLogOutput(key = "Auto/Target")
   private static Translation2d getAlignTarget(Drive drive) {
@@ -226,10 +232,8 @@ public class DriveCommands {
   }
 
   /**
-   * Field relative drive command where joystick controlls linear velocity and robot is continuously
-   * towards a point on the field. Useful for orbitting shooting targets
-   *
-   * @param target Translation2d to look at
+   * Field relative drive command where joystick controlls linear velocity and robot points in the
+   * direction of the rotation joystick.
    */
   public static Command joystickPointDrive(
       Drive drive,
@@ -260,6 +264,36 @@ public class DriveCommands {
           return Math.hypot(angleXSupplier.getAsDouble(), angleYSupplier.getAsDouble())
               > DriveConstants.POINT_DEADBAND;
         });
+  }
+
+  public static Command autoAlign(Drive drive, Pose2d pose) {//TODO: not working
+
+    xController.setTolerance(0.05);
+    yController.setTolerance(0.05);
+
+    return Commands.run(
+            () -> {
+              // Get linear velocity
+              double xSpeed = xController.calculate(drive.getPose().getX(), pose.getX());
+
+              double ySpeed = yController.calculate(drive.getPose().getY(), pose.getY());
+
+              // Calculate angular speed
+              double omega =
+                  angleController.calculate(
+                      drive.getRotation().getRadians(), pose.getRotation().getRadians());
+
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, 0, omega); // ySpeed, omega);
+
+              drive.runVelocity(
+                  ChassisSpeeds.fromFieldRelativeSpeeds(speeds, Rotation2d.fromDegrees(0)));
+              // TODO: use the Field2d
+            },
+            drive)
+
+        // Reset PID controller when command starts
+        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
   }
 
   /**

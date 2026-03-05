@@ -27,23 +27,27 @@ public class Hopper extends SubsystemBase {
   double kD = 3.0;
   double kickTargetRPM = 2000.0;
 
-  SparkMaxConfig KickConfig = new SparkMaxConfig();
+  SparkMaxConfig kickConfig = new SparkMaxConfig();
 
   public Hopper() {
-    SparkMaxConfig config = new SparkMaxConfig();
-    config.smartCurrentLimit(50).idleMode(IdleMode.kCoast);
+    SparkMaxConfig hopperConfig = new SparkMaxConfig();
+    hopperConfig.smartCurrentLimit(HopperConstants.HOPPER_CURRENT_LIMIT).idleMode(IdleMode.kCoast);
+    hopperConfig.inverted(HopperConstants.INVERT_HOPPER);
 
-    KickConfig.closedLoop.p(kP).i(kI).d(kD);
+    kickConfig.closedLoop.p(kP).i(kI).d(kD);
+    kickConfig.smartCurrentLimit(HopperConstants.KICKER_CURRENT_LIMIT).idleMode(IdleMode.kCoast);
+    kickConfig.inverted(HopperConstants.INVERT_KICKER);
 
     // Persist parameters to retain configuration in the event of a power cycle
-    hopper.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    hopper.configure(hopperConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    kicker.configure(kickConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
   // spins the motor inside the hopper
   public Command shootCMD() {
     return Commands.runOnce(
         () -> {
-          kicker.set(1);
-          hopper.set(1);
+          kicker.set(0.5);
+          hopper.set(0.2);
           // speed can be changed
           SmartDashboard.putString("Shooter/Hopper State", "Shooting");
         },
@@ -64,8 +68,8 @@ public class Hopper extends SubsystemBase {
   public Command backdriveCMD() {
     return Commands.runOnce(
         () -> {
-          kicker.set(-1);
-          hopper.set(-1);
+          kicker.set(-0.5);
+          hopper.set(-0.5);
           SmartDashboard.putString("Shooter/Hopper State", "Backdriving");
         },
         this);

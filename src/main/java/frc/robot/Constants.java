@@ -115,6 +115,10 @@ public final class Constants {
 
     public static final int HOPPERID = 21;
     public static final int KICKERID = 31;
+    public static final int KICKER_CURRENT_LIMIT = 50;
+    public static final int HOPPER_CURRENT_LIMIT = 50;
+    public static final boolean INVERT_KICKER = true;
+    public static final boolean INVERT_HOPPER = false;
   }
 
   public static class IntakeConstants {

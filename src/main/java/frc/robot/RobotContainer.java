@@ -26,7 +26,8 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
-import frc.robot.subsystems.drive.GyroIOBoron;
+// import frc.robot.subsystems.drive.GyroIOBoron;
+import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
@@ -90,7 +91,7 @@ public class RobotContainer {
         // a CANcoder
         drive =
             new Drive(
-                new GyroIOBoron(),
+                new GyroIONavX(), // new GyroIOBoron(),
                 new ModuleIOTalonFX(TunerConstants.FrontLeft),
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
@@ -274,7 +275,16 @@ public class RobotContainer {
     /* RIGHT SIDE---SHOOTING */
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-
+    // Snap to intake face neutral zone
+    controller
+        .a()
+        .onTrue(
+            DriveCommands.joystickDriveAtAngle(
+                drive,
+                () -> -controller.getLeftX() * speed,
+                () -> -controller.getLeftY() * speed,
+                () -> Rotation2d.kZero,
+                () -> robotRelative));
     // align to shoot on right bumper
     controller
         .rightBumper()
@@ -285,31 +295,34 @@ public class RobotContainer {
                     () -> -controller.getLeftY() * speed,
                     () ->
                         -controller.getLeftX()
-                            * speed, // maybe implement a hard cap here, we'll see
+                            * speed, // TODO: maybe implement a hard cap here, we'll see
                     () -> robotRelative)
                 .until(() -> !controller.rightBumper().getAsBoolean()));
 
+    /* OPERATOR BINDINGS */
+
+    /*SHOOTING*/
     // runs kicker and hopper if flywheel is at speed. If flywheel is not being spun up, clears
     // hopper.
-    controller
+    operator
         .a()
         .onTrue(
             Commands.either(
-                Commands.either(hopper.shootCMD(), Commands.none(), shooter::atSpeed),
-                Commands.parallel(shooter.flywheelCMD(() -> 10), hopper.backdriveCMD()),
+                Commands.either(
+                    hopper.shootCMD(), Commands.none(), shooter::atSpeed), // shoot if aligned
+                Commands.parallel(
+                    hopper.shootCMD(),
+                    shooter.flywheelCMD(() -> 10),
+                    hopper.backdriveCMD()), // clear if not aligning
                 controller.rightBumper()::getAsBoolean));
 
-    controller.a().onFalse(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
+    operator.a().onFalse(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
 
     // spits out fuel manually
-    controller
-        .rightTrigger()
-        .onTrue(
-            Commands.parallel(
-                shooter.flywheelCMD(() -> controller.getRightTriggerAxis() * 15),
-                Commands.sequence(Commands.waitUntil(shooter::atSpeed), hopper.shootCMD())));
-
-    /* OPERATOR BINDINGS */
+    operator
+        .rightTrigger(0.05)
+        .onTrue(shooter.flywheelCMD(() -> operator.getRightTriggerAxis() * 10));
+    operator.rightTrigger(0.05).onFalse(shooter.stopCMD());
 
     /* RIGHT SIDE---INTAKE */
     // runs intake
@@ -317,8 +330,12 @@ public class RobotContainer {
     operator.b().onFalse(intake.stoptakeCMD());
 
     // runs intake backwards
-    operator.y().onTrue(intake.spitakeCMD());
-    operator.y().onFalse(intake.stoptakeCMD());
+    operator.povDown().onTrue(intake.spitakeCMD());
+    operator.povDown().onFalse(intake.stoptakeCMD());
+
+    // clear hopper
+    operator.povDown().onTrue(hopper.backdriveCMD());
+    operator.povDown().onFalse(hopper.stopCMD());
 
     // deploys intake
     operator.a().toggleOnTrue(deploy.deployCMD());
@@ -327,8 +344,8 @@ public class RobotContainer {
     /* LEFT SIDE---DRIVE CONFIG */
 
     // toggles between robot- and field-relative drive
-    operator
-        .povLeft()
+    controller
+        .leftBumper()
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -338,7 +355,7 @@ public class RobotContainer {
 
     // slow mode
     operator
-        .povDown()
+        .povRight()
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -349,7 +366,7 @@ public class RobotContainer {
 
     // point turn mode
     operator
-        .povRight()
+        .povLeft()
         .onTrue(
             DriveCommands.joystickPointDrive(
                     drive,
@@ -358,7 +375,7 @@ public class RobotContainer {
                     () -> -controller.getRightY(),
                     () -> -controller.getLeftX(),
                     () -> robotRelative)
-                .until(() -> !operator.povRight().getAsBoolean()));
+                .until(() -> !operator.povLeft().getAsBoolean()));
 
     /* TRIGGERS---CLIMBING */
 
@@ -431,8 +448,8 @@ public class RobotContainer {
     controller.y().onFalse(intake.stoptakeCMD());
 
     // deploys intake
-    controller.a().toggleOnTrue(deploy.deployCMD());
-    controller.a().toggleOnFalse(deploy.undeployCMD());
+    controller.rightTrigger().toggleOnTrue(deploy.deployCMD());
+    controller.leftTrigger().toggleOnTrue(deploy.undeployCMD());
 
     // toggles between robot- and field-relative drive
     controller
@@ -456,7 +473,7 @@ public class RobotContainer {
 
     // point turn mode
     controller
-        .povRight()
+        .povLeft()
         .onTrue(
             DriveCommands.joystickPointDrive(
                     drive,
@@ -465,7 +482,7 @@ public class RobotContainer {
                     () -> -controller.getRightY(),
                     () -> -controller.getLeftX(),
                     () -> robotRelative)
-                .until(() -> !controller.povRight().getAsBoolean()));
+                .until(() -> !controller.povLeft().getAsBoolean()));
 
     // climbing on the left trigger side
     controller
