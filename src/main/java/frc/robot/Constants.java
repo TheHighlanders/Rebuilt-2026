@@ -109,6 +109,7 @@ public final class Constants {
     public static final double RAISE_SPEED = 1;
     public static final double PULL_SPEED = -1;
     public static final double CLIMBER_SPEED_DOWN = -1;
+    public static final double DOWN_POSITION = 0;
   }
 
   public final class HopperConstants {
@@ -152,9 +153,11 @@ public final class Constants {
     public static final double GEAR_RATIO = 2;
 
     public static final Translation3d SHOOTER_RR_POS =
-        new Translation3d(Meters.of(-0.1), Meters.of(0.3), Meters.of(0.27));
+        new Translation3d(Meters.of(-0.1), Meters.of(0.3), Meters.of(0.27)); // TODO find in cad
     public static final Angle SHOOTER_HOOD = Degrees.of(78);
     public static final Distance FLYWHEEL_RADIUS = Inches.of(2);
+
+    public static final double GRAVITY = 9.80665;
   }
 
   public static class FieldConstants {
@@ -172,6 +175,7 @@ public final class Constants {
                 - VisionConstants.aprilTagLayout.getTagPose(17).get().getX(),
             VisionConstants.aprilTagLayout.getTagPose(1).get().getX()
                 - VisionConstants.aprilTagLayout.getTagPose(6).get().getX());
+    public static final double HUB_HEIGHT = 1.8288;//meters
   }
 
   public static enum Mode {

@@ -120,7 +120,7 @@ public class Autos {
     routine
         .active()
         .onTrue(
-            DriveCommands.autoAlign(drive, new Pose2d(5, 5, Rotation2d.kCCW_90deg))
+            DriveCommands.autoAlign(drive, new Pose2d(3, 5, Rotation2d.kCCW_90deg))
                 .andThen(
                     Commands.runOnce(
                             () ->

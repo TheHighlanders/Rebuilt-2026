@@ -5,6 +5,7 @@
 package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
 import static frc.robot.util.PhoenixUtil.*;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -14,10 +15,14 @@ import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.ShooterConstants;
 import java.util.function.DoubleSupplier;
 
@@ -63,14 +68,37 @@ public class Shooter extends SubsystemBase {
 
   public void intake() {} // for sim
 
-  protected double calculate(double distanceMeters) {
+  protected double calculate(Translation2d trajectory) {
     // TODO: wait until shooter is finalized, and tune.
-    // btw holy moly my math was bad here. It still is, but this time everything has the right
-    // units.
-    // Here's desmos:  https://www.desmos.com/calculator/l0j2qxdelx
     double linearVelocity =
-        3 + 1.26 * distanceMeters - 0.02 * distanceMeters * distanceMeters; // estimated
+        Math.sqrt(
+            ShooterConstants.GRAVITY
+                * Math.pow(trajectory.getX(), 2)
+                / (2
+                    * Math.pow(Math.cos(ShooterConstants.SHOOTER_HOOD.in(Radians)), 2)
+                    * (trajectory.getX() * Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians))
+                        - trajectory.getY())));
+
     return linearVelocity / (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 2 * Math.PI);
+  }
+
+  protected double calculateRR(Translation2d trajectory) {
+    Translation3d robotToHub = new Translation3d(trajectory.getX(), 0, trajectory.getY());
+    Translation3d shooterToHub =
+        robotToHub.minus(
+            ShooterConstants.SHOOTER_RR_POS.rotateBy(new Rotation3d(0, 0, Math.PI / 2)));
+    Translation2d newTrajectory =
+        new Translation2d(
+            Math.hypot(shooterToHub.getX(), shooterToHub.getY()), shooterToHub.getZ());
+    return calculate(newTrajectory);
+  }
+
+  protected double calculateHub(double distance) {
+    return calculateRR(new Translation2d(distance, FieldConstants.HUB_HEIGHT));
+  }
+
+  protected double calculateGround(double distance) {
+    return calculateRR(new Translation2d(distance, 0));
   }
 
   public boolean atSpeed() {
@@ -80,7 +108,24 @@ public class Shooter extends SubsystemBase {
   public Command flywheelCMD(DoubleSupplier distance) {
     return Commands.run(
         () -> {
-          targetRPS = calculate(distance.getAsDouble());
+          targetRPS = calculateHub(distance.getAsDouble());
+          flywheel.setControl(velocityVoltage.withVelocity(targetRPS));
+          SmartDashboard.putNumber(
+              "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
+          SmartDashboard.putNumber(
+              "Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
+          SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
+          SmartDashboard.putNumber(
+              "Shooter/Flywheel RPS", flywheel.getVelocity().getValueAsDouble());
+          SmartDashboard.putNumber("Shooter/Distance", distance.getAsDouble());
+        },
+        this);
+  }
+  
+  public Command flywheelGndCMD(DoubleSupplier distance) {
+    return Commands.run(
+        () -> {
+          targetRPS = calculateGround(distance.getAsDouble());
           flywheel.setControl(velocityVoltage.withVelocity(targetRPS));
           SmartDashboard.putNumber(
               "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());

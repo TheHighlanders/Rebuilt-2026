@@ -24,7 +24,7 @@ public class HopperSim extends Hopper {
             Commands.repeatingSequence(
                     Commands.waitUntil(
                         () -> {
-                          return ballsIn > 0;
+                          return ballsIn > 0 || true;
                         }),
                     Commands.waitSeconds(0.3),
                     runOnce(

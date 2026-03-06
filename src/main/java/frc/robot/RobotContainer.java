@@ -64,6 +64,7 @@ public class RobotContainer {
 
   private boolean robotRelative;
   private double speed;
+  double testDistance = 1;
 
   // Dashboard inputs
   //  private final LoggedDashboardChooser<Command> autoChooser;
@@ -109,7 +110,7 @@ public class RobotContainer {
                     VisionConstants.camera3Name, VisionConstants.robotToCamera3));
         shooter = new Shooter();
         hopper = new Hopper();
-        configureButtonBindings();
+        configureShooterTestBindings(); // configureButtonBindings();
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -182,7 +183,7 @@ public class RobotContainer {
         fuelSim
             .start(); // enables the simulation to run (updateSim must still be called periodically)
 
-        configureButtonBindingsOneController();
+        configureButtonBindings();//OneController is not work
 
         break;
 
@@ -311,9 +312,8 @@ public class RobotContainer {
                 Commands.either(
                     hopper.shootCMD(), Commands.none(), shooter::atSpeed), // shoot if aligned
                 Commands.parallel(
-                    hopper.shootCMD(),
-                    shooter.flywheelCMD(() -> 10),
-                    hopper.backdriveCMD()), // clear if not aligning
+                    // hopper.shootCMD(),
+                    shooter.flywheelCMD(() -> 10), hopper.backdriveCMD()), // clear if not aligning
                 controller.rightBumper()::getAsBoolean));
 
     operator.a().onFalse(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
@@ -495,6 +495,50 @@ public class RobotContainer {
 
     controller.leftTrigger(0.95).onTrue(climber.raiseCMD());
     controller.leftTrigger(0.1).onFalse(climber.pullCMD());
+  }
+
+  private void configureShooterTestBindings() {
+    testDistance = 1;
+    Command shootCommand = shooter.flywheelGndCMD(() -> testDistance);
+
+    controller
+        .povUp()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  testDistance += 0.5;
+                  if (testDistance > 5.5) testDistance = 1;
+                }));
+
+    controller.rightBumper().onTrue(shootCommand);
+
+    controller
+        .rightTrigger(0.05)
+        .onTrue(shooter.rawFlywheelCMD(() -> controller.getRightTriggerAxis()));
+
+    controller.a().onTrue(hopper.shootCMD());
+
+    controller
+        .b()
+        .onTrue(
+            Commands.sequence(
+                Commands.waitUntil(
+                    () -> {
+                      return shooter.atSpeed() && shooter.getCurrentCommand() == shootCommand;
+                    }),
+                hopper.shootCMD()));
+
+    controller.x().onTrue(hopper.backdriveCMD());
+
+    controller.rightTrigger(0.05).onFalse(shooter.stopCMD());
+
+    controller.a().onFalse(hopper.stopCMD());
+
+    controller.b().onFalse(hopper.stopCMD());
+
+    controller.rightBumper().onFalse(shooter.stopCMD());
+
+    controller.x().onFalse(hopper.stopCMD());
   }
 
   /**
