@@ -22,8 +22,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.ShooterConstants;
+import frc.robot.Constants.ShooterConstants.LookupTable;
+import java.util.Arrays;
 import java.util.function.DoubleSupplier;
 
 public class Shooter extends SubsystemBase {
@@ -68,7 +71,24 @@ public class Shooter extends SubsystemBase {
 
   public void intake() {} // for sim
 
-  protected double calculate(Translation2d trajectory) {
+  /*
+   * compensates for the shooter's position on the robot based on a flat robot-relative trajectory to the target.
+   */
+  private static Translation2d robotToShooterTraj(Translation2d trajectory) {
+    Translation3d robotToHub = new Translation3d(trajectory.getX(), 0, trajectory.getY());
+    Translation3d shooterToHub =
+        robotToHub.minus(
+            ShooterConstants.SHOOTER_RR_POS.rotateBy(
+                new Rotation3d(0, 0, DriveConstants.ALIGN_SHOOTER_COMP.in(Radians))));
+    return new Translation2d(
+        Math.hypot(shooterToHub.getX(), shooterToHub.getY()), shooterToHub.getZ());
+  }
+
+  /*
+   * finds desired angular velocity of the shooter to target a certain shooter-relative point
+   * using a physics simulation.
+   */
+  protected static double calculate(Translation2d trajectory) {
     // TODO: wait until shooter is finalized, and tune.
     double linearVelocity =
         Math.sqrt(
@@ -82,23 +102,122 @@ public class Shooter extends SubsystemBase {
     return linearVelocity / (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 2 * Math.PI);
   }
 
-  protected double calculateRR(Translation2d trajectory) {
-    Translation3d robotToHub = new Translation3d(trajectory.getX(), 0, trajectory.getY());
-    Translation3d shooterToHub =
-        robotToHub.minus(
-            ShooterConstants.SHOOTER_RR_POS.rotateBy(new Rotation3d(0, 0, Math.PI / 2)));
-    Translation2d newTrajectory =
-        new Translation2d(
-            Math.hypot(shooterToHub.getX(), shooterToHub.getY()), shooterToHub.getZ());
-    return calculate(newTrajectory);
+  /*
+   * finds desired angular velocity of the shooter to target a certain robot-relative point
+   * using a physics simulation.
+   */
+  protected static double calculateRR(Translation2d trajectory) {
+    return calculate(robotToShooterTraj(trajectory));
   }
 
-  protected double calculateHub(double distance) {
+  /*
+   * finds desired angular velocity of the shooter to reach the hub from a certain distance away
+   * using a physics simulation.
+   */
+  protected double calculateRRHub(double distance) {
     return calculateRR(new Translation2d(distance, FieldConstants.HUB_HEIGHT));
   }
 
-  protected double calculateGround(double distance) {
+  /*
+   * finds desired angular velocity of the shooter to reach the ground a certain distance away
+   * using a physics simulation.
+   */
+  protected double calculateRRGround(double distance) {
     return calculateRR(new Translation2d(distance, 0));
+  }
+
+  /*
+   * finds desired angular velocity of the shooter to reach the ground a certain distance away
+   * using a lookup table of values taken from the real robot.
+   */
+  protected double calculateGroundLookup(double distance) {
+    // find position of data at around desired distance on lookup table
+    int index = 0;
+    for (double test : LookupTable.DISTS) {
+      if (distance > test) index++;
+      else break;
+    }
+
+    // find neigboring data
+    double[] neighborsX =
+        Arrays.copyOfRange(
+            LookupTable.DISTS,
+            index - (int) Math.sqrt(LookupTable.DISTS.length / 4),
+            index + (int) Math.sqrt(LookupTable.DISTS.length / 4));
+
+    double[] neighborsY =
+        Arrays.copyOfRange(
+            LookupTable.RPMS,
+            index - (int) Math.sqrt(LookupTable.RPMS.length / 4),
+            index
+                + (int)
+                    Math.sqrt(
+                        LookupTable.RPMS.length / 4)); // hopefully they are the same length...
+
+    /* FIND REGRESSION FOR NEIGHBORING DATA */
+    // x mean
+    double xMean = 0;
+    for (double d : neighborsX) xMean += d;
+    xMean /= neighborsX.length;
+
+    // x standard deviation
+    double xStdDev = 0;
+    for (double d : neighborsX) xStdDev += Math.pow(d - xMean, 2);
+    xStdDev = Math.sqrt(xStdDev / neighborsX.length);
+
+    // y mean
+    double yMean = 0;
+    for (double d : neighborsY) yMean += d;
+    yMean /= neighborsY.length;
+
+    // y standard deviation
+    double yStdDev = 0;
+    for (double d : neighborsY) yStdDev += Math.pow(d - yMean, 2);
+    yStdDev = Math.sqrt(yStdDev / neighborsY.length);
+
+    // slope
+    double r = 0;
+    for (int i = 0; i < neighborsX.length; i++) {
+      r += (neighborsX[i] - xMean) / xStdDev * (neighborsY[i] - yMean) / yStdDev;
+    }
+    r /= neighborsX.length - 1;
+    double slope = r * (yStdDev / xStdDev);
+
+    // regression
+    return yMean + (slope * (distance - xMean));
+  }
+
+  /*
+   * finds desired angular velocity of the shooter to target a certain shooter-relative point
+   * using a lookup table of values taken from the real robot.
+   */
+  protected double calculateLookup(Translation2d trajectory) {
+    double fallrate =
+        (trajectory.getY()
+                - Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians)) * trajectory.getX())
+            / (trajectory.getX() * trajectory.getX());
+    return calculateGroundLookup(
+        (-Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians))
+                * Math.sqrt(
+                    Math.pow(Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians)), 2)
+                        - (4 * ShooterConstants.SHOOTER_RR_POS.getZ() * fallrate)))
+            / (2 * fallrate));
+  }
+
+  /*
+   * finds desired angular velocity of the shooter to target a certain robot-relative point
+   * using a lookup table of values taken from the real robot.
+   */
+  protected double calculateRRLookup(Translation2d trajectory) {
+    return calculateLookup(robotToShooterTraj(trajectory));
+  }
+
+  /*
+   * finds desired angular velocity of the shooter to reach the hub from a certain distance away
+   * using a physics simulation.
+   */
+  protected double calculateHubRRLookup(double distance) {
+    return calculateRRLookup(new Translation2d(distance, FieldConstants.HUB_HEIGHT));
   }
 
   public boolean atSpeed() {
@@ -108,7 +227,7 @@ public class Shooter extends SubsystemBase {
   public Command flywheelCMD(DoubleSupplier distance) {
     return Commands.run(
         () -> {
-          targetRPS = calculateHub(distance.getAsDouble());
+          targetRPS = calculateRRHub(distance.getAsDouble());
           flywheel.setControl(velocityVoltage.withVelocity(targetRPS));
           SmartDashboard.putNumber(
               "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
@@ -121,11 +240,11 @@ public class Shooter extends SubsystemBase {
         },
         this);
   }
-  
+
   public Command flywheelGndCMD(DoubleSupplier distance) {
     return Commands.run(
         () -> {
-          targetRPS = calculateGround(distance.getAsDouble());
+          targetRPS = calculateRRGround(distance.getAsDouble());
           flywheel.setControl(velocityVoltage.withVelocity(targetRPS));
           SmartDashboard.putNumber(
               "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());

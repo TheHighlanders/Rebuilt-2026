@@ -10,6 +10,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -39,6 +40,8 @@ public final class Constants {
     public static final Pose2d POSE_RESET =
         new Pose2d(Meters.of(2), Meters.of(2), Rotation2d.kZero);
     public static final int GYRO_ID = 0; // TODO
+    public static final Angle ALIGN_SHOOTER_COMP =
+        Radians.of(1.67); // could make this a function of distance, but this works for now
   }
 
   public static final class VisionConstants {
@@ -158,6 +161,13 @@ public final class Constants {
     public static final Distance FLYWHEEL_RADIUS = Inches.of(2);
 
     public static final double GRAVITY = 9.80665;
+
+    public static class LookupTable {
+      // SORTED!!
+      public static final double[] RPMS = {1, 2, 3, 5}; // TODO: fill with real data
+      // DISTANCE OF FUEL LANDING FROM SHOOTER!!
+      public static final double[] DISTS = {1, 2, 2.5, 5.5}; // TODO: fill with real data
+    }
   }
 
   public static class FieldConstants {
@@ -175,7 +185,7 @@ public final class Constants {
                 - VisionConstants.aprilTagLayout.getTagPose(17).get().getX(),
             VisionConstants.aprilTagLayout.getTagPose(1).get().getX()
                 - VisionConstants.aprilTagLayout.getTagPose(6).get().getX());
-    public static final double HUB_HEIGHT = 1.8288;//meters
+    public static final double HUB_HEIGHT = 1.8288; // meters
   }
 
   public static enum Mode {
