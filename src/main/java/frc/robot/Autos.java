@@ -122,23 +122,18 @@ public class Autos {
         .onTrue(
             DriveCommands.autoAlign(drive, new Pose2d(3, 5, Rotation2d.kCCW_90deg))
                 .andThen(
-                    Commands.runOnce(
-                            () ->
-                                drive.setPose(
-                                    new Pose2d(2, 2, Rotation2d.fromDegrees(0)))) // remove
-                        .andThen(
-                            Commands.parallel(
-                                DriveCommands.joystickAlignDrive(
-                                    drive, shooter, () -> 0, () -> 0, () -> true),
-                                Commands.sequence(
-                                    Commands.waitSeconds(1),
-                                    Commands.waitUntil(
-                                        () -> {
-                                          return shooter.atSpeed()
-                                              && DriveCommands.aligned().getAsBoolean();
-                                        }),
-                                    // Commands.runOnce(drive::stopWithX),//maybe
-                                    hopper.shootCMD())))));
+                    Commands.parallel(
+                        DriveCommands.joystickAlignDrive(
+                            drive, shooter, () -> 0, () -> 0, () -> true),
+                        Commands.sequence(
+                            Commands.waitSeconds(1),
+                            Commands.waitUntil(
+                                () -> {
+                                  return shooter.atSpeed()
+                                      && DriveCommands.aligned().getAsBoolean();
+                                }),
+                            // Commands.runOnce(drive::stopWithX),//maybe
+                            hopper.shootCMD()))));
 
     return routine;
   }

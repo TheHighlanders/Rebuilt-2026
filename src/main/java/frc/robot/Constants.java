@@ -36,12 +36,14 @@ public final class Constants {
 
   public static final class DriveConstants {
     public static final double SLOWMODE = 0.6;
-    public static final double POINT_DEADBAND = 0.5;
+    public static final double POINT_DEADBAND = 0.4;
     public static final Pose2d POSE_RESET =
         new Pose2d(Meters.of(2), Meters.of(2), Rotation2d.kZero);
     public static final int GYRO_ID = 0; // TODO
     public static final Angle ALIGN_SHOOTER_COMP =
         Radians.of(1.67); // could make this a function of distance, but this works for now
+    public static final Translation2d TO_CORNER_BUMPERS =
+        new Translation2d(Units.inchesToMeters(33.25 / 2), Units.inchesToMeters(33.6 / 2));
   }
 
   public static final class VisionConstants {
@@ -179,13 +181,23 @@ public final class Constants {
         new Translation2d(
             VisionConstants.aprilTagLayout.getTagPose(5).get().getX(),
             VisionConstants.aprilTagLayout.getTagPose(4).get().getY());
+    public static final double HUB_HEIGHT = 1.8288; // meters
+
     public static final Translation2d CENTER =
         new Translation2d(
             VisionConstants.aprilTagLayout.getTagPose(6).get().getX()
                 - VisionConstants.aprilTagLayout.getTagPose(17).get().getX(),
             VisionConstants.aprilTagLayout.getTagPose(1).get().getX()
                 - VisionConstants.aprilTagLayout.getTagPose(6).get().getX());
-    public static final double HUB_HEIGHT = 1.8288; // meters
+
+    public static final Translation2d CLIMB_DEPOT_CORNER =
+        new Translation2d(
+            Units.inchesToMeters(40 + (3.51 / 2)),
+            Units.inchesToMeters((158.32 - 11.46) + (32.25 / 2) + 1.5));
+    public static final Translation2d CLIMB_OUTPOST_CORNER =
+        new Translation2d(
+            Units.inchesToMeters(40 + (3.51 / 2)),
+            Units.inchesToMeters((158.32 - 11.46) - ((32.25 / 2) + 1.5)));
   }
 
   public static enum Mode {

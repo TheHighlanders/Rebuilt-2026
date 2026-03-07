@@ -189,6 +189,8 @@ public class Drive extends SubsystemBase {
       for (var module : modules) {
         module.stop();
       }
+    } else if (this.getCurrentCommand() != null) {
+      Logger.recordOutput("Drive/ActiveCommand", this.getCurrentCommand().getName());
     }
 
     // Log empty setpoint states when disabled

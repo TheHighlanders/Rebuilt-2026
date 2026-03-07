@@ -137,22 +137,17 @@ public class Shooter extends SubsystemBase {
       if (distance > test) index++;
       else break;
     }
+    int range = (int) Math.sqrt(LookupTable.DISTS.length / 4);
+
+    // data limits
+    if (index + range > LookupTable.DISTS.length) index = LookupTable.DISTS.length - range;
+
+    if (index < Math.sqrt(LookupTable.DISTS.length / 4)) index = range;
 
     // find neigboring data
-    double[] neighborsX =
-        Arrays.copyOfRange(
-            LookupTable.DISTS,
-            index - (int) Math.sqrt(LookupTable.DISTS.length / 4),
-            index + (int) Math.sqrt(LookupTable.DISTS.length / 4));
+    double[] neighborsX = Arrays.copyOfRange(LookupTable.DISTS, index - range, index + range);
 
-    double[] neighborsY =
-        Arrays.copyOfRange(
-            LookupTable.RPMS,
-            index - (int) Math.sqrt(LookupTable.RPMS.length / 4),
-            index
-                + (int)
-                    Math.sqrt(
-                        LookupTable.RPMS.length / 4)); // hopefully they are the same length...
+    double[] neighborsY = Arrays.copyOfRange(LookupTable.RPMS, index - range, index + range);
 
     /* FIND REGRESSION FOR NEIGHBORING DATA */
     // x mean

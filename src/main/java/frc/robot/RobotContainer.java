@@ -183,7 +183,7 @@ public class RobotContainer {
         fuelSim
             .start(); // enables the simulation to run (updateSim must still be called periodically)
 
-        configureButtonBindings();//OneController is not work
+        configureButtonBindings();
 
         break;
 
@@ -277,15 +277,14 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     // Snap to intake face neutral zone
-    controller
-        .a()
-        .onTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -controller.getLeftX() * speed,
-                () -> -controller.getLeftY() * speed,
-                () -> Rotation2d.kZero,
-                () -> robotRelative));
+    controller.a().onTrue(hopper.shootCMD());
+    controller.a().onFalse(hopper.stopCMD());
+    // DriveCommands.joystickDriveAtAngle(
+    //     drive,
+    //     () -> -controller.getLeftX() * speed,
+    //     () -> -controller.getLeftY() * speed,
+    //     () -> Rotation2d.kZero,
+    //     () -> robotRelative));
     // align to shoot on right bumper
     controller
         .rightBumper()
@@ -365,17 +364,17 @@ public class RobotContainer {
                 }));
 
     // point turn mode
-    operator
-        .povLeft()
+    controller // operator TODO
+        .povRight()
         .onTrue(
             DriveCommands.joystickPointDrive(
                     drive,
                     () -> -controller.getLeftY() * speed,
                     () -> -controller.getLeftX() * speed,
-                    () -> -controller.getRightY(),
-                    () -> -controller.getLeftX(),
+                    () -> controller.getRightY(),
+                    () -> controller.getRightX(),
                     () -> robotRelative)
-                .until(() -> !operator.povLeft().getAsBoolean()));
+                .until(controller.povUp()::getAsBoolean));
 
     /* TRIGGERS---CLIMBING */
 
@@ -387,7 +386,7 @@ public class RobotContainer {
             Commands.sequence(
                 Commands.waitSeconds(0.5),
                 Commands.either(
-                    climber.raiseCMD(), // auto climb command
+                    DriveCommands.autoClimb(drive, climber),
                     Commands.none(),
                     operator.leftBumper().and(operator.rightBumper())::getAsBoolean)));
 
@@ -406,6 +405,13 @@ public class RobotContainer {
             () -> -controller.getLeftX() * speed,
             () -> -controller.getRightX() * speed,
             () -> robotRelative));
+    // DriveCommands.joystickPointDrive(
+    //             drive,
+    //             () -> -controller.getLeftY() * speed,
+    //             () -> -controller.getLeftX() * speed,
+    //             () -> -controller.getRightY(),
+    //             () -> -controller.getLeftX(),
+    //             () -> robotRelative));
 
     // align to shoot on right bumper
     controller
@@ -433,11 +439,8 @@ public class RobotContainer {
 
     // spits out fuel manually
     controller
-        .rightTrigger()
-        .onTrue(
-            Commands.parallel(
-                shooter.flywheelCMD(() -> controller.getRightTriggerAxis() * 15),
-                Commands.sequence(Commands.waitUntil(shooter::atSpeed), hopper.shootCMD())));
+        .rightTrigger(0.1)
+        .onTrue(shooter.flywheelGndCMD(() -> controller.getRightTriggerAxis() * 6));
 
     // runs intake
     controller.x().onTrue(intake.intakeCMD());
@@ -448,8 +451,8 @@ public class RobotContainer {
     controller.y().onFalse(intake.stoptakeCMD());
 
     // deploys intake
-    controller.rightTrigger().toggleOnTrue(deploy.deployCMD());
-    controller.leftTrigger().toggleOnTrue(deploy.undeployCMD());
+    // controller.leftBumper().toggleOnTrue(deploy.deployCMD());
+    // controller.leftBumper().toggleOnFalse(deploy.undeployCMD());
 
     // toggles between robot- and field-relative drive
     controller
@@ -473,7 +476,7 @@ public class RobotContainer {
 
     // point turn mode
     controller
-        .povLeft()
+        .povRight()
         .onTrue(
             DriveCommands.joystickPointDrive(
                     drive,
@@ -482,16 +485,15 @@ public class RobotContainer {
                     () -> -controller.getRightY(),
                     () -> -controller.getLeftX(),
                     () -> robotRelative)
-                .until(() -> !controller.povLeft().getAsBoolean()));
+                .until(() -> !controller.povRight().multiPress(2, 1).getAsBoolean()));
 
     // climbing on the left trigger side
-    controller
-        .leftBumper()
-        .onTrue(
-            Commands.sequence(
-                Commands.waitSeconds(0.5),
-                Commands.either(
-                    climber.raiseCMD(), Commands.none(), controller.leftBumper()::getAsBoolean)));
+    controller.leftBumper().onTrue(DriveCommands.autoClimb(drive, climber));
+    // Commands.sequence(
+    //     Commands.waitSeconds(0.5),
+    //     Commands.either(
+    //         DriveCommands.autoClimb(drive, climber), Commands.none(),
+    // controller.leftBumper()::getAsBoolean)));
 
     controller.leftTrigger(0.95).onTrue(climber.raiseCMD());
     controller.leftTrigger(0.1).onFalse(climber.pullCMD());
