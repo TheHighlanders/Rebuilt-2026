@@ -187,8 +187,8 @@ public final class Constants {
         new Translation2d(
             VisionConstants.aprilTagLayout.getTagPose(6).get().getX()
                 - VisionConstants.aprilTagLayout.getTagPose(17).get().getX(),
-            VisionConstants.aprilTagLayout.getTagPose(1).get().getX()
-                - VisionConstants.aprilTagLayout.getTagPose(6).get().getX());
+            VisionConstants.aprilTagLayout.getTagPose(1).get().getY()
+                - VisionConstants.aprilTagLayout.getTagPose(6).get().getY());
 
     public static final Translation2d CLIMB_DEPOT_CORNER =
         new Translation2d(
