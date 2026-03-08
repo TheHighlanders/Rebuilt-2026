@@ -16,8 +16,10 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -71,15 +73,42 @@ public class DriveCommands {
   private static Rotation2d pointAngle = Rotation2d.kZero;
 
   // @AutoLogOutput(key = "Auto/Target")
-  private static Translation2d getAlignTarget(Drive drive) {
-    Translation2d movementComp = Translation2d.kZero;
+  private static Translation3d getAlignTarget(Drive drive) {
+    Pose2d testPose = drive.getPose();
+    Translation3d target;
+    double fieldAlignX = 1;
+
+    if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+      testPose = testPose.rotateAround(FieldConstants.CENTER, Rotation2d.k180deg);
+      fieldAlignX = (FieldConstants.CENTER.getX() * 2) - fieldAlignX;
+    }
+
+    // returns the hub if the robot is inside the alliance side
+    if (testPose.getMeasureX().in(Meters) < FieldConstants.HUB_POSE_BLUE.getX() + 0.597154) {
+      target = new Translation3d(FieldConstants.HUB_POSE_BLUE.plus(new Translation2d(0.4, 0)));
+      target = target.plus(new Translation3d(0, 0, FieldConstants.HUB_HEIGHT));
+    }
+
+    // otherwise, shoots towards outpost or depot, depending on robot position
+    else if (testPose.getY() > FieldConstants.CENTER.getY()) {
+      target = new Translation3d(FieldConstants.DEPOT_POSE_BLUE); // blue depot
+    } else {
+      target = new Translation3d(FieldConstants.OUTPOST_POSE_BLUE); // blue outpost
+    }
+
+    // account for alliance side
+    if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+      target =
+          target.rotateAround(
+              new Translation3d(FieldConstants.CENTER), new Rotation3d(Rotation2d.k180deg));
+    }
+
+    Translation3d movementComp = new Translation3d(Translation2d.kZero);
     // new Translation2d(drive.getSpeeds().vxMetersPerSecond, drive.getSpeeds().vyMetersPerSecond)
     //     .rotateBy(drive.getPose().getRotation())
     //     .div(3);
 
-    return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-        ? FieldConstants.HUB_POSE_RED.minus(movementComp)
-        : FieldConstants.HUB_POSE_BLUE.minus(movementComp);
+    return target.plus(movementComp);
   }
 
   public static Trigger aligned() {
@@ -259,12 +288,7 @@ public class DriveCommands {
         .withName("Joystic Drive At Angle");
   }
 
-  /**
-   * Field relative drive command where joystick controlls linear velocity and robot is continuously
-   * towards a point on the field. Useful for orbitting shooting targets
-   *
-   * @param target Translation2d to look at
-   */
+  /** Aligns shooter and robot towards color hub */
   public static Command joystickAlignDrive(
       Drive drive,
       Shooter shooter,
@@ -272,7 +296,64 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       BooleanSupplier robotRelative) {
 
-    Supplier<Translation2d> target = () -> DriveCommands.getAlignTarget(drive);
+    Supplier<Translation3d> targetFR = () -> getAlignTarget(drive);
+
+    return Commands.parallel(
+            joystickDriveAtAngle(
+                drive,
+                xSupplier,
+                ySupplier,
+                () ->
+                    Rotation2d.fromRadians(
+                        Math.atan2(
+                                targetFR.get().getY() - drive.getPose().getY(),
+                                targetFR.get().getX() - drive.getPose().getX())
+                            + DriveConstants.ALIGN_SHOOTER_COMP.in(Radians)),
+                robotRelative),
+            shooter.flywheelCMD(
+                () ->
+                    new Translation2d(
+                        drive
+                            .getPose()
+                            .getTranslation()
+                            .getDistance(targetFR.get().toTranslation2d()),
+                        targetFR.get().getZ())),
+            // shooter.flywheelCMD(
+            //     () -> {
+            //       return new Translation2d(
+            //           drive.getPose().getTranslation().getDistance(targetFR.get()),
+            //           targetFR.get().equals(FieldConstants.HUB_POSE_BLUE)
+            //                   || targetFR.get().equals(FieldConstants.HUB_POSE_RED)
+            //               ? FieldConstants.HUB_HEIGHT
+            //               : 0);
+            //     }),
+            Commands.run(
+                () ->
+                    Logger.recordOutput(
+                        "Auto/Align Target",
+                        new Pose2d(targetFR.get().toTranslation2d(), Rotation2d.kZero))))
+        .withName("Joystic Align Drive");
+  }
+
+  /** Aligns shooter and robot towards color hub */
+  public static Command joystickAlignDriveHub(
+      Drive drive,
+      Shooter shooter,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      BooleanSupplier robotRelative) {
+
+    Supplier<Translation2d> target =
+        () -> {
+          Translation2d movementComp = Translation2d.kZero;
+          // new Translation2d(drive.getSpeeds().vxMetersPerSecond,
+          // drive.getSpeeds().vyMetersPerSecond)
+          //     .rotateBy(drive.getPose().getRotation())
+          //     .div(3);
+          return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+              ? FieldConstants.HUB_POSE_RED.minus(movementComp)
+              : FieldConstants.HUB_POSE_BLUE.minus(movementComp);
+        };
 
     return Commands.parallel(
             joystickDriveAtAngle(
@@ -286,7 +367,7 @@ public class DriveCommands {
                                 target.get().getX() - drive.getPose().getX())
                             + DriveConstants.ALIGN_SHOOTER_COMP.in(Radians)),
                 robotRelative),
-            shooter.flywheelCMD(
+            shooter.flywheelHubCMD(
                 () -> {
                   return drive.getPose().getTranslation().getDistance(target.get());
                 }),
@@ -446,10 +527,10 @@ public class DriveCommands {
         Commands.sequence(
                 Commands.deadline( // parallel
                     autoAlign(drive, autoClimbSequence), climber.raiseCMD()),
-                Commands.parallel(
+                Commands.deadline(
+                    Commands.sequence(Commands.waitSeconds(0.5), climber.pullCMD()),
                     joystickDriveAtAngle(
-                        drive, () -> 0, () -> 0.3, () -> drive.getRotation(), () -> true),
-                    Commands.sequence(Commands.waitSeconds(0.5), climber.pullCMD())))
+                        drive, () -> 0, () -> 0.3, () -> drive.getRotation(), () -> true)))
             .beforeStarting(
                 Commands.runOnce(
                     () -> {
@@ -466,7 +547,7 @@ public class DriveCommands {
           if (drive.getPose().getMeasureX().in(Meters) > FieldConstants.CENTER.getX()) {
             testPose = testPose.rotateAround(FieldConstants.CENTER, Rotation2d.k180deg);
           }
-
+          // returns if the robot is inside the alliance side
           return testPose.getMeasureX().in(Meters) < FieldConstants.HUB_POSE_BLUE.getX() - 0.597154;
         });
   }

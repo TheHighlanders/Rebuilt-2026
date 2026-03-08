@@ -28,6 +28,7 @@ import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.ShooterConstants.LookupTable;
 import java.util.Arrays;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
@@ -219,10 +220,27 @@ public class Shooter extends SubsystemBase {
     return Math.abs(flywheel.getVelocity().getValueAsDouble() - targetRPS) < 0.4;
   }
 
-  public Command flywheelCMD(DoubleSupplier distance) {
+  public Command flywheelCMD(Supplier<Translation2d> distance) {
     return Commands.run(
         () -> {
-          targetRPS = calculateRRHub(distance.getAsDouble());
+          targetRPS = calculateRR(distance.get());
+          flywheel.setControl(velocityVoltage.withVelocity(targetRPS));
+          SmartDashboard.putNumber(
+              "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
+          SmartDashboard.putNumber(
+              "Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
+          SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
+          SmartDashboard.putNumber(
+              "Shooter/Flywheel RPS", flywheel.getVelocity().getValueAsDouble());
+          SmartDashboard.putNumber("Shooter/Distance", distance.get().getX());
+        },
+        this);
+  }
+
+  public Command flywheelGndCMD(DoubleSupplier distance) {
+    return Commands.run(
+        () -> {
+          targetRPS = calculateRRGround(distance.getAsDouble());
           flywheel.setControl(velocityVoltage.withVelocity(targetRPS));
           SmartDashboard.putNumber(
               "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
@@ -236,10 +254,10 @@ public class Shooter extends SubsystemBase {
         this);
   }
 
-  public Command flywheelGndCMD(DoubleSupplier distance) {
+  public Command flywheelHubCMD(DoubleSupplier distance) {
     return Commands.run(
         () -> {
-          targetRPS = calculateRRGround(distance.getAsDouble());
+          targetRPS = calculateRRHub(distance.getAsDouble());
           flywheel.setControl(velocityVoltage.withVelocity(targetRPS));
           SmartDashboard.putNumber(
               "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
@@ -277,5 +295,10 @@ public class Shooter extends SubsystemBase {
         "Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
     SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
     SmartDashboard.putNumber("Shooter/Flywheel RPS", flywheel.getVelocity().getValueAsDouble());
+  }
+
+  public Command flywheelHubCMD(Object object) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'flywheelHubCMD'");
   }
 }

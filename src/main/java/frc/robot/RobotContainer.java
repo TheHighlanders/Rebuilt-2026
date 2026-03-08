@@ -155,7 +155,7 @@ public class RobotContainer {
         shooter = temp;
         hopper = new HopperSim(temp);
 
-        fuelSim.spawnStartingFuel(false);
+        fuelSim.spawnStartingFuel(true);//Armaan, disable center fuel for performance
 
         // Register a robot for collision with fuel
         fuelSim.registerRobot(
@@ -176,8 +176,9 @@ public class RobotContainer {
         fuelSim.setSubticks(
             3); // sets the number of physics iterations to perform per 20ms loop. Default = 5
 
-        fuelSim
-            .enableAirResistance(); // an additional drag force will be applied to fuel in physics
+        // fuelSim
+        //     .enableAirResistance(); // an additional drag force will be applied to fuel in
+        // physics
         // update step
 
         fuelSim
@@ -287,7 +288,7 @@ public class RobotContainer {
 
     // snaps intake forward
     controller
-        .a()
+        .b()
         .onTrue(
             DriveCommands.joystickPointDrive(
                     drive,
@@ -350,8 +351,13 @@ public class RobotContainer {
                     () -> -controller.getRightX() * speed,
                     () -> robotRelative)));
 
-    // reset gyro - not really but close enough
-    controller.back().onTrue(Commands.runOnce(() -> drive.setPose(new Pose2d())));
+    // reset gyro TODO: might not work with photonvision
+    controller
+        .back()
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    drive.setPose(new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero))));
 
     /* INTAKE COMMANDS */
     // intake and deploy
@@ -366,8 +372,8 @@ public class RobotContainer {
     /* HOPPER COMMANDS */
 
     // shoot
-    controller.b().onTrue(hopper.shootCMD());
-    controller.b().onFalse(hopper.stopCMD());
+    controller.a().onTrue(hopper.shootCMD()); // TODO: add trigger
+    controller.a().onFalse(hopper.stopCMD());
 
     // can add condition that only shoots when aligned and spun up - or that waits until it is
     // aligned...
@@ -392,8 +398,8 @@ public class RobotContainer {
 
     controller.rightTrigger(0.05).onFalse(shooter.stopCMD());
 
-    // flywheel spin-up (not precise)
-    operator.y().onTrue(shooter.flywheelCMD(() -> 6));
+    // flywheel pre-spin-up (not precise)
+    operator.y().onTrue(shooter.flywheelGndCMD(() -> 6));
 
     /* CLIMBER COMMANDS */
 
@@ -408,8 +414,6 @@ public class RobotContainer {
                     DriveCommands.autoClimb(drive, climber),
                     Commands.none(),
                     operator.leftBumper().and(operator.rightBumper())::getAsBoolean)));
-
-    operator.a().onFalse(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
 
     // backup---raise and lower climber with trigger
     operator.leftTrigger(0.95).onTrue(climber.raiseCMD());

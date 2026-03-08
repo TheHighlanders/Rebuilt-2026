@@ -197,6 +197,11 @@ public final class Constants {
         new Translation2d(
             Units.inchesToMeters(40 + (3.51 / 2)),
             Units.inchesToMeters((158.32 - 11.46) - ((32.25 / 2) + 1.5)));
+    public static final Translation2d OUTPOST_POSE_BLUE =
+        new Translation2d(Units.inchesToMeters(33.25 / 2), Units.inchesToMeters(26.22));
+    public static final Translation2d DEPOT_POSE_BLUE =
+        new Translation2d(
+            Units.inchesToMeters(27 / 2), Units.inchesToMeters(158.84 + 75.93)); // TODO: measure
   }
 
   public static enum Mode {
