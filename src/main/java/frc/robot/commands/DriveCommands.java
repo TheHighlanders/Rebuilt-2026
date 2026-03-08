@@ -443,33 +443,32 @@ public class DriveCommands {
   private static Command autoClimb(Drive drive, Climber climber, Pose2d[] autoClimbSequence) {
 
     return Commands.either(
-            Commands.sequence(
-                    Commands.deadline( // parallel
-                        autoAlign(drive, autoClimbSequence), climber.raiseCMD()),
-                    Commands.parallel(
-                        joystickDriveAtAngle(
-                            drive, () -> 0, () -> 0.3, () -> drive.getRotation(), () -> true),
-                        Commands.sequence(Commands.waitSeconds(0.5), climber.pullCMD())))
-                .beforeStarting(
-                    Commands.runOnce(
-                        () -> {
-                          SmartDashboard.putString("Drive/AutoClimbOff", "No---Climbing");
-                        })),
-            Commands.none()
-                .beforeStarting(
-                    Commands.runOnce(
-                        () -> {
-                          SmartDashboard.putString("Drive/AutoClimbOff", "Yes---FAIL");
-                        })),
-            () -> {
-              Pose2d testPose = drive.getPose();
-              if (drive.getPose().getMeasureX().in(Meters) > FieldConstants.CENTER.getX()) {
-                testPose = testPose.rotateAround(FieldConstants.CENTER, Rotation2d.k180deg);
-              }
+        Commands.sequence(
+                Commands.deadline( // parallel
+                    autoAlign(drive, autoClimbSequence), climber.raiseCMD()),
+                Commands.parallel(
+                    joystickDriveAtAngle(
+                        drive, () -> 0, () -> 0.3, () -> drive.getRotation(), () -> true),
+                    Commands.sequence(Commands.waitSeconds(0.5), climber.pullCMD())))
+            .beforeStarting(
+                Commands.runOnce(
+                    () -> {
+                      SmartDashboard.putString("Drive/AutoClimbOff", "No---Climbing");
+                    })),
+        Commands.none()
+            .beforeStarting(
+                Commands.runOnce(
+                    () -> {
+                      SmartDashboard.putString("Drive/AutoClimbOff", "Yes---FAIL");
+                    })),
+        () -> {
+          Pose2d testPose = drive.getPose();
+          if (drive.getPose().getMeasureX().in(Meters) > FieldConstants.CENTER.getX()) {
+            testPose = testPose.rotateAround(FieldConstants.CENTER, Rotation2d.k180deg);
+          }
 
-              return testPose.getMeasureX().in(Meters)
-                  < FieldConstants.HUB_POSE_BLUE.getX() - 0.597154;
-            });
+          return testPose.getMeasureX().in(Meters) < FieldConstants.HUB_POSE_BLUE.getX() - 0.597154;
+        });
   }
 
   /**

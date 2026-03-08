@@ -9,7 +9,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
@@ -53,10 +52,7 @@ public class Autos {
   public AutoRoutine badLaptopTestAuto() {
     AutoRoutine routine = autoFactory.newRoutine("Test");
 
-    routine
-        .active()
-        .onTrue(
-            Commands.none());
+    routine.active().onTrue(Commands.none());
 
     return routine;
   }

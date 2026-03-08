@@ -64,7 +64,17 @@ public class Deploy extends SubsystemBase {
             runCMD(IntakeConstants.DEPLOY_SPEED))
         .andThen(runCMD(0));
   }
-  // Stops motor
+
+  public Command readyCMD() {
+    return Commands.deadline(
+            Commands.waitUntil(
+                () ->
+                    deployEncoder.getPosition()
+                        >= IntakeConstants.READY_POSITION - IntakeConstants.DEPLOY_TOLERANCE),
+            runCMD(IntakeConstants.DEPLOY_SPEED))
+        .andThen(runCMD(0));
+  }
+
   public Command undeployCMD() {
     return Commands.deadline(
             Commands.waitUntil(
