@@ -49,7 +49,32 @@ public class Autos {
     return Commands.runOnce(() -> SmartDashboard.putString("Auto/Auto State", state));
   }
 
-  public AutoRoutine test() {
+  public AutoRoutine badLaptopTestAuto() {
+    AutoRoutine routine = autoFactory.newRoutine("Test");
+
+    routine
+        .active()
+        .onTrue(
+            Commands.sequence(
+                // red outpost
+                // Commands.runOnce(() -> drive.setPose(new Pose2d(13, 1, Rotation2d.kZero))),
+                // Commands.deadline(Commands.waitSeconds(3), DriveCommands.autoClimb(drive,
+                // climber)),
+                // red depot
+                Commands.runOnce(() -> drive.setPose(new Pose2d(13, 7, Rotation2d.kZero))),
+                Commands.deadline(Commands.waitSeconds(3), DriveCommands.autoClimb(drive, climber)),
+                // blue outpost
+                Commands.runOnce(() -> drive.setPose(new Pose2d(1, 1, Rotation2d.kZero))),
+                Commands.deadline(Commands.waitSeconds(3), DriveCommands.autoClimb(drive, climber)),
+                // blue depot
+                Commands.runOnce(() -> drive.setPose(new Pose2d(1, 7, Rotation2d.kZero))),
+                Commands.deadline(
+                    Commands.waitSeconds(3), DriveCommands.autoClimb(drive, climber))));
+
+    return routine;
+  }
+
+  public AutoRoutine testAuto() {
     AutoRoutine routine = autoFactory.newRoutine("Test");
 
     AutoTrajectory square = routine.trajectory("TestSquare");
@@ -120,20 +145,16 @@ public class Autos {
     routine
         .active()
         .onTrue(
-            DriveCommands.autoAlign(drive, new Pose2d(3, 5, Rotation2d.kCCW_90deg))
-                .andThen(
-                    Commands.parallel(
-                        DriveCommands.joystickAlignDrive(
-                            drive, shooter, () -> 0, () -> 0, () -> true),
-                        Commands.sequence(
-                            Commands.waitSeconds(1),
-                            Commands.waitUntil(
-                                () -> {
-                                  return shooter.atSpeed()
-                                      && DriveCommands.aligned().getAsBoolean();
-                                }),
-                            // Commands.runOnce(drive::stopWithX),//maybe
-                            hopper.shootCMD()))));
+            Commands.parallel(
+                DriveCommands.joystickAlignDrive(drive, shooter, () -> 0, () -> 0, () -> true),
+                Commands.sequence(
+                    Commands.waitSeconds(1),
+                    Commands.waitUntil(
+                        () -> {
+                          return shooter.atSpeed() && DriveCommands.aligned().getAsBoolean();
+                        }),
+                    // Commands.runOnce(drive::stopWithX),//maybe
+                    hopper.shootCMD())));
 
     return routine;
   }

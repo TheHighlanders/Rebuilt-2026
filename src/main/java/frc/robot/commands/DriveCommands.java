@@ -391,28 +391,59 @@ public class DriveCommands {
 
   public static Command autoClimb(Drive drive, Climber climber) {
     return Commands.either(
-      Commands.either(
-        autoClimb(drive, climber, getAutoClimbAlignSequence(true, true)), 
-        autoClimb(drive, climber, getAutoClimbAlignSequence(true, false)), 
-        () -> 
-          drive.getPose().rotateAround(FieldConstants.CENTER, Rotation2d.k180deg).getMeasureY()
-            .lt(
-                FieldConstants.CLIMB_OUTPOST_CORNER
-                    .minus(DriveConstants.TO_CORNER_BUMPERS)
-                    .getMeasureY())), 
-      Commands.either(
-        autoClimb(drive, climber, getAutoClimbAlignSequence(false, true)), 
-        autoClimb(drive, climber, getAutoClimbAlignSequence(false, false)), 
-        () -> 
-          drive.getPose().getMeasureY()
-            .lt(
-                FieldConstants.CLIMB_OUTPOST_CORNER
-                    .minus(DriveConstants.TO_CORNER_BUMPERS)
-                    .getMeasureY())), 
+        Commands.either(
+            autoClimb(drive, climber, getAutoClimbAlignSequence(true, true))
+                .beforeStarting(
+                    Commands.runOnce(
+                        () -> {
+                          SmartDashboard.putString("Drive/AutoClimbAlliance", "Red");
+                          SmartDashboard.putString("Drive/AutoClimbSide", "Outpost");
+                        })),
+            autoClimb(drive, climber, getAutoClimbAlignSequence(true, false))
+                .beforeStarting(
+                    Commands.runOnce(
+                        () -> {
+                          SmartDashboard.putString("Drive/AutoClimbAlliance", "Red");
+                          SmartDashboard.putString("Drive/AutoClimbSide", "Depot");
+                        })),
+            () ->
+                drive
+                    .getPose()
+                    .rotateAround(FieldConstants.CENTER, Rotation2d.k180deg)
+                    .getMeasureY()
+                    .lt(
+                        FieldConstants.CLIMB_OUTPOST_CORNER
+                            .minus(DriveConstants.TO_CORNER_BUMPERS)
+                            .getMeasureY())),
+        Commands.either(
+            autoClimb(drive, climber, getAutoClimbAlignSequence(false, true))
+                .beforeStarting(
+                    Commands.runOnce(
+                        () -> {
+                          SmartDashboard.putString("Drive/AutoClimbAlliance", "Blue");
+                          SmartDashboard.putString("Drive/AutoClimbSide", "Outpost");
+                        })),
+            autoClimb(drive, climber, getAutoClimbAlignSequence(false, false))
+                .beforeStarting(
+                    Commands.runOnce(
+                        () -> {
+                          SmartDashboard.putString("Drive/AutoClimbAlliance", "Blue");
+                          SmartDashboard.putString("Drive/AutoClimbSide", "Depot");
+                        })),
+            () ->
+                drive
+                    .getPose()
+                    .getMeasureY()
+                    .lt(
+                        FieldConstants.CLIMB_OUTPOST_CORNER
+                            .minus(DriveConstants.TO_CORNER_BUMPERS)
+                            .getMeasureY())),
         () -> {
           return drive.getPose().getMeasureX().in(Meters) > FieldConstants.CENTER.getX();
         });
   }
+
+  // auto climb tool that aligns to the tower given a sequence of Pose2ds, then pulls the robot up.
   private static Command autoClimb(Drive drive, Climber climber, Pose2d[] autoClimbSequence) {
 
     return Commands.either(
