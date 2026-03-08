@@ -155,7 +155,7 @@ public class RobotContainer {
         shooter = temp;
         hopper = new HopperSim(temp);
 
-        fuelSim.spawnStartingFuel(true);//Armaan, disable center fuel for performance
+        fuelSim.spawnStartingFuel(true); // Armaan, disable center fuel for performance
 
         // Register a robot for collision with fuel
         fuelSim.registerRobot(
