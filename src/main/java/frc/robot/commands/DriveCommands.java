@@ -116,19 +116,13 @@ public class DriveCommands {
       alignSeq[0] =
           new Pose2d(
               FieldConstants.CLIMB_OUTPOST_CORNER
-                  .plus(
-                      new Translation2d(
-                          DriveConstants.TO_CORNER_BUMPERS.getX(),
-                          -DriveConstants.TO_CORNER_BUMPERS.getY()))
-                  .plus(new Translation2d(0, 0.1)),
+                  .minus(DriveConstants.TO_CORNER_BUMPERS)
+                  .plus(new Translation2d(0, -0.1)),
               Rotation2d.kCW_90deg);
       alignSeq[1] =
           new Pose2d(
               FieldConstants.CLIMB_OUTPOST_CORNER
-                  .plus(
-                      new Translation2d(
-                          DriveConstants.TO_CORNER_BUMPERS.getX(),
-                          -DriveConstants.TO_CORNER_BUMPERS.getY()))
+                  .minus(DriveConstants.TO_CORNER_BUMPERS)
                   .plus(new Translation2d(0.1, 0)),
               Rotation2d.kCW_90deg);
     } else {
@@ -150,6 +144,12 @@ public class DriveCommands {
     if (red) {
       alignSeq[0] = alignSeq[0].rotateAround(FieldConstants.CENTER, Rotation2d.k180deg);
       alignSeq[1] = alignSeq[1].rotateAround(FieldConstants.CENTER, Rotation2d.k180deg);
+    }
+
+    if (alignSeq[1] == null) {
+      SmartDashboard.putString("Drive/AutoAlign", "FAIL");
+    } else {
+      SmartDashboard.putString("Drive/AutoAlign", "SUCCESS");
     }
 
     return alignSeq;
@@ -382,7 +382,7 @@ public class DriveCommands {
   }
 
   private static Command autoAlign(Drive drive, Pose2d[] poses) {
-    Command alignCMD = Commands.none();
+    Command alignCMD = Commands.waitSeconds(0);
     for (Pose2d pose : poses) {
       alignCMD = alignCMD.andThen(autoAlign(drive, pose));
     }
@@ -396,15 +396,13 @@ public class DriveCommands {
                 .beforeStarting(
                     Commands.runOnce(
                         () -> {
-                          SmartDashboard.putString("Drive/AutoClimbAlliance", "Red");
-                          SmartDashboard.putString("Drive/AutoClimbSide", "Outpost");
+                          SmartDashboard.putString("Drive/AutoClimb", "Red Outpost");
                         })),
             autoClimb(drive, climber, getAutoClimbAlignSequence(true, false))
                 .beforeStarting(
                     Commands.runOnce(
                         () -> {
-                          SmartDashboard.putString("Drive/AutoClimbAlliance", "Red");
-                          SmartDashboard.putString("Drive/AutoClimbSide", "Depot");
+                          SmartDashboard.putString("Drive/AutoClimb", "Red Depot");
                         })),
             () ->
                 drive
@@ -420,15 +418,13 @@ public class DriveCommands {
                 .beforeStarting(
                     Commands.runOnce(
                         () -> {
-                          SmartDashboard.putString("Drive/AutoClimbAlliance", "Blue");
-                          SmartDashboard.putString("Drive/AutoClimbSide", "Outpost");
+                          SmartDashboard.putString("Drive/AutoClimb", "Blue Outpost");
                         })),
             autoClimb(drive, climber, getAutoClimbAlignSequence(false, false))
                 .beforeStarting(
                     Commands.runOnce(
                         () -> {
-                          SmartDashboard.putString("Drive/AutoClimbAlliance", "Blue");
-                          SmartDashboard.putString("Drive/AutoClimbSide", "Depot");
+                          SmartDashboard.putString("Drive/AutoClimb", "Blue Depot");
                         })),
             () ->
                 drive
@@ -448,13 +444,23 @@ public class DriveCommands {
 
     return Commands.either(
             Commands.sequence(
-                Commands.deadline( // parallel
-                    autoAlign(drive, autoClimbSequence), climber.raiseCMD()),
-                Commands.parallel(
-                    joystickDriveAtAngle(
-                        drive, () -> 0, () -> 0.3, () -> drive.getRotation(), () -> true),
-                    Commands.sequence(Commands.waitSeconds(0.5), climber.pullCMD()))),
-            Commands.none(),
+                    Commands.deadline( // parallel
+                        autoAlign(drive, autoClimbSequence), climber.raiseCMD()),
+                    Commands.parallel(
+                        joystickDriveAtAngle(
+                            drive, () -> 0, () -> 0.3, () -> drive.getRotation(), () -> true),
+                        Commands.sequence(Commands.waitSeconds(0.5), climber.pullCMD())))
+                .beforeStarting(
+                    Commands.runOnce(
+                        () -> {
+                          SmartDashboard.putString("Drive/AutoClimbOff", "No---Climbing");
+                        })),
+            Commands.none()
+                .beforeStarting(
+                    Commands.runOnce(
+                        () -> {
+                          SmartDashboard.putString("Drive/AutoClimbOff", "Yes---FAIL");
+                        })),
             () -> {
               Pose2d testPose = drive.getPose();
               if (drive.getPose().getMeasureX().in(Meters) > FieldConstants.CENTER.getX()) {
@@ -462,9 +468,8 @@ public class DriveCommands {
               }
 
               return testPose.getMeasureX().in(Meters)
-                  > FieldConstants.HUB_POSE_BLUE.getX() - 0.597154;
-            })
-        .withName("Auto-Climbing");
+                  < FieldConstants.HUB_POSE_BLUE.getX() - 0.597154;
+            });
   }
 
   /**

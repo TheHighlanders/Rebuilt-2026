@@ -185,10 +185,8 @@ public final class Constants {
 
     public static final Translation2d CENTER =
         new Translation2d(
-            VisionConstants.aprilTagLayout.getTagPose(6).get().getX()
-                - VisionConstants.aprilTagLayout.getTagPose(17).get().getX(),
-            VisionConstants.aprilTagLayout.getTagPose(1).get().getY()
-                - VisionConstants.aprilTagLayout.getTagPose(6).get().getY());
+            Units.inchesToMeters(325.61),
+            Units.inchesToMeters(158.84)); // how you know none of this is vibe coded
 
     public static final Translation2d CLIMB_DEPOT_CORNER =
         new Translation2d(
