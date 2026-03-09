@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.Constants.ShooterConstants;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
@@ -111,34 +112,27 @@ public class DriveCommands {
         chooseAlignTarget(drive.getPose(), DriverStation.getAlliance().orElse(Alliance.Blue));
 
     // robot-relative target pose
-    Translation2d movingTarget = target.minus(drive.getPose());
+    Pose2d pose = drive.getPose();
+    Translation2d movingTarget =
+        new Translation2d(target.getX() - pose.getX(), target.getY() - pose.getY());
 
     // delta distance
-    double dd = (((-movingTarget.getX())*drive.getSpeeds().vxMetersPerSecond)
-                     + ((-movingTarget.getY())*drive.getSpeeds().vyMetersPerSecond))
-                    / Math.sqrt(
-                        Math.pow(
-                            (movingTarget.getY() * movingTarget.getY())
-                            + (movingTarget.getX() * movingTarget.getX())));
+    double dd =
+        (((-movingTarget.getX()) * drive.getSpeeds().vxMetersPerSecond)
+                + ((-movingTarget.getY()) * drive.getSpeeds().vyMetersPerSecond))
+            / Math.sqrt(Math.pow(movingTarget.getY(), 2) + Math.pow(movingTarget.getX(), 2));
 
     // airtime
-    double airtime = (dd 
-                        + Math.sqrt(
-                            (dd * dd)
-                            - (
-                                2
-                                * ShooterConstants.GRAVITY
-                                * ShooterConstants.HOOD_SLOPE
-                                * ((target.getZ() * ShooterConstants.HOOD_SLOPE) 
-                                    - Math.hypot(
-                                        movingTarget.getX(),
-                                        movingTarget.getY()
-                                    ))
-                            )
-                        ))
-                    / (2 
-                        * ShooterConstants.GRAVITY 
-                        * ShooterConstants.HOOD_SLOPE);
+    double airtime =
+        (dd
+                + Math.sqrt(
+                    (dd * dd)
+                        - (2
+                            * ShooterConstants.GRAVITY
+                            * ShooterConstants.HOOD_SLOPE
+                            * ((target.getZ() * ShooterConstants.HOOD_SLOPE)
+                                - Math.hypot(movingTarget.getX(), movingTarget.getY())))))
+            / (2 * ShooterConstants.GRAVITY * ShooterConstants.HOOD_SLOPE);
 
     Translation3d movementComp =
         new Translation3d(
