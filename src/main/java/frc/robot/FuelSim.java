@@ -123,7 +123,7 @@ public class FuelSim {
         if (simulateAirResistance) {
           double speed = vel.getNorm();
           if (speed > 1e-6) {
-            Fd = vel.times(-DRAG_FORCE_FACTOR * speed);
+            Fd = vel.times(-DRAG_FORCE_FACTOR); // * speed);
           }
         }
 
@@ -563,7 +563,7 @@ public class FuelSim {
             * Math.sin(turretYaw.plus(launchPose.getRotation().getMeasureZ()).in(Radians));
 
     xVel += fieldSpeeds.vxMetersPerSecond;
-    yVel += fieldSpeeds.vyMetersPerSecond;
+    yVel += fieldSpeeds.vyMetersPerSecond; // TODO
 
     spawnFuel(launchPose.getTranslation(), new Translation3d(xVel, yVel, verticalVel));
   }

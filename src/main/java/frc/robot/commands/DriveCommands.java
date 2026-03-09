@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.Constants.ShooterConstants;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
@@ -85,7 +86,7 @@ public class DriveCommands {
 
     // returns the hub if the robot is inside the alliance side
     if (testPose.getMeasureX().in(Meters) < FieldConstants.HUB_POSE_BLUE.getX() + 0.597154) {
-      target = new Translation3d(FieldConstants.HUB_POSE_BLUE.plus(new Translation2d(0.4, 0)));
+      target = new Translation3d(FieldConstants.HUB_POSE_BLUE);//.plus(new Translation2d(0.4, 0)));
       target = target.plus(new Translation3d(0, 0, FieldConstants.HUB_HEIGHT));
     }
 
@@ -103,42 +104,41 @@ public class DriveCommands {
               new Translation3d(FieldConstants.CENTER), new Rotation3d(Rotation2d.k180deg));
     }
 
-    //robot-relative target pose
-    Translation2d movingTarget = target.minus(drive.getPose());
+    // robot-relative target pose
+    Translation2d movingTarget = target.toTranslation2d().minus(drive.getPose().getTranslation());
+
+    // robot linear velocity
+    Translation2d robotLinVel =
+        new Translation2d(drive.getSpeeds().vxMetersPerSecond, drive.getSpeeds().vyMetersPerSecond)
+            .rotateBy(drive.getRotation());
 
     // delta distance
-    double dd = (((-movingTarget.getX())*drive.getSpeeds().vxMetersPerSecond)
-                     + ((-movingTarget.getY())*drive.getSpeeds().vyMetersPerSecond))
-                    / Math.sqrt(
-                        Math.pow(
-                            (movingTarget.getY() * movingTarget.getY())
-                            + (movingTarget.getX() * movingTarget.getX())));
+    double dd =
+        -((movingTarget.getX() * robotLinVel.getX()) + (movingTarget.getY() * robotLinVel.getY()))
+            / movingTarget.getNorm();
 
-    //airtime
-    double airtime = (dd 
-                        + Math.sqrt(
-                            (dd * dd)
-                            - (
-                                2
-                                * ShooterConstants.GRAVITY
-                                * ShooterConstants.HOOD_SLOPE
-                                * ((target.getZ() * ShooterConstants.HOOD_SLOPE) 
-                                    - Math.hypot(
-                                        movingTarget.getX(),
-                                        movingTarget.getY()
-                                    ))
-                            )
-                        ))
-                    / (2 
-                        * ShooterConstants.GRAVITY 
-                        * ShooterConstants.HOOD_SLOPE);
+    // airtime
+    double airtime =
+        (dd
+                + Math.sqrt(
+                    (dd * dd)
+                        - (2
+                            * ShooterConstants.GRAVITY
+                            * ShooterConstants.HOOD_SLOPE
+                            * ((target.getZ() * ShooterConstants.HOOD_SLOPE)
+                                - movingTarget.getNorm()))))
+            / (2 * ShooterConstants.GRAVITY * ShooterConstants.HOOD_SLOPE);
 
-    Translation3d movementComp = new Translation3d(
-    new Translation2d(drive.getSpeeds().vxMetersPerSecond, drive.getSpeeds().vyMetersPerSecond)
-        .rotateBy(drive.getPose().getRotation())
-        .times(airtime));
+    Translation3d movementComp = new Translation3d(robotLinVel.times(airtime*2));
 
-    return target.plus(movementComp);
+    SmartDashboard.putNumber("Auto Align/robot linear velocity", robotLinVel.getNorm());
+    SmartDashboard.putNumber("Auto Align/dd over dt", dd);
+    SmartDashboard.putNumber("Auto Align/distance", movingTarget.getNorm());
+    SmartDashboard.putNumber("Auto Align/airtime", airtime);
+
+    Logger.recordOutput("robot speeds", new Pose2d(robotLinVel, Rotation2d.kZero));
+
+    return target.minus(movementComp);
   }
 
   public static Trigger aligned() {

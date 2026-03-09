@@ -13,6 +13,7 @@ import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -155,7 +156,7 @@ public class RobotContainer {
         shooter = temp;
         hopper = new HopperSim(temp);
 
-        fuelSim.spawnStartingFuel(true); // Armaan, disable center fuel for performance
+        fuelSim.spawnStartingFuel(false); // Armaan, disable center fuel for performance
 
         // Register a robot for collision with fuel
         fuelSim.registerRobot(
@@ -163,7 +164,13 @@ public class RobotContainer {
             0.6858, // from front to back in meters
             0.1, // from floor to top of bumpers in meters
             drive::getPose, // Supplier<Pose2d> of robot pose
-            drive::getSpeeds); // Supplier<ChassisSpeeds> of field-centric chassis speeds
+            () ->
+                ChassisSpeeds.fromRobotRelativeSpeeds(
+                    drive.getSpeeds().vxMetersPerSecond,
+                    drive.getSpeeds().vyMetersPerSecond,
+                    drive.getSpeeds().omegaRadiansPerSecond,
+                    drive.getRotation())); // Supplier<ChassisSpeeds> of field-centric chassis
+        // speeds.
 
         // Register an intake to remove fuel from the field as a rectangular bounding box
         fuelSim.registerIntake(
@@ -176,8 +183,7 @@ public class RobotContainer {
         fuelSim.setSubticks(
             3); // sets the number of physics iterations to perform per 20ms loop. Default = 5
 
-        // fuelSim
-        //     .enableAirResistance(); // an additional drag force will be applied to fuel in
+        fuelSim.enableAirResistance(); // an additional drag force will be applied to fuel in
         // physics
         // update step
 
@@ -306,8 +312,8 @@ public class RobotContainer {
             DriveCommands.joystickAlignDrive(
                     drive,
                     shooter,
-                    () -> -controller.getLeftY() * speed,
-                    () -> -controller.getLeftX() * speed,
+                    () -> -controller.getLeftY() * 0.7,
+                    () -> -controller.getLeftX() * 0.7,
                     () -> robotRelative)
                 .until(() -> !controller.rightBumper().getAsBoolean()));
 

@@ -41,7 +41,9 @@ public final class Constants {
         new Pose2d(Meters.of(2), Meters.of(2), Rotation2d.kZero);
     public static final int GYRO_ID = 0; // TODO
     public static final Angle ALIGN_SHOOTER_COMP =
-        Radians.of(1.67); // could make this a function of distance, but this works for now
+        Radians.of(
+            Math.PI
+                / 2); // 1.67); // could make this a function of distance, but this works for now
     public static final Translation2d TO_CORNER_BUMPERS =
         new Translation2d(Units.inchesToMeters(33.25 / 2), Units.inchesToMeters(33.6 / 2));
   }
@@ -161,7 +163,7 @@ public final class Constants {
     public static final Translation3d SHOOTER_RR_POS =
         new Translation3d(Meters.of(-0.1), Meters.of(0.3), Meters.of(0.27)); // TODO find in cad
     public static final Angle SHOOTER_HOOD = Degrees.of(78);
-    public static final double HOOD_SLOPE = Math.cot(Units.degreesToRadians(78));
+    public static final double HOOD_SLOPE = 1 / Math.tan(Units.degreesToRadians(78));
     public static final Distance FLYWHEEL_RADIUS = Inches.of(2);
 
     public static final double GRAVITY = 9.80665;
