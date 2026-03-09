@@ -86,8 +86,7 @@ public class DriveCommands {
 
     // returns the hub if the robot is inside the alliance side
     if (testPose.getMeasureX().in(Meters) < FieldConstants.HUB_POSE_BLUE.getX() + 0.597154) {
-      target =
-          new Translation3d(FieldConstants.HUB_POSE_BLUE); // .plus(new Translation2d(0.4, 0)));
+      target = new Translation3d(FieldConstants.HUB_POSE_BLUE.plus(new Translation2d(0.4, 0)));
       target = target.plus(new Translation3d(0, 0, FieldConstants.HUB_HEIGHT));
     }
 
@@ -137,7 +136,7 @@ public class DriveCommands {
                             * ShooterConstants.GRAVITY
                             * ShooterConstants.HOOD_SLOPE
                             * ((target.getZ() * ShooterConstants.HOOD_SLOPE)
-                                - movingTarget.getNorm())))
+                                - movingTarget.getNorm()))))
             / (2 * ShooterConstants.GRAVITY * ShooterConstants.HOOD_SLOPE);
 
     Translation3d movementComp = new Translation3d(robotLinVel.times(airtime * 2));
