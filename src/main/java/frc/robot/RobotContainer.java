@@ -281,13 +281,27 @@ public class RobotContainer {
 
     // toggles between robot- and field-relative drive
     controller
-        .rightStick()
+        .leftStick()
         .onTrue(
             Commands.runOnce(
                 () -> {
                   robotRelative = !robotRelative;
                   SmartDashboard.putBoolean("Robot Relative Drive", robotRelative);
                 }));
+
+    controller
+        .rightStick()
+        .toggleOnTrue(
+            Commands.sequence(
+                Commands.waitUntil(() -> !controller.rightStick().getAsBoolean()),
+                DriveCommands.joystickPointDrive(
+                        drive,
+                        () -> -controller.getLeftY(),
+                        () -> -controller.getLeftX(),
+                        () -> controller.getRightY(),
+                        () -> controller.getRightX(),
+                        () -> robotRelative)
+                    .until(() -> controller.rightStick().getAsBoolean())));
 
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));

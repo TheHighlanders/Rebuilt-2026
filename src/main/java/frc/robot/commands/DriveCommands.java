@@ -86,7 +86,8 @@ public class DriveCommands {
 
     // returns the hub if the robot is inside the alliance side
     if (testPose.getMeasureX().in(Meters) < FieldConstants.HUB_POSE_BLUE.getX() + 0.597154) {
-      target = new Translation3d(FieldConstants.HUB_POSE_BLUE);//.plus(new Translation2d(0.4, 0)));
+      target =
+          new Translation3d(FieldConstants.HUB_POSE_BLUE); // .plus(new Translation2d(0.4, 0)));
       target = target.plus(new Translation3d(0, 0, FieldConstants.HUB_HEIGHT));
     }
 
@@ -105,7 +106,7 @@ public class DriveCommands {
     }
 
     /* MOVEMENT COMP */
-    //https://www.desmos.com/calculator/2jxmstl1qs
+    // https://www.desmos.com/calculator/2jxmstl1qs
 
     // robot-relative target pose
     Translation2d movingTarget = target.toTranslation2d().minus(drive.getPose().getTranslation());
@@ -132,7 +133,7 @@ public class DriveCommands {
                                 - movingTarget.getNorm()))))
             / (2 * ShooterConstants.GRAVITY * ShooterConstants.HOOD_SLOPE);
 
-    Translation3d movementComp = new Translation3d(robotLinVel.times(airtime*2));
+    Translation3d movementComp = new Translation3d(robotLinVel.times(airtime * 2));
 
     SmartDashboard.putNumber("Auto Align/robot linear velocity", robotLinVel.getNorm());
     SmartDashboard.putNumber("Auto Align/dd over dt", dd);
