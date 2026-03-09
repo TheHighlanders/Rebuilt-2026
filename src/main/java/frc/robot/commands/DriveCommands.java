@@ -137,7 +137,7 @@ public class DriveCommands {
                             * ShooterConstants.GRAVITY
                             * ShooterConstants.HOOD_SLOPE
                             * ((target.getZ() * ShooterConstants.HOOD_SLOPE)
-                                - movingTarget.getNorm()))))
+                                - movingTarget.getNorm())))
             / (2 * ShooterConstants.GRAVITY * ShooterConstants.HOOD_SLOPE);
 
     Translation3d movementComp = new Translation3d(robotLinVel.times(airtime * 2));
