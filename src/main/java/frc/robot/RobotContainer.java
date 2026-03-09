@@ -15,6 +15,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -392,24 +393,39 @@ public class RobotContainer {
     /* HOPPER COMMANDS */
 
     // shoot
-    controller.a().onTrue(hopper.shootCMD()); // TODO: add trigger
-    controller.a().onFalse(hopper.stopCMD());
+    controller
+        .a()
+        .onTrue(
+            Commands.sequence(
+                Commands.waitUntil(
+                    () -> shooter.atSpeed() || DriveCommands.aligned().getAsBoolean()),
+                hopper.shootCMD()));
 
-    // can add condition that only shoots when aligned and spun up - or that waits until it is
-    // aligned...
-    // Commands.either(
-    //     Commands.either(
-    //         hopper.shootCMD(), Commands.none(), shooter::atSpeed), // shoot if aligned
-    //     Commands.parallel(
-    //         // hopper.shootCMD(),
-    //         shooter.flywheelCMD(() -> 10), hopper.backdriveCMD()), // clear if not aligning
-    //     controller.rightBumper()::getAsBoolean));
+    controller.a().onFalse(hopper.stopCMD());
 
     // clear hopper
     operator.x().onTrue(hopper.backdriveCMD());
     operator.x().onFalse(hopper.stopCMD());
 
     /* SHOOTER COMMANDS */
+
+    // This trigger probably goes off way too much - maybe make shooter.atSpeed() lock this at true?
+    DriveCommands.aligned()
+        .and(() -> shooter.atSpeed())// && false) // Armaan, turn off rumble
+        .onTrue(
+            Commands.sequence(
+                Commands.run(
+                    () -> {
+                    controller.getHID().setRumble(RumbleType.kLeftRumble, 1);
+                    controller.getHID().setRumble(RumbleType.kRightRumble, 1);
+                    SmartDashboard.putString("Rumble?", "Yes");
+                    }),
+                Commands.waitSeconds(1),
+                Commands.run(
+                    () -> {
+                    controller.getHID().setRumble(RumbleType.kBothRumble, 0);
+                    SmartDashboard.putString("Rumble?", "No");
+                    })));
 
     // backup mannual flywheel spinup
     controller

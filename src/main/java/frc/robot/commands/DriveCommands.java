@@ -309,11 +309,10 @@ public class DriveCommands {
                               ? drive.getRotation().plus(new Rotation2d(Math.PI))
                               : drive.getRotation()));
 
-              SmartDashboard.putNumber(
-                  "drive angle error",
-                  (rotationSupplier.get().getDegrees() - drive.getRotation().getDegrees() + 180)
-                          % (360)
-                      - 180);
+              Logger.recordOutput(
+                  "Drive/Align/drive angle error",
+                  rotationSupplier.get().minus(drive.getRotation()));
+              Logger.recordOutput("Drive/Align/drive angle target", rotationSupplier.get());
             },
             drive)
 
@@ -436,12 +435,10 @@ public class DriveCommands {
                 robotRelative),
             Commands.run(
                 () -> {
-                  SmartDashboard.putNumber(
-                      "Drive/deadband",
-                      Math.hypot(angleXSupplier.getAsDouble(), angleYSupplier.getAsDouble()));
-                  SmartDashboard.putNumber(
+                  Logger.recordOutput(
                       "Drive/point angle",
-                      Math.atan2(angleYSupplier.getAsDouble(), angleXSupplier.getAsDouble()));
+                      getAngleFromJoysticks(
+                          angleXSupplier.getAsDouble(), angleYSupplier.getAsDouble()));
                 }))
         .withName("Joystic Point Drive");
   }
@@ -471,7 +468,9 @@ public class DriveCommands {
               //         && DriverStation.getAlliance().get() == Alliance.Red;
 
               drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
-              // TODO: use the Field2d
+
+              Logger.recordOutput("Drive/Align/Target", pose);
+              Logger.recordOutput("Drive/Align/Error", pose.minus(drive.getPose()));
             },
             drive)
         .until(
