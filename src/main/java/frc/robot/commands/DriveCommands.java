@@ -103,10 +103,40 @@ public class DriveCommands {
               new Translation3d(FieldConstants.CENTER), new Rotation3d(Rotation2d.k180deg));
     }
 
-    Translation3d movementComp = new Translation3d(Translation2d.kZero);
-    // new Translation2d(drive.getSpeeds().vxMetersPerSecond, drive.getSpeeds().vyMetersPerSecond)
-    //     .rotateBy(drive.getPose().getRotation())
-    //     .div(3);
+    //robot-relative target pose
+    Translation2d movingTarget = target.minus(drive.getPose());
+
+    // delta distance
+    double dd = (((-movingTarget.getX())*drive.getSpeeds().vxMetersPerSecond)
+                     + ((-movingTarget.getY())*drive.getSpeeds().vyMetersPerSecond))
+                    / Math.sqrt(
+                        Math.pow(
+                            (movingTarget.getY() * movingTarget.getY())
+                            + (movingTarget.getX() * movingTarget.getX())));
+
+    //airtime
+    double airtime = (dd 
+                        + Math.sqrt(
+                            (dd * dd)
+                            - (
+                                2
+                                * ShooterConstants.GRAVITY
+                                * ShooterConstants.HOOD_SLOPE
+                                * ((target.getZ() * ShooterConstants.HOOD_SLOPE) 
+                                    - Math.hypot(
+                                        movingTarget.getX(),
+                                        movingTarget.getY()
+                                    ))
+                            )
+                        ))
+                    / (2 
+                        * ShooterConstants.GRAVITY 
+                        * ShooterConstants.HOOD_SLOPE);
+
+    Translation3d movementComp = new Translation3d(
+    new Translation2d(drive.getSpeeds().vxMetersPerSecond, drive.getSpeeds().vyMetersPerSecond)
+        .rotateBy(drive.getPose().getRotation())
+        .times(airtime));
 
     return target.plus(movementComp);
   }
