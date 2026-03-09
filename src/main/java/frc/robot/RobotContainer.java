@@ -303,9 +303,6 @@ public class RobotContainer {
                         () -> robotRelative)
                     .until(() -> controller.rightStick().getAsBoolean())));
 
-    // Switch to X pattern when X button is pressed
-    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-
     // snaps intake forward
     controller
         .b()
@@ -319,20 +316,8 @@ public class RobotContainer {
                     () -> robotRelative)
                 .until(DriveCommands.aligned()));
 
-    // auto align
-    controller
-        .rightBumper()
-        .onTrue(
-            DriveCommands.joystickAlignDrive(
-                    drive,
-                    shooter,
-                    () -> -controller.getLeftY() * 0.7,
-                    () -> -controller.getLeftX() * 0.7,
-                    () -> robotRelative)
-                .until(() -> !controller.rightBumper().getAsBoolean()));
-
     // slow mode
-    operator
+    controller
         .povDown()
         .onTrue(
             Commands.runOnce(
@@ -342,89 +327,10 @@ public class RobotContainer {
                   SmartDashboard.putNumber("Drive/Speed", speed);
                 }));
 
-    // point turn mode
-    operator
-        .povRight()
-        .onTrue(
-            DriveCommands.joystickPointDrive(
-                drive,
-                () -> -controller.getLeftY() * speed,
-                () -> -controller.getLeftX() * speed,
-                () -> controller.getRightY(),
-                () -> controller.getRightX(),
-                () -> robotRelative));
-
-    // reset drive commands
-    operator
-        .povUp()
-        .onTrue(
-            Commands.sequence(
-                Commands.runOnce(
-                    () -> {
-                      speed = 1;
-                      robotRelative = false;
-                    }),
-                DriveCommands.joystickDrive(
-                    drive,
-                    () -> -controller.getLeftY() * speed,
-                    () -> -controller.getLeftX() * speed,
-                    () -> -controller.getRightX() * speed,
-                    () -> robotRelative)));
-
-    // reset gyro TODO: might not work with photonvision
-    controller
-        .back()
-        .onTrue(
-            Commands.runOnce(
-                () ->
-                    drive.setPose(new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero))));
-
-    /* INTAKE COMMANDS */
-    // intake and deploy
-    controller.leftBumper().onTrue(Commands.parallel(deploy.deployCMD(), intake.intakeCMD()));
-    controller.leftBumper().onFalse(Commands.parallel(deploy.readyCMD(), intake.stoptakeCMD()));
-    // outtake
-    operator.a().onTrue(intake.spitakeCMD());
-    operator.a().onFalse(intake.stoptakeCMD());
-    // retract intake
-    operator.b().onTrue(deploy.undeployCMD());
-
-    /* HOPPER COMMANDS */
-
-    // shoot
-    controller.a().onTrue(hopper.shootCMD()); // TODO: add trigger
-    controller.a().onFalse(hopper.stopCMD());
-
-    // can add condition that only shoots when aligned and spun up - or that waits until it is
-    // aligned...
-    // Commands.either(
-    //     Commands.either(
-    //         hopper.shootCMD(), Commands.none(), shooter::atSpeed), // shoot if aligned
-    //     Commands.parallel(
-    //         // hopper.shootCMD(),
-    //         shooter.flywheelCMD(() -> 10), hopper.backdriveCMD()), // clear if not aligning
-    //     controller.rightBumper()::getAsBoolean));
-
-    // clear hopper
-    operator.x().onTrue(hopper.backdriveCMD());
-    operator.x().onFalse(hopper.stopCMD());
-
-    /* SHOOTER COMMANDS */
-
-    // backup mannual flywheel spinup
-    controller
-        .rightTrigger(0.05)
-        .onTrue(shooter.rawFlywheelCMD(() -> controller.getRightTriggerAxis() * 10));
-
-    controller.rightTrigger(0.05).onFalse(shooter.stopCMD());
-
-    // flywheel pre-spin-up (not precise)
-    operator.y().onTrue(shooter.flywheelGndCMD(() -> 6));
-
     /* CLIMBER COMMANDS */
 
     // hold left and right triggers for 0.5 seconds to auto-climb
-    operator
+    controller
         .leftBumper()
         .and(operator.rightBumper())
         .onTrue(
@@ -436,8 +342,16 @@ public class RobotContainer {
                     operator.leftBumper().and(operator.rightBumper())::getAsBoolean)));
 
     // backup---raise and lower climber with trigger
-    operator.leftTrigger(0.95).onTrue(climber.raiseCMD());
-    operator.leftTrigger(0.1).onFalse(climber.pullCMD());
+    controller.leftTrigger(0.95).onTrue(climber.raiseCMD());
+    controller.leftTrigger(0.1).onFalse(climber.pullCMD());
+
+    controller.x().onTrue(climber.runUpCMD());
+    controller.x().onFalse(climber.stopCMD());
+    
+    controller.y().onTrue(climber.runDownCMD());
+    controller.y().onFalse(climber.stopCMD());
+
+    controller.a().onTrue(climber.slowCMD());
   }
 
   private void configureShooterTestBindings() {
