@@ -110,7 +110,8 @@ public final class Constants {
 
   public static class ClimberConstants {
     public static final int CLIMBERID = 51;
-    public static final double UP_POSITION = 5; // Rotations. TODO
+    /* TODO: CHANGE */
+    public static final double UP_POSITION = 5;
     public static final double POS_TOLERANCE = 0.1;
 
     public static final double RAISE_SPEED = 1;

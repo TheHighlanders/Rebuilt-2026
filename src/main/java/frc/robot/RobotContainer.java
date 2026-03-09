@@ -347,7 +347,7 @@ public class RobotContainer {
 
     controller.x().onTrue(climber.runUpCMD());
     controller.x().onFalse(climber.stopCMD());
-    
+
     controller.y().onTrue(climber.runDownCMD());
     controller.y().onFalse(climber.stopCMD());
 

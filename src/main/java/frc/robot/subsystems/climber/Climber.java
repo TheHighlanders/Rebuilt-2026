@@ -4,12 +4,13 @@
 
 package frc.robot.subsystems.climber;
 
+import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -25,6 +26,7 @@ public class Climber extends SubsystemBase {
   /** Creates a new Climber. */
   public Climber() {
     config.idleMode(IdleMode.kBrake);
+    climbMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     climbEncoder.setPosition(0);
   }
 
@@ -58,9 +60,9 @@ public class Climber extends SubsystemBase {
 
   public Command slowCMD() {
     return run(
-      () -> {
-        testSpeed *= 0.9;
-      });
+        () -> {
+          testSpeed *= 0.9;
+        });
   }
 
   public Command raiseCMD() {
@@ -88,12 +90,12 @@ public class Climber extends SubsystemBase {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("CLIMBER/Encoder", climbEncoder.getPosition());
     SmartDashboard.putNumber("CLIMBER/Upper Limit", ClimberConstants.UP_POSITION);
-    SmartDashboard.putNumber("CLIMBER/Upper Tolerance", ClimberConstants.UP_POSITION - ClimberConstants.POS_TOLERANCE);
+    SmartDashboard.putNumber(
+        "CLIMBER/Upper Tolerance", ClimberConstants.UP_POSITION - ClimberConstants.POS_TOLERANCE);
     SmartDashboard.putNumber("CLIMBER/Tolerance", ClimberConstants.POS_TOLERANCE);
     SmartDashboard.putNumber("CLIMBER/Speed", ClimberConstants.RAISE_SPEED * testSpeed);
     SmartDashboard.putNumber("CLIMBER/Motor/Voltage", climbMotor.getBusVoltage());
     SmartDashboard.putNumber("CLIMBER/Motor/Current", climbMotor.getOutputCurrent());
     SmartDashboard.putNumber("CLIMBER/Motor/Temp", climbMotor.getMotorTemperature());
-
   }
 }
