@@ -104,6 +104,9 @@ public class DriveCommands {
               new Translation3d(FieldConstants.CENTER), new Rotation3d(Rotation2d.k180deg));
     }
 
+    /* MOVEMENT COMP */
+    //https://www.desmos.com/calculator/2jxmstl1qs
+
     // robot-relative target pose
     Translation2d movingTarget = target.toTranslation2d().minus(drive.getPose().getTranslation());
 
