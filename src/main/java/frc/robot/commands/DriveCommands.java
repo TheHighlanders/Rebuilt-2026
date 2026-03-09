@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.Constants.ShooterConstants;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
@@ -73,12 +74,12 @@ public class DriveCommands {
   private static Rotation2d pointAngle = Rotation2d.kZero;
 
   // @AutoLogOutput(key = "Auto/Target")
-  private static Translation3d getAlignTarget(Drive drive) {
-    Pose2d testPose = drive.getPose();
+  static Translation3d chooseAlignTarget(Pose2d pose, Alliance alliance) {
+    Pose2d testPose = pose;
     Translation3d target;
     double fieldAlignX = 1;
 
-    if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+    if (alliance == Alliance.Red) {
       testPose = testPose.rotateAround(FieldConstants.CENTER, Rotation2d.k180deg);
       fieldAlignX = (FieldConstants.CENTER.getX() * 2) - fieldAlignX;
     }
@@ -97,46 +98,48 @@ public class DriveCommands {
     }
 
     // account for alliance side
-    if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+    if (alliance == Alliance.Red) {
       target =
           target.rotateAround(
               new Translation3d(FieldConstants.CENTER), new Rotation3d(Rotation2d.k180deg));
     }
 
-    //robot-relative target pose
-    Translation2d movingTarget = target.minus(drive.getPose());
+    return target;
+  }
+
+  private static Translation3d getAlignTarget(Drive drive) {
+    Translation3d target =
+        chooseAlignTarget(drive.getPose(), DriverStation.getAlliance().orElse(Alliance.Blue));
+
+    // robot-relative target pose
+    Pose2d pose = drive.getPose();
+    Translation2d movingTarget =
+        new Translation2d(target.getX() - pose.getX(), target.getY() - pose.getY());
 
     // delta distance
-    double dd = (((-movingTarget.getX())*drive.getSpeeds().vxMetersPerSecond)
-                     + ((-movingTarget.getY())*drive.getSpeeds().vyMetersPerSecond))
-                    / Math.sqrt(
-                        Math.pow(
-                            (movingTarget.getY() * movingTarget.getY())
-                            + (movingTarget.getX() * movingTarget.getX())));
+    double dd =
+        (((-movingTarget.getX()) * drive.getSpeeds().vxMetersPerSecond)
+                + ((-movingTarget.getY()) * drive.getSpeeds().vyMetersPerSecond))
+            / Math.sqrt(Math.pow(movingTarget.getY(), 2) + Math.pow(movingTarget.getX(), 2));
 
-    //airtime
-    double airtime = (dd 
-                        + Math.sqrt(
-                            (dd * dd)
-                            - (
-                                2
-                                * ShooterConstants.GRAVITY
-                                * ShooterConstants.HOOD_SLOPE
-                                * ((target.getZ() * ShooterConstants.HOOD_SLOPE) 
-                                    - Math.hypot(
-                                        movingTarget.getX(),
-                                        movingTarget.getY()
-                                    ))
-                            )
-                        ))
-                    / (2 
-                        * ShooterConstants.GRAVITY 
-                        * ShooterConstants.HOOD_SLOPE);
+    // airtime
+    double airtime =
+        (dd
+                + Math.sqrt(
+                    (dd * dd)
+                        - (2
+                            * ShooterConstants.GRAVITY
+                            * ShooterConstants.HOOD_SLOPE
+                            * ((target.getZ() * ShooterConstants.HOOD_SLOPE)
+                                - Math.hypot(movingTarget.getX(), movingTarget.getY())))))
+            / (2 * ShooterConstants.GRAVITY * ShooterConstants.HOOD_SLOPE);
 
-    Translation3d movementComp = new Translation3d(
-    new Translation2d(drive.getSpeeds().vxMetersPerSecond, drive.getSpeeds().vyMetersPerSecond)
-        .rotateBy(drive.getPose().getRotation())
-        .times(airtime));
+    Translation3d movementComp =
+        new Translation3d(
+            new Translation2d(
+                    drive.getSpeeds().vxMetersPerSecond, drive.getSpeeds().vyMetersPerSecond)
+                .rotateBy(drive.getPose().getRotation())
+                .times(airtime));
 
     return target.plus(movementComp);
   }

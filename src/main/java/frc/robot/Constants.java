@@ -161,7 +161,7 @@ public final class Constants {
     public static final Translation3d SHOOTER_RR_POS =
         new Translation3d(Meters.of(-0.1), Meters.of(0.3), Meters.of(0.27)); // TODO find in cad
     public static final Angle SHOOTER_HOOD = Degrees.of(78);
-    public static final double HOOD_SLOPE = Math.cot(Units.degreesToRadians(78));
+    public static final double HOOD_SLOPE = 1.0 / Math.tan(Units.degreesToRadians(78));
     public static final Distance FLYWHEEL_RADIUS = Inches.of(2);
 
     public static final double GRAVITY = 9.80665;
