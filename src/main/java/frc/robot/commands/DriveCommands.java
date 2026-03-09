@@ -74,12 +74,12 @@ public class DriveCommands {
   private static Rotation2d pointAngle = Rotation2d.kZero;
 
   // @AutoLogOutput(key = "Auto/Target")
-  private static Translation3d getAlignTarget(Drive drive) {
-    Pose2d testPose = drive.getPose();
+  static Translation3d chooseAlignTarget(Pose2d pose, Alliance alliance) {
+    Pose2d testPose = pose;
     Translation3d target;
     double fieldAlignX = 1;
 
-    if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+    if (alliance == Alliance.Red) {
       testPose = testPose.rotateAround(FieldConstants.CENTER, Rotation2d.k180deg);
       fieldAlignX = (FieldConstants.CENTER.getX() * 2) - fieldAlignX;
     }
@@ -99,11 +99,18 @@ public class DriveCommands {
     }
 
     // account for alliance side
-    if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+    if (alliance == Alliance.Red) {
       target =
           target.rotateAround(
               new Translation3d(FieldConstants.CENTER), new Rotation3d(Rotation2d.k180deg));
     }
+
+    return target;
+  }
+
+  private static Translation3d getAlignTarget(Drive drive) {
+    Translation3d target =
+        chooseAlignTarget(drive.getPose(), DriverStation.getAlliance().orElse(Alliance.Blue));
 
     /* MOVEMENT COMP */
     // https://www.desmos.com/calculator/2jxmstl1qs
