@@ -90,7 +90,7 @@ public class Shooter extends SubsystemBase {
    * using a physics simulation.
    */
   protected static double calculate(Translation2d trajectory) {
-    // TODO: wait until shooter is finalized, and tune.
+    // TODO: tune.
     double linearVelocity =
         Math.sqrt(
             ShooterConstants.GRAVITY
@@ -98,7 +98,8 @@ public class Shooter extends SubsystemBase {
                 / (2
                     * Math.pow(Math.cos(ShooterConstants.SHOOTER_HOOD.in(Radians)), 2)
                     * (trajectory.getX() * Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians))
-                        - trajectory.getY())));
+                        - trajectory.getY())))
+         + (trajectory.getX() / 25); // air resistance fudge factor works way too well
 
     return linearVelocity / (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 2 * Math.PI);
   }
