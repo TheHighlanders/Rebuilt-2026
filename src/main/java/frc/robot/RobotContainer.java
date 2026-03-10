@@ -343,18 +343,6 @@ public class RobotContainer {
                   SmartDashboard.putNumber("Drive/Speed", speed);
                 }));
 
-    // point turn mode
-    operator
-        .povRight()
-        .onTrue(
-            DriveCommands.joystickPointDrive(
-                drive,
-                () -> -controller.getLeftY() * speed,
-                () -> -controller.getLeftX() * speed,
-                () -> controller.getRightY(),
-                () -> controller.getRightX(),
-                () -> robotRelative));
-
     // reset drive commands
     operator
         .povUp()

@@ -110,13 +110,12 @@ public final class Constants {
 
   public static class ClimberConstants {
     public static final int CLIMBERID = 51;
-    public static final double UP_POSITION = 5; // Rotations. TODO
+    public static final double UP_POSITION = 0; // Rotations. TODO
+    public static final double DOWN_POSITION = 4;
     public static final double POS_TOLERANCE = 0.1;
 
-    public static final double RAISE_SPEED = 1;
-    public static final double PULL_SPEED = -1;
-    public static final double CLIMBER_SPEED_DOWN = -1;
-    public static final double DOWN_POSITION = 0;
+    public static final double RAISE_SPEED = -0.3;
+    public static final double PULL_SPEED = 1;
   }
 
   public final class HopperConstants {
@@ -136,17 +135,19 @@ public final class Constants {
     public static final double INTAKE_SPEED = 1;
     public static final double SPITAKE_SPEED = -1;
     public static final double DEPLOY_SPEED = 1;
-    public static final double DEPLOY_POSITION = 3; // rotations. TODO: measure
-    public static final double READY_POSITION = 2;
-    public static final double DEPLOY_TOLERANCE = 0.1;
+    public static final Angle DEPLOY_POSITION = Degrees.of(70); 
+    public static final Angle READY_POSITION = Degrees.of(40);
+    public static final Angle UP_POSITION = Degrees.of(0);
+    public static final Angle DEPLOY_TOLERANCE = Degrees.of(5);
 
-    public static final double kP1 = 0.1;
-    public static final double kI1 = 0;
-    public static final double kD1 = 0;
+    public static final double kP = 1;//1.33;
+    public static final double kI = 0;
+    public static final double kD = 7.84;
+    public static final double DEPLOY_RATIO = 25;
 
-    public static final double kP2 = 0.0001;
-    public static final double kI2 = 0;
-    public static final double kD2 = 0;
+    public static double kS = 1.68;
+    public static double kG = 3.05;
+    public static double kV = 0.27;
   }
 
   public static class ShooterConstants {
