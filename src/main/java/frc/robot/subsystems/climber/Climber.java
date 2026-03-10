@@ -4,7 +4,9 @@
 
 package frc.robot.subsystems.climber;
 
+import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -22,6 +24,7 @@ public class Climber extends SubsystemBase {
   /** Creates a new Climber. */
   public Climber() {
     config.idleMode(IdleMode.kBrake);
+    climbMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     climbEncoder.setPosition(0);
   }
 
