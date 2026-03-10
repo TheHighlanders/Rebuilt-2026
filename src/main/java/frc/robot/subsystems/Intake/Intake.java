@@ -35,6 +35,7 @@ public class Intake extends SubsystemBase {
           intakeMotor.set(IntakeConstants.INTAKE_SPEED);
         });
   }
+
   // Spits out
   public Command spitakeCMD() {
     return runOnce(

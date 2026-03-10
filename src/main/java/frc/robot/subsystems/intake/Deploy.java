@@ -53,6 +53,7 @@ public class Deploy extends SubsystemBase {
           deployMotor.set(speed);
         });
   }
+
   // Adds start and stop for deploying
   public Command deployCMD() {
     // Deploys fuel

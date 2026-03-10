@@ -42,6 +42,7 @@ public class Hopper extends SubsystemBase {
     hopper.configure(hopperConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     kicker.configure(kickConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
+
   // spins the motor inside the hopper
   public Command shootCMD() {
     return Commands.runOnce(
@@ -53,6 +54,7 @@ public class Hopper extends SubsystemBase {
         },
         this);
   }
+
   // stops the hopper
   public Command stopCMD() {
     return Commands.runOnce(

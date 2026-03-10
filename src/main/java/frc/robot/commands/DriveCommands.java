@@ -74,20 +74,19 @@ public class DriveCommands {
   private static Rotation2d pointAngle = Rotation2d.kZero;
 
   // @AutoLogOutput(key = "Auto/Target")
-  private static Translation3d getAlignTarget(Drive drive) {
-    Pose2d testPose = drive.getPose();
+  static Translation3d chooseAlignTarget(Pose2d pose, Alliance alliance) {
+    Pose2d testPose = pose;
     Translation3d target;
     double fieldAlignX = 1;
 
-    if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+    if (alliance == Alliance.Red) {
       testPose = testPose.rotateAround(FieldConstants.CENTER, Rotation2d.k180deg);
       fieldAlignX = (FieldConstants.CENTER.getX() * 2) - fieldAlignX;
     }
 
     // returns the hub if the robot is inside the alliance side
     if (testPose.getMeasureX().in(Meters) < FieldConstants.HUB_POSE_BLUE.getX() + 0.597154) {
-      target =
-          new Translation3d(FieldConstants.HUB_POSE_BLUE); // .plus(new Translation2d(0.4, 0)));
+      target = new Translation3d(FieldConstants.HUB_POSE_BLUE.plus(new Translation2d(0.4, 0)));
       target = target.plus(new Translation3d(0, 0, FieldConstants.HUB_HEIGHT));
     }
 
@@ -99,11 +98,18 @@ public class DriveCommands {
     }
 
     // account for alliance side
-    if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+    if (alliance == Alliance.Red) {
       target =
           target.rotateAround(
               new Translation3d(FieldConstants.CENTER), new Rotation3d(Rotation2d.k180deg));
     }
+
+    return target;
+  }
+
+  private static Translation3d getAlignTarget(Drive drive) {
+    Translation3d target =
+        chooseAlignTarget(drive.getPose(), DriverStation.getAlliance().orElse(Alliance.Blue));
 
     /* MOVEMENT COMP */
     // https://www.desmos.com/calculator/2jxmstl1qs
