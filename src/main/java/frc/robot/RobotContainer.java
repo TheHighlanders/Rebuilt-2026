@@ -107,7 +107,7 @@ public class RobotContainer {
         //     VisionConstants.camera3Name, VisionConstants.robotToCamera3));
         shooter = new Shooter();
         hopper = new Hopper();
-        configureShooterTestBindings(); // configureButtonBindings();
+        configureButtonBindings();
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -361,15 +361,19 @@ public class RobotContainer {
                 () ->
                     drive.setPose(new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero))));
 
-    /* INTAKE COMMANDS */
+    /* INTAKE COMMANDS. TODO */
     // intake and deploy
     controller.leftBumper().onTrue(Commands.parallel(deploy.deployCMD(), intake.intakeCMD()));
     controller.leftBumper().onFalse(Commands.parallel(deploy.readyCMD(), intake.stoptakeCMD()));
     // outtake
     operator.a().onTrue(intake.spitakeCMD());
+    operator
+        .a()
+        .onTrue(Commands.runOnce(() -> SmartDashboard.putString("INTAKE/FISH", "AAAAAAAAA")));
     operator.a().onFalse(intake.stoptakeCMD());
     // retract intake
-    operator.b().onTrue(deploy.undeployCMD());
+    operator.b().onTrue(intake.intakeCMD());
+    operator.b().onFalse(intake.stoptakeCMD());
 
     deploy.setDefaultCommand(deploy.mannualCMD(operator::getLeftY));
     intake.setDefaultCommand(intake.mannualCMD(operator::getRightY));
@@ -440,6 +444,7 @@ public class RobotContainer {
     operator.leftTrigger(0.1).onFalse(climber.pullCMD());
   }
 
+  @SuppressWarnings("unused")
   private void configureShooterTestBindings() {
     testDistance = 1;
     Command shootCommand = shooter.flywheelGndCMD(() -> testDistance);
