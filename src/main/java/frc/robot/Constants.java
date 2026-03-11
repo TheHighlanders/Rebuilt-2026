@@ -110,12 +110,12 @@ public final class Constants {
 
   public static class ClimberConstants {
     public static final int CLIMBERID = 51;
-    public static final double UP_POSITION = 0; // Rotations. TODO
-    public static final double DOWN_POSITION = 4;
-    public static final double POS_TOLERANCE = 0.1;
-
-    public static final double RAISE_SPEED = -0.3;
+    public static final double UP_POS_OFFSET = -33.5;
+    public static final double CURRENT_DETECT_LEVEL = 2;//TODO: Test
+    public static final double RAISE_SPEED = 1;
     public static final double PULL_SPEED = 1;
+    public static final double HOLD_SPEED = 0;
+    public static final double CURRENT_DETECT_SPEED = 0.7;
   }
 
   public final class HopperConstants {

@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.climber;
 
+import java.util.function.DoubleSupplier;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -20,6 +22,7 @@ public class Climber extends SubsystemBase {
   SparkMax climbMotor = new SparkMax(ClimberConstants.CLIMBERID, MotorType.kBrushless);
   RelativeEncoder climbEncoder = climbMotor.getEncoder();
   SparkMaxConfig config = new SparkMaxConfig();
+  boolean initialized = false;
 
   /** Creates a new Climber. */
   public Climber() {
@@ -35,34 +38,49 @@ public class Climber extends SubsystemBase {
         });
   }
 
+  public Command initializeCMD() {
+    // runs the climber down until it jumps above a certain current
+    // to find bottom of climber
+    // capped at 2ish seconds for safety
+    return Commands.deadline(
+              Commands.deadline(
+                Commands.waitSeconds(2/ClimberConstants.CURRENT_DETECT_SPEED),
+                Commands.waitUntil(() -> 
+                  climbMotor.getOutputCurrent() > ClimberConstants.CURRENT_DETECT_LEVEL)), 
+              runCMD(ClimberConstants.CURRENT_DETECT_SPEED))
+          //then, resets climb encoder.
+              .andThen(Commands.runOnce(() -> {
+                initialized = true;
+                climbEncoder.setPosition(0);
+              }));
+  }
+
   public Command raiseCMD() {
     return Commands.deadline(
             Commands.waitUntil(
                 () ->
                     climbEncoder.getPosition()
-                        <=  ClimberConstants.POS_TOLERANCE),
+                        <=  ClimberConstants.UP_POS_OFFSET),
             runCMD(ClimberConstants.RAISE_SPEED))
         .andThen(runCMD(0));
   }
 
   public Command pullCMD() {
-    return Commands.deadline(
-            Commands.waitUntil(
-                () ->
-                    climbEncoder.getPosition()
-                        >= ClimberConstants.DOWN_POSITION - ClimberConstants.POS_TOLERANCE),
-            runCMD(ClimberConstants.PULL_SPEED))
-        .andThen(runCMD(0));
+    return Commands.either(
+          //normal raise command  
+            Commands.deadline(
+              Commands.waitUntil(
+                      () ->
+                          climbEncoder.getPosition()
+                              >= 0),
+                  runCMD(ClimberConstants.PULL_SPEED))
+              .andThen(runCMD(ClimberConstants.HOLD_SPEED)),
+            this.initializeCMD(),
+            () -> initialized);
   }
 
-  public Command tuckCMD() {
-    return Commands.deadline(
-            Commands.waitUntil(
-                () ->
-                    climbEncoder.getPosition()
-                        >= ClimberConstants.DOWN_POSITION - (2*ClimberConstants.POS_TOLERANCE)),
-            runCMD(ClimberConstants.PULL_SPEED))
-        .andThen(runCMD(0));
+  public DoubleSupplier currentDraw() {//use this for better autoClimb?
+    return climbMotor::getOutputCurrent;
   }
 
   @Override
