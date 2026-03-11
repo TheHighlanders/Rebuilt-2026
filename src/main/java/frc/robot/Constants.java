@@ -112,11 +112,12 @@ public final class Constants {
     public static final int CLIMBERID = 51;
     /* TODO: CHANGE */
     public static final double UP_POSITION = 0;
-    public static final double DOWN_POSITION = 4;
+    public static final double DOWN_POSITION = 33.5;
     public static final double POS_TOLERANCE = 0.1;
 
-    public static final double RAISE_SPEED = -0.3;
+    public static final double RAISE_SPEED = -1;
     public static final double PULL_SPEED = 1;
+    public static final double TUCK_SPEED = 1;
   }
 
   public final class HopperConstants {

@@ -27,8 +27,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
-// import frc.robot.subsystems.drive.GyroIOBoron;
-import frc.robot.subsystems.drive.GyroIONavX;
+import frc.robot.subsystems.drive.GyroIOBoron;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
@@ -40,7 +39,6 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 
 /**
@@ -93,7 +91,7 @@ public class RobotContainer {
         // a CANcoder
         drive =
             new Drive(
-                new GyroIONavX(), // new GyroIOBoron(),
+                new GyroIOBoron(),
                 new ModuleIOTalonFX(TunerConstants.FrontLeft),
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
@@ -101,17 +99,21 @@ public class RobotContainer {
         vision =
             new Vision(
                 drive::addVisionMeasurement,
-                new VisionIOPhotonVision(
-                    VisionConstants.camera0Name, VisionConstants.robotToCamera0),
-                new VisionIOPhotonVision(
-                    VisionConstants.camera1Name, VisionConstants.robotToCamera1),
-                new VisionIOPhotonVision(
-                    VisionConstants.camera2Name, VisionConstants.robotToCamera2),
-                new VisionIOPhotonVision(
-                    VisionConstants.camera3Name, VisionConstants.robotToCamera3));
+                new VisionIO() {},
+                new VisionIO() {},
+                new VisionIO() {},
+                new VisionIO() {});
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1),
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera2Name, VisionConstants.robotToCamera2),
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera3Name, VisionConstants.robotToCamera3));
         shooter = new Shooter();
         hopper = new Hopper();
-        configureShooterTestBindings(); // configureButtonBindings();
+        configureButtonBindings();
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -351,7 +353,7 @@ public class RobotContainer {
     controller.y().onTrue(climber.runDownCMD());
     controller.y().onFalse(climber.stopCMD());
 
-    controller.a().onTrue(climber.slowCMD());
+    // controller.a().onTrue(climber.slowCMD());
   }
 
   private void configureShooterTestBindings() {
