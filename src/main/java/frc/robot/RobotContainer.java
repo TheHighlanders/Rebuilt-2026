@@ -28,8 +28,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
-// import frc.robot.subsystems.drive.GyroIOBoron;
-import frc.robot.subsystems.drive.GyroIONavX;
+import frc.robot.subsystems.drive.GyroIOBoron;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
@@ -94,7 +93,7 @@ public class RobotContainer {
         // a CANcoder
         drive =
             new Drive(
-                new GyroIONavX(), // new GyroIOBoron(),
+                new GyroIOBoron(),
                 new ModuleIOTalonFX(TunerConstants.FrontLeft),
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
@@ -112,7 +111,7 @@ public class RobotContainer {
                     VisionConstants.camera3Name, VisionConstants.robotToCamera3));
         shooter = new Shooter();
         hopper = new Hopper();
-        configureShooterTestBindings(); // configureButtonBindings();
+        configureButtonBindings();
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -399,20 +398,20 @@ public class RobotContainer {
 
     // This trigger probably goes off way too much - maybe make shooter.atSpeed() lock this at true?
     DriveCommands.aligned()
-        .and(() -> shooter.atSpeed())// && false) // Armaan, turn off rumble
+        .and(() -> shooter.atSpeed()) // && false) // Armaan, turn off rumble
         .onTrue(
             Commands.sequence(
                 Commands.run(
                     () -> {
-                    controller.getHID().setRumble(RumbleType.kLeftRumble, 1);
-                    controller.getHID().setRumble(RumbleType.kRightRumble, 1);
-                    SmartDashboard.putString("Rumble?", "Yes");
+                      controller.getHID().setRumble(RumbleType.kLeftRumble, 1);
+                      controller.getHID().setRumble(RumbleType.kRightRumble, 1);
+                      SmartDashboard.putString("Rumble?", "Yes");
                     }),
                 Commands.waitSeconds(1),
                 Commands.run(
                     () -> {
-                    controller.getHID().setRumble(RumbleType.kBothRumble, 0);
-                    SmartDashboard.putString("Rumble?", "No");
+                      controller.getHID().setRumble(RumbleType.kBothRumble, 0);
+                      SmartDashboard.putString("Rumble?", "No");
                     })));
 
     // backup mannual flywheel spinup
@@ -442,8 +441,13 @@ public class RobotContainer {
     // backup---raise and lower climber with trigger
     operator.leftTrigger(0.95).onTrue(climber.raiseCMD());
     operator.leftTrigger(0.1).onFalse(climber.pullCMD());
+
+    // TEST COMMANDS.
+    climber.setDefaultCommand(climber.rawCMD(operator::getLeftY));
+    operator.start().onTrue(climber.initializeCMD());
   }
 
+  @SuppressWarnings("unused")
   private void configureShooterTestBindings() {
     testDistance = 1;
     Command shootCommand = shooter.flywheelGndCMD(() -> testDistance);

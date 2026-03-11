@@ -111,10 +111,10 @@ public final class Constants {
   public static class ClimberConstants {
     public static final int CLIMBERID = 51;
     public static final double UP_POS_OFFSET = -33.5;
-    public static final double CURRENT_DETECT_LEVEL = 2;//TODO: Test
+    public static final double CURRENT_DETECT_LEVEL = 20; // TODO: Test
     public static final double RAISE_SPEED = 1;
     public static final double PULL_SPEED = 1;
-    public static final double HOLD_SPEED = 0;
+    public static final double HOLD_SPEED = 0.5;
     public static final double CURRENT_DETECT_SPEED = 0.7;
   }
 
@@ -135,12 +135,12 @@ public final class Constants {
     public static final double INTAKE_SPEED = 1;
     public static final double SPITAKE_SPEED = -1;
     public static final double DEPLOY_SPEED = 1;
-    public static final Angle DEPLOY_POSITION = Degrees.of(70); 
+    public static final Angle DEPLOY_POSITION = Degrees.of(70);
     public static final Angle READY_POSITION = Degrees.of(40);
     public static final Angle UP_POSITION = Degrees.of(0);
     public static final Angle DEPLOY_TOLERANCE = Degrees.of(5);
 
-    public static final double kP = 1;//1.33;
+    public static final double kP = 1; // 1.33;
     public static final double kI = 0;
     public static final double kD = 7.84;
     public static final double DEPLOY_RATIO = 25;

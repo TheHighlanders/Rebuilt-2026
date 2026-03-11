@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems.climber;
 
-import java.util.function.DoubleSupplier;
-
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -13,22 +11,26 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimberConstants;
+import java.util.function.DoubleSupplier;
 
 public class Climber extends SubsystemBase {
   SparkMax climbMotor = new SparkMax(ClimberConstants.CLIMBERID, MotorType.kBrushless);
   RelativeEncoder climbEncoder = climbMotor.getEncoder();
   SparkMaxConfig config = new SparkMaxConfig();
   boolean initialized = false;
+  double threshold = ClimberConstants.CURRENT_DETECT_LEVEL;
 
   /** Creates a new Climber. */
   public Climber() {
     config.idleMode(IdleMode.kBrake);
     climbMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     climbEncoder.setPosition(0);
+    SmartDashboard.putNumber("CLIMBER/threshold", ClimberConstants.CURRENT_DETECT_SPEED);
   }
 
   private Command runCMD(double speed) {
@@ -43,48 +45,50 @@ public class Climber extends SubsystemBase {
     // to find bottom of climber
     // capped at 2ish seconds for safety
     return Commands.deadline(
-              Commands.deadline(
-                Commands.waitSeconds(2/ClimberConstants.CURRENT_DETECT_SPEED),
-                Commands.waitUntil(() -> 
-                  climbMotor.getOutputCurrent() > ClimberConstants.CURRENT_DETECT_LEVEL)), 
-              runCMD(ClimberConstants.CURRENT_DETECT_SPEED))
-          //then, resets climb encoder.
-              .andThen(Commands.runOnce(() -> {
-                initialized = true;
-                climbEncoder.setPosition(0);
-              }));
+            Commands.deadline(
+                Commands.waitSeconds(2 / ClimberConstants.CURRENT_DETECT_SPEED),
+                Commands.waitUntil(() -> climbMotor.getOutputCurrent() > threshold)),
+            runCMD(ClimberConstants.CURRENT_DETECT_SPEED))
+        // then, resets climb encoder.
+        .andThen(
+            Commands.runOnce(
+                () -> {
+                  initialized = true;
+                  climbEncoder.setPosition(0);
+                }));
   }
 
   public Command raiseCMD() {
     return Commands.deadline(
-            Commands.waitUntil(
-                () ->
-                    climbEncoder.getPosition()
-                        <=  ClimberConstants.UP_POS_OFFSET),
+            Commands.waitUntil(() -> climbEncoder.getPosition() <= ClimberConstants.UP_POS_OFFSET),
             runCMD(ClimberConstants.RAISE_SPEED))
         .andThen(runCMD(0));
   }
 
   public Command pullCMD() {
     return Commands.either(
-          //normal raise command  
-            Commands.deadline(
-              Commands.waitUntil(
-                      () ->
-                          climbEncoder.getPosition()
-                              >= 0),
-                  runCMD(ClimberConstants.PULL_SPEED))
-              .andThen(runCMD(ClimberConstants.HOLD_SPEED)),
-            this.initializeCMD(),
-            () -> initialized);
+        // normal raise command
+        Commands.deadline(
+                Commands.waitUntil(() -> climbEncoder.getPosition() >= 0),
+                runCMD(ClimberConstants.PULL_SPEED))
+            .andThen(runCMD(ClimberConstants.HOLD_SPEED)),
+        this.initializeCMD(),
+        () -> initialized);
   }
 
-  public DoubleSupplier currentDraw() {//use this for better autoClimb?
+  public DoubleSupplier currentDraw() { // use this for better autoClimb?
     return climbMotor::getOutputCurrent;
+  }
+
+  public Command rawCMD(DoubleSupplier amount) {
+    return Commands.run(() -> climbMotor.set(amount.getAsDouble()), this);
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+
+    threshold =
+        SmartDashboard.getNumber("CLIMBER/threshold", ClimberConstants.CURRENT_DETECT_LEVEL);
   }
 }
