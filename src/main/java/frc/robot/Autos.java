@@ -152,8 +152,9 @@ public class Autos {
         .active()
         .onTrue(
             Commands.sequence(
-                collect.resetOdometry(),
                 sendState("Auto Started!"),
+                DriveCommands.autoAlign(drive, collect.getInitialPose().orElse(drive.getPose())),
+                collect.resetOdometry(),
                 Commands.parallel(collect.cmd(), deploy.deployCMD())));
 
     collect.atTime("intake").onTrue(Commands.sequence(intake.intakeCMD(), sendState("Intaking!")));
@@ -170,12 +171,11 @@ public class Autos {
 
     if (addClimb) {
       collect
-          .doneDelayed(8)
+          .doneDelayed(10)
           .onTrue(
               Commands.parallel(
                   sendState("Aligning!"),
-                  climb.cmd(),
-                  climber.raiseCMD(),
+                  DriveCommands.autoClimb(drive, climber),
                   hopper.stopCMD(),
                   shooter.stopCMD(),
                   deploy.undeployCMD()));

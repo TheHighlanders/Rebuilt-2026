@@ -135,12 +135,12 @@ public final class Constants {
     public static final double INTAKE_SPEED = 1;
     public static final double SPITAKE_SPEED = -1;
     public static final double DEPLOY_SPEED = 1;
-    public static final Angle DEPLOY_POSITION = Degrees.of(70); 
+    public static final Angle DEPLOY_POSITION = Degrees.of(70);
     public static final Angle READY_POSITION = Degrees.of(40);
     public static final Angle UP_POSITION = Degrees.of(0);
     public static final Angle DEPLOY_TOLERANCE = Degrees.of(5);
 
-    public static final double kP = 1;//1.33;
+    public static final double kP = 1; // 1.33;
     public static final double kI = 0;
     public static final double kD = 7.84;
     public static final double DEPLOY_RATIO = 25;

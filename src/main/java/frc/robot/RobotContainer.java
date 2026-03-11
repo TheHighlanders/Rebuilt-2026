@@ -40,8 +40,6 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -98,17 +96,15 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                new VisionIOPhotonVision(
-                    VisionConstants.camera0Name, VisionConstants.robotToCamera0),
-                new VisionIOPhotonVision(
-                    VisionConstants.camera1Name, VisionConstants.robotToCamera1),
-                new VisionIOPhotonVision(
-                    VisionConstants.camera2Name, VisionConstants.robotToCamera2),
-                new VisionIOPhotonVision(
-                    VisionConstants.camera3Name, VisionConstants.robotToCamera3));
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1),
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera2Name, VisionConstants.robotToCamera2),
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera3Name, VisionConstants.robotToCamera3));
         shooter = new Shooter();
         hopper = new Hopper();
         configureShooterTestBindings(); // configureButtonBindings();
@@ -141,17 +137,15 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera2Name, VisionConstants.robotToCamera2, drive::getPose),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera3Name, VisionConstants.robotToCamera3, drive::getPose));
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        // new VisionIOPhotonVisionSim(
+        //     VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
+        // new VisionIOPhotonVisionSim(
+        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose),
+        // new VisionIOPhotonVisionSim(
+        //     VisionConstants.camera2Name, VisionConstants.robotToCamera2, drive::getPose),
+        // new VisionIOPhotonVisionSim(
+        //     VisionConstants.camera3Name, VisionConstants.robotToCamera3, drive::getPose));
         ShooterSim temp = new ShooterSim(fuelSim); // how do i destruct this
         shooter = temp;
         hopper = new HopperSim(temp);
@@ -377,6 +371,9 @@ public class RobotContainer {
     // retract intake
     operator.b().onTrue(deploy.undeployCMD());
 
+    deploy.setDefaultCommand(deploy.mannualCMD(operator::getLeftY));
+    intake.setDefaultCommand(intake.mannualCMD(operator::getRightY));
+
     /* HOPPER COMMANDS */
 
     // shoot
@@ -398,20 +395,20 @@ public class RobotContainer {
 
     // This trigger probably goes off way too much - maybe make shooter.atSpeed() lock this at true?
     DriveCommands.aligned()
-        .and(() -> shooter.atSpeed())// && false) // Armaan, turn off rumble
+        .and(() -> shooter.atSpeed()) // && false) // Armaan, turn off rumble
         .onTrue(
             Commands.sequence(
                 Commands.run(
                     () -> {
-                    controller.getHID().setRumble(RumbleType.kLeftRumble, 1);
-                    controller.getHID().setRumble(RumbleType.kRightRumble, 1);
-                    SmartDashboard.putString("Rumble?", "Yes");
+                      controller.getHID().setRumble(RumbleType.kLeftRumble, 1);
+                      controller.getHID().setRumble(RumbleType.kRightRumble, 1);
+                      SmartDashboard.putString("Rumble?", "Yes");
                     }),
                 Commands.waitSeconds(1),
                 Commands.run(
                     () -> {
-                    controller.getHID().setRumble(RumbleType.kBothRumble, 0);
-                    SmartDashboard.putString("Rumble?", "No");
+                      controller.getHID().setRumble(RumbleType.kBothRumble, 0);
+                      SmartDashboard.putString("Rumble?", "No");
                     })));
 
     // backup mannual flywheel spinup
