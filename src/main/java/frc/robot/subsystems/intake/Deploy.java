@@ -16,6 +16,9 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -29,6 +32,7 @@ public class Deploy extends SubsystemBase {
 
   SparkClosedLoopController closedLoopController = deployMotor.getClosedLoopController();
   RelativeEncoder deployEncoder = deployMotor.getEncoder();
+  ProfiledPIDController controller;
 
   SparkMaxConfig config = new SparkMaxConfig();
   double p = IntakeConstants.kP;
@@ -42,16 +46,9 @@ public class Deploy extends SubsystemBase {
   public Deploy() {
     config.smartCurrentLimit(50).idleMode(IdleMode.kBrake);
     config.encoder.positionConversionFactor(IntakeConstants.DEPLOY_RATIO);
-    config
-        .closedLoop
-        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        .p(p)
-        .i(i)
-        .d(d)
-        .feedForward
-        .kS(s)
-        .kCos(g)
-        .kV(v);
+
+    controller = new ProfiledPIDController(p, i, d, new TrapezoidProfile.Constraints(1.75, 0.75));
+
     // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
     deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployEncoder.getPosition());
@@ -74,53 +71,57 @@ public class Deploy extends SubsystemBase {
   // }
   // Adds start and stop for deploying
   public Command deployCMD() {
-    // Deploys fuel
-    return Commands.sequence(
-            Commands.runOnce(
-                () -> {
-                  closedLoopController.setSetpoint(
-                      IntakeConstants.DEPLOY_POSITION.in(Radians), ControlType.kPosition);
-                }, this),
-            Commands.waitUntil(closedLoopController::isAtSetpoint),
-            Commands.runOnce(() -> deployMotor.set(rest)))
-        .withName("Deployed");
-    // return Commands.deadline(
-    //         Commands.waitUntil(
-    //             () ->
-    //                 deployEncoder.getPosition()
-    //                     >= IntakeConstants.DEPLOY_POSITION - IntakeConstants.DEPLOY_TOLERANCE),
-    //         runCMD(IntakeConstants.DEPLOY_SPEED))
-    //     .andThen(runCMD(0));
+    return run(() -> {
+      deployMotor.set(
+        controller.calculate(
+          deployEncoder.getPosition(), 
+          IntakeConstants.DEPLOY_POSITION.in(Radians)));
+    });
+
+    
+    // // Deploys fuel
+    // return Commands.sequence(
+    //         Commands.runOnce(
+    //             () -> {
+    //               closedLoopController.setSetpoint(
+    //                   IntakeConstants.DEPLOY_POSITION.in(Radians), ControlType.kPosition);
+    //             }, this),
+    //         Commands.waitUntil(closedLoopController::isAtSetpoint),
+    //         Commands.runOnce(() -> deployMotor.set(rest)))
+    //     .withName("Deployed");
   }
 
   public Command readyCMD() {
-    return Commands.runOnce(
-            () -> {
-              closedLoopController.setSetpoint(
-                  IntakeConstants.READY_POSITION.in(Radians), ControlType.kPosition);
-            }, this)
-        .withName("Ready");
-    // return Commands.deadline(
-    //         Commands.waitUntil(
-    //             () ->
-    //                 deployEncoder.getPosition()
-    //                     >= IntakeConstants.READY_POSITION - IntakeConstants.DEPLOY_TOLERANCE),
-    //         runCMD(IntakeConstants.DEPLOY_SPEED))
-    //     .andThen(runCMD(0));
+    return run(() -> {
+      deployMotor.set(
+        controller.calculate(
+          deployEncoder.getPosition(), 
+          IntakeConstants.READY_POSITION.in(Radians)));
+    });
+    
+    // return Commands.runOnce(
+    //         () -> {
+    //           closedLoopController.setSetpoint(
+    //               IntakeConstants.READY_POSITION.in(Radians), ControlType.kPosition);
+    //         }, this)
+    //     .withName("Ready");
+    
   }
 
   public Command undeployCMD() {
-    return Commands.run(
-            () -> {
-              closedLoopController.setSetpoint(
-                  IntakeConstants.UP_POSITION.in(Radians), ControlType.kPosition);
-            }, this)
-        .withName("Retracted");
-    // return Commands.deadline(
-    //         Commands.waitUntil(
-    //             () -> deployEncoder.getPosition() <= IntakeConstants.DEPLOY_TOLERANCE),
-    //         runCMD(0 - IntakeConstants.DEPLOY_SPEED))
-    //     .andThen(runCMD(0));
+    return run(() -> {
+      deployMotor.set(
+        controller.calculate(
+          deployEncoder.getPosition(), 
+          IntakeConstants.UP_POSITION.in(Radians)));
+    });
+
+    // return Commands.run(
+    //         () -> {
+    //           closedLoopController.setSetpoint(
+    //               IntakeConstants.UP_POSITION.in(Radians), ControlType.kPosition);
+    //         }, this)
+    //     .withName("Retracted");
   }
 
   public Command mannualCMD(DoubleSupplier speed) {
@@ -144,17 +145,17 @@ public class Deploy extends SubsystemBase {
         "INTAKE/Deploy State",
         getCurrentCommand() == null ? "NONE" : getCurrentCommand().getName());
 
-    config
-        .closedLoop
-        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        .p(p)
-        .i(i)
-        .d(d)
-        .feedForward
-        .kS(s)
-        .kG(g)
-        .kV(v);
-    // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
-    deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    // config
+    //     .closedLoop
+    //     .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+    //     .p(p)
+    //     .i(i)
+    //     .d(d)
+    //     .feedForward
+    //     .kS(s)
+    //     .kG(g)
+    //     .kV(v);
+    // // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
+    // deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }
 }
