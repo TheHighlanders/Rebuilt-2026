@@ -13,6 +13,7 @@ import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -361,22 +362,22 @@ public class RobotContainer {
                 () ->
                     drive.setPose(new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero))));
 
+    // reset all odometry
+    operator
+        .povLeft()
+        .onTrue(Commands.runOnce(() -> drive.setPose(DriveConstants.POSE_RESET), drive));
     /* INTAKE COMMANDS. TODO */
     // intake and deploy
     controller.leftBumper().onTrue(Commands.parallel(deploy.deployCMD(), intake.intakeCMD()));
     controller.leftBumper().onFalse(Commands.parallel(deploy.readyCMD(), intake.stoptakeCMD()));
     // outtake
     operator.a().onTrue(intake.spitakeCMD());
-    operator
-        .a()
-        .onTrue(Commands.runOnce(() -> SmartDashboard.putString("INTAKE/FISH", "AAAAAAAAA")));
     operator.a().onFalse(intake.stoptakeCMD());
     // retract intake
-    operator.b().onTrue(intake.intakeCMD());
-    operator.b().onFalse(intake.stoptakeCMD());
+    operator.b().toggleOnTrue(deploy.deployCMD());
+    operator.b().toggleOnFalse(deploy.undeployCMD());
 
     deploy.setDefaultCommand(deploy.mannualCMD(operator::getLeftY));
-    intake.setDefaultCommand(intake.mannualCMD(operator::getRightY));
 
     /* HOPPER COMMANDS */
 
@@ -385,8 +386,8 @@ public class RobotContainer {
         .a()
         .onTrue(
             Commands.sequence(
-                Commands.waitUntil(
-                    () -> shooter.atSpeed() || DriveCommands.aligned().getAsBoolean()),
+                // Commands.waitUntil(
+                //     () -> shooter.atSpeed() || DriveCommands.aligned().getAsBoolean()),
                 hopper.shootCMD()));
 
     controller.a().onFalse(hopper.stopCMD());
@@ -394,6 +395,17 @@ public class RobotContainer {
     // clear hopper
     operator.x().onTrue(hopper.backdriveCMD());
     operator.x().onFalse(hopper.stopCMD());
+
+    controller
+        .povUp()
+        .onTrue(
+            DriveCommands.autoAlign(
+                drive,
+                drive
+                    .getPose()
+                    .plus(
+                        new Transform2d(
+                            new Translation2d(1, drive.getRotation()), drive.getRotation()))));
 
     /* SHOOTER COMMANDS */
 

@@ -56,7 +56,7 @@ public class Deploy extends SubsystemBase {
     deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployEncoder.getPosition());
 
-    deployEncoder.setPosition(0);
+    deployEncoder.setPosition(1);
     SmartDashboard.putNumber("INTAKE/kS", IntakeConstants.kS);
     SmartDashboard.putNumber("INTAKE/kG", IntakeConstants.kG);
     SmartDashboard.putNumber("INTAKE/kV", IntakeConstants.kV);
@@ -124,7 +124,7 @@ public class Deploy extends SubsystemBase {
   }
 
   public Command mannualCMD(DoubleSupplier speed) {
-    return run(() -> deployMotor.set(-speed.getAsDouble()));
+    return run(() -> deployMotor.set(-0.3 * speed.getAsDouble()));
   }
 
   @Override
@@ -138,6 +138,11 @@ public class Deploy extends SubsystemBase {
     d = SmartDashboard.getNumber("INTAKE/kD", IntakeConstants.kD);
     rest = SmartDashboard.getNumber("INTAKE/rest speed", rest);
     SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployEncoder.getPosition());
+    SmartDashboard.putNumber("INTAKE/Deploy Encoder Velocity", deployEncoder.getVelocity());
+
+    SmartDashboard.putString(
+        "INTAKE/Deploy State",
+        getCurrentCommand() == null ? "NONE" : getCurrentCommand().getName());
 
     config
         .closedLoop

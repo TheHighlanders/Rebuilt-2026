@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
-import java.util.function.DoubleSupplier;
 
 public class Intake extends SubsystemBase {
   SparkMax intakeMotor = new SparkMax(IntakeConstants.SPINTAKEID, MotorType.kBrushless);
@@ -65,10 +64,6 @@ public class Intake extends SubsystemBase {
           intakeMotor.set(0);
         },
         this);
-  }
-
-  public Command mannualCMD(DoubleSupplier speed) {
-    return run(() -> intakeMotor.set(speed.getAsDouble()));
   }
 
   @Override

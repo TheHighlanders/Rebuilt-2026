@@ -38,7 +38,7 @@ public final class Constants {
     public static final double SLOWMODE = 0.6;
     public static final double POINT_DEADBAND = 0.4;
     public static final Pose2d POSE_RESET =
-        new Pose2d(Meters.of(2), Meters.of(2), Rotation2d.kZero);
+        new Pose2d(Meters.of(3.61), Meters.of(3.87), Rotation2d.kZero);
     public static final int GYRO_ID = 0; // TODO
     public static final Angle ALIGN_SHOOTER_COMP =
         Radians.of(
@@ -132,8 +132,8 @@ public final class Constants {
     public static final int SPINTAKEID = 42;
     public static final int DEPLOYID = 41;
 
-    public static final double INTAKE_SPEED = 1;
-    public static final double SPITAKE_SPEED = -1;
+    public static final double INTAKE_SPEED = 0.5;
+    public static final double SPITAKE_SPEED = -0.5;
     public static final double DEPLOY_SPEED = 1;
     public static final Angle DEPLOY_POSITION = Degrees.of(70);
     public static final Angle READY_POSITION = Degrees.of(40);
