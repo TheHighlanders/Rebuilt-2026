@@ -377,7 +377,10 @@ public class RobotContainer {
     operator.b().toggleOnTrue(deploy.deployCMD());
     operator.b().toggleOnFalse(deploy.undeployCMD());
 
-    deploy.setDefaultCommand(deploy.mannualCMD(operator::getLeftY));
+    operator
+        .leftStick()
+        .onTrue(
+            deploy.mannualCMD(operator::getLeftY));
 
     /* HOPPER COMMANDS */
 

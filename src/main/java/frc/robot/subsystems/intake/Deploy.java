@@ -50,7 +50,7 @@ public class Deploy extends SubsystemBase {
         .d(d)
         .feedForward
         .kS(s)
-        .kG(g)
+        .kCos(g)
         .kV(v);
     // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
     deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -80,7 +80,7 @@ public class Deploy extends SubsystemBase {
                 () -> {
                   closedLoopController.setSetpoint(
                       IntakeConstants.DEPLOY_POSITION.in(Radians), ControlType.kPosition);
-                }),
+                }, this),
             Commands.waitUntil(closedLoopController::isAtSetpoint),
             Commands.runOnce(() -> deployMotor.set(rest)))
         .withName("Deployed");
@@ -98,7 +98,7 @@ public class Deploy extends SubsystemBase {
             () -> {
               closedLoopController.setSetpoint(
                   IntakeConstants.READY_POSITION.in(Radians), ControlType.kPosition);
-            })
+            }, this)
         .withName("Ready");
     // return Commands.deadline(
     //         Commands.waitUntil(
@@ -114,7 +114,7 @@ public class Deploy extends SubsystemBase {
             () -> {
               closedLoopController.setSetpoint(
                   IntakeConstants.UP_POSITION.in(Radians), ControlType.kPosition);
-            })
+            }, this)
         .withName("Retracted");
     // return Commands.deadline(
     //         Commands.waitUntil(
