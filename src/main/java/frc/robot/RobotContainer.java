@@ -64,6 +64,7 @@ public class RobotContainer {
 
   private boolean robotRelative;
   private double speed;
+  private double mannualShotLength;
   double testDistance = 1;
 
   // Dashboard inputs
@@ -263,6 +264,7 @@ public class RobotContainer {
   private void configureButtonBindings() {
     robotRelative = false;
     speed = 1;
+    mannualShotLength = 2;
 
     /* DRIVE COMMANDS */
     // Default command, normal field-relative drive
@@ -433,9 +435,21 @@ public class RobotContainer {
     // backup mannual flywheel spinup
     controller
         .rightTrigger(0.05)
-        .onTrue(shooter.rawFlywheelCMD(() -> controller.getRightTriggerAxis() * 10));
+        .onTrue(shooter.flywheelHubCMD(() -> controller.getRightTriggerAxis() * mannualShotLength));
 
     controller.rightTrigger(0.05).onFalse(shooter.stopCMD());
+    controller.rightBumper().onFalse(shooter.stopCMD());
+    
+    // increment backup shot length
+    operator
+        .povRight()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  mannualShotLength += 0.5;
+                  if (speed > 6) mannualShotLength = 1;
+                  SmartDashboard.putNumber("Shooter/Mannual shot length", mannualShotLength);
+                }));
 
     // flywheel pre-spin-up (not precise)
     operator.y().onTrue(shooter.flywheelGndCMD(() -> 6));
