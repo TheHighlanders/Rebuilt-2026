@@ -32,26 +32,16 @@ public class Deploy extends SubsystemBase {
   ProfiledPIDController controller;
 
   SparkMaxConfig config = new SparkMaxConfig();
-  double p = IntakeConstants.kP;
-  double i = IntakeConstants.kI;
-  double d = IntakeConstants.kD;
-  double s = IntakeConstants.kS;
-  double g = IntakeConstants.kG;
-  double v = IntakeConstants.kV;
   double rest = 0;
 
   public Deploy() {
     config.smartCurrentLimit(50).idleMode(IdleMode.kBrake);
     config.encoder.positionConversionFactor(IntakeConstants.DEPLOY_RATIO);
 
-    controller = new ProfiledPIDController(p, i, d, new TrapezoidProfile.Constraints(1.75, 0.75));
-
-    // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
     deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployEncoder.getPosition());
 
-    deployEncoder.setPosition(1);
-    SmartDashboard.putNumber("INTAKE/rest speed", rest);
+    deployEncoder.setPosition(0);
   }
 
   public Command deployCMD() {
@@ -88,13 +78,6 @@ public class Deploy extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    s = SmartDashboard.getNumber("INTAKE/kS", IntakeConstants.kS);
-    g = SmartDashboard.getNumber("INTAKE/kG", IntakeConstants.kG);
-    v = SmartDashboard.getNumber("INTAKE/kV", IntakeConstants.kV);
-    p = SmartDashboard.getNumber("INTAKE/kP", IntakeConstants.kP);
-    i = SmartDashboard.getNumber("INTAKE/kI", IntakeConstants.kI);
-    d = SmartDashboard.getNumber("INTAKE/kD", IntakeConstants.kD);
-    rest = SmartDashboard.getNumber("INTAKE/rest speed", rest);
     SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder", deployEncoder.getPosition());
     SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder Velocity", deployEncoder.getVelocity());
     SmartDashboard.putNumber("INTAKE/Deploy/Deploy Current", deployMotor.getOutputCurrent());
