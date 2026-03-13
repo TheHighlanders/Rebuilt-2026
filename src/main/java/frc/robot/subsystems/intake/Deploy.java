@@ -18,6 +18,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
 import java.util.function.DoubleSupplier;
@@ -50,73 +51,27 @@ public class Deploy extends SubsystemBase {
     SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployEncoder.getPosition());
 
     deployEncoder.setPosition(1);
-    SmartDashboard.putNumber("INTAKE/kS", IntakeConstants.kS);
-    SmartDashboard.putNumber("INTAKE/kG", IntakeConstants.kG);
-    SmartDashboard.putNumber("INTAKE/kV", IntakeConstants.kV);
-    SmartDashboard.putNumber("INTAKE/kP", IntakeConstants.kP);
-    SmartDashboard.putNumber("INTAKE/kI", IntakeConstants.kI);
-    SmartDashboard.putNumber("INTAKE/kD", IntakeConstants.kD);
     SmartDashboard.putNumber("INTAKE/rest speed", rest);
   }
 
-  // private Command runCMD(double voltage) {
-  //   return run(
-  //       () -> {
-  //         deployMotor.set(speed);
-  //       });
-  // }
-  // Adds start and stop for deploying
   public Command deployCMD() {
     return run(
         () -> {
-          deployMotor.set(
-              controller.calculate(
-                  deployEncoder.getPosition(), IntakeConstants.DEPLOY_POSITION.in(Radians)));
+          deployMotor.set(0.2);
         });
-
-    // // Deploys fuel
-    // return Commands.sequence(
-    //         Commands.runOnce(
-    //             () -> {
-    //               closedLoopController.setSetpoint(
-    //                   IntakeConstants.DEPLOY_POSITION.in(Radians), ControlType.kPosition);
-    //             }, this),
-    //         Commands.waitUntil(closedLoopController::isAtSetpoint),
-    //         Commands.runOnce(() -> deployMotor.set(rest)))
-    //     .withName("Deployed");
-  }
-
-  public Command readyCMD() {
-    return run(
-        () -> {
-          deployMotor.set(
-              controller.calculate(
-                  deployEncoder.getPosition(), IntakeConstants.READY_POSITION.in(Radians)));
-        });
-
-    // return Commands.runOnce(
-    //         () -> {
-    //           closedLoopController.setSetpoint(
-    //               IntakeConstants.READY_POSITION.in(Radians), ControlType.kPosition);
-    //         }, this)
-    //     .withName("Ready");
-
   }
 
   public Command undeployCMD() {
-    return run(
+    return Commands.sequence(
+      Commands.runOnce(
         () -> {
-          deployMotor.set(
-              controller.calculate(
-                  deployEncoder.getPosition(), IntakeConstants.UP_POSITION.in(Radians)));
-        });
+          deployMotor.set(-0.3);
+        }),
+      Commands.waitSeconds(0.5),
+      Commands.runOnce(() -> {
+        deployMotor.set(-0.02);
+      }));
 
-    // return Commands.run(
-    //         () -> {
-    //           closedLoopController.setSetpoint(
-    //               IntakeConstants.UP_POSITION.in(Radians), ControlType.kPosition);
-    //         }, this)
-    //     .withName("Retracted");
   }
 
   public Command mannualCMD(DoubleSupplier speed) {
