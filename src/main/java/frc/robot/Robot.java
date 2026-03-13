@@ -7,6 +7,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -25,8 +27,10 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 public class Robot extends LoggedRobot {
   private Command autonomousCommand;
   private RobotContainer robotContainer;
+  Timer gcTimer = new Timer();
 
   public Robot() {
+    gcTimer.start();
     // Record metadata
     Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
     Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
@@ -87,6 +91,11 @@ public class Robot extends LoggedRobot {
 
     // Return to non-RT thread priority (do not modify the first argument)
     // Threads.setCurrentThreadPriority(false, 10);
+
+    // run the garbage collector every 5 seconds
+    if (gcTimer.advanceIfElapsed(5)) {
+      System.gc();
+    }
   }
 
   /** This function is called once when the robot is disabled. */
@@ -145,5 +154,9 @@ public class Robot extends LoggedRobot {
 
   /** This function is called periodically whilst in simulation. */
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    robotContainer.fuelSim.updateSim();
+    SmartDashboard.putNumber("red score", FuelSim.Hub.RED_HUB.getScore());
+    SmartDashboard.putNumber("blue score", FuelSim.Hub.BLUE_HUB.getScore());
+  }
 }

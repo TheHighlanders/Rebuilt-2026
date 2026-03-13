@@ -33,6 +33,10 @@ deploy {
                     jvmArgs.add("-XX:GCTimeRatio=5")
                     jvmArgs.add("-XX:+UseSerialGC")
                     jvmArgs.add("-XX:MaxGCPauseMillis=50")
+                    // Enable automatic heap dumps on OutOfMemoryError
+                    // Note: the heap dump path here is a path on a USB flash drive, see below
+                    // jvmArgs.add("-XX:+HeapDumpOnOutOfMemoryError")
+                    // jvmArgs.add("-XX:HeapDumpPath=/tmp/frc-usercode.hprof")
 
                     // The options below may improve performance, but should only be enabled on the RIO 2
                     //
@@ -108,7 +112,7 @@ test {
 // The sim GUI is *disabled* by default to support running
 // AdvantageKit log replay, which requires that all HAL
 // sim extensions be disabled.
-wpi.sim.addGui().defaultEnabled = false
+wpi.sim.addGui().defaultEnabled = true
 wpi.sim.addDriverstation()
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
