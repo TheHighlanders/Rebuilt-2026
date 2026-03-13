@@ -41,6 +41,7 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -98,11 +99,13 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-        // new VisionIOPhotonVision(
-        //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
-        // new VisionIOPhotonVision(
-        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1),
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                // new VisionIOPhotonVision(
+                //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
+                new VisionIOPhotonVision(
+                    VisionConstants.camera1Name, VisionConstants.robotToCamera1));
         // new VisionIOPhotonVision(
         //     VisionConstants.camera2Name, VisionConstants.robotToCamera2),
         // new VisionIOPhotonVision(
@@ -246,6 +249,7 @@ public class RobotContainer {
     autoChooser.addRoutine("Subsystem Test", () -> autos.badLaptopTestAuto());
     autoChooser.addRoutine("Auto Test", () -> autos.testAuto());
     autoChooser.addRoutine("Simple Shoot", () -> autos.simpleShoot());
+    autoChooser.addRoutine("Simpler Shoot", () -> autos.simplerShoot());
     autoChooser.addRoutine("Depot + Climb", () -> autos.depotAndClimb(true));
     autoChooser.addRoutine("Depot", () -> autos.depotAndClimb(false));
     autoChooser.addRoutine("Outpost + Climb", () -> autos.outpostAndClimb(true));
@@ -264,7 +268,7 @@ public class RobotContainer {
   private void configureButtonBindings() {
     robotRelative = false;
     speed = 1;
-    mannualShotLength = 2;
+    mannualShotLength = 1;
 
     /* DRIVE COMMANDS */
     // Default command, normal field-relative drive
@@ -370,8 +374,12 @@ public class RobotContainer {
         .onTrue(Commands.runOnce(() -> drive.setPose(DriveConstants.POSE_RESET), drive));
     /* INTAKE COMMANDS. TODO */
     // intake and deploy
-    controller.leftBumper().onTrue(Commands.parallel(deploy.deployCMD(), intake.intakeCMD()));
-    controller.leftBumper().onFalse(Commands.parallel(deploy.readyCMD(), intake.stoptakeCMD()));
+    controller
+        .leftBumper()
+        .onTrue(Commands.parallel(intake.intakeCMD())); // , deploy.deployCMD()));
+    controller
+        .leftBumper()
+        .onFalse(Commands.parallel(intake.stoptakeCMD())); // ,deploy.readyCMD()));
     // outtake
     operator.a().onTrue(intake.spitakeCMD());
     operator.a().onFalse(intake.stoptakeCMD());
@@ -379,10 +387,7 @@ public class RobotContainer {
     operator.b().toggleOnTrue(deploy.deployCMD());
     operator.b().toggleOnFalse(deploy.undeployCMD());
 
-    operator
-        .leftStick()
-        .onTrue(
-            deploy.mannualCMD(operator::getLeftY));
+    operator.leftStick().onTrue(deploy.mannualCMD(operator::getLeftY));
 
     /* HOPPER COMMANDS */
 
@@ -390,10 +395,13 @@ public class RobotContainer {
     controller
         .a()
         .onTrue(
-            Commands.sequence(
-                // Commands.waitUntil(
-                //     () -> shooter.atSpeed() || DriveCommands.aligned().getAsBoolean()),
+            Commands.parallel(
+                // Commands.runOnce(drive::stopWithX, drive), //uncomment for stopping while
+                // shooting
                 hopper.shootCMD()));
+    // Commands.waitUntil(
+    //     () -> shooter.atSpeed() || DriveCommands.aligned().getAsBoolean()),
+    // spun up trigger
 
     controller.a().onFalse(hopper.stopCMD());
 
@@ -435,11 +443,11 @@ public class RobotContainer {
     // backup mannual flywheel spinup
     controller
         .rightTrigger(0.05)
-        .onTrue(shooter.flywheelHubCMD(() -> controller.getRightTriggerAxis() * mannualShotLength));
+        .onTrue(shooter.rawFlywheelCMD(() -> controller.getRightTriggerAxis() * 0.3));
 
     controller.rightTrigger(0.05).onFalse(shooter.stopCMD());
     controller.rightBumper().onFalse(shooter.stopCMD());
-    
+
     // increment backup shot length
     operator
         .povRight()
@@ -447,7 +455,7 @@ public class RobotContainer {
             Commands.runOnce(
                 () -> {
                   mannualShotLength += 0.5;
-                  if (speed > 6) mannualShotLength = 1;
+                  if (mannualShotLength > 6) mannualShotLength = 1;
                   SmartDashboard.putNumber("Shooter/Mannual shot length", mannualShotLength);
                 }));
 

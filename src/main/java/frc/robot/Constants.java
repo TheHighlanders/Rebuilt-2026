@@ -66,10 +66,10 @@ public final class Constants {
         new Transform3d(Units.inchesToMeters(12), 0, 0.5, new Rotation3d(0.0, 0.0, 0.0));
     public static Transform3d robotToCamera1 =
         new Transform3d(
-            Units.inchesToMeters(7),
-            Units.inchesToMeters(12),
-            0.1,
-            new Rotation3d(0.0, -0.6, Math.PI / 2));
+            -0.132,
+            -0.248,
+            0.0513 + 0.115 + 0.0375,
+            new Rotation3d(0.0, Units.degreesToRadians(-25), Math.PI / 2));
     public static Transform3d robotToCamera2 =
         new Transform3d(
             Units.inchesToMeters(7.5),

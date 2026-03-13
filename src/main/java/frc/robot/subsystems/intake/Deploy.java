@@ -9,19 +9,15 @@ import static edu.wpi.first.units.Units.Radians;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.FeedbackSensor;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
 import java.util.function.DoubleSupplier;
@@ -71,14 +67,13 @@ public class Deploy extends SubsystemBase {
   // }
   // Adds start and stop for deploying
   public Command deployCMD() {
-    return run(() -> {
-      deployMotor.set(
-        controller.calculate(
-          deployEncoder.getPosition(), 
-          IntakeConstants.DEPLOY_POSITION.in(Radians)));
-    });
+    return run(
+        () -> {
+          deployMotor.set(
+              controller.calculate(
+                  deployEncoder.getPosition(), IntakeConstants.DEPLOY_POSITION.in(Radians)));
+        });
 
-    
     // // Deploys fuel
     // return Commands.sequence(
     //         Commands.runOnce(
@@ -92,29 +87,29 @@ public class Deploy extends SubsystemBase {
   }
 
   public Command readyCMD() {
-    return run(() -> {
-      deployMotor.set(
-        controller.calculate(
-          deployEncoder.getPosition(), 
-          IntakeConstants.READY_POSITION.in(Radians)));
-    });
-    
+    return run(
+        () -> {
+          deployMotor.set(
+              controller.calculate(
+                  deployEncoder.getPosition(), IntakeConstants.READY_POSITION.in(Radians)));
+        });
+
     // return Commands.runOnce(
     //         () -> {
     //           closedLoopController.setSetpoint(
     //               IntakeConstants.READY_POSITION.in(Radians), ControlType.kPosition);
     //         }, this)
     //     .withName("Ready");
-    
+
   }
 
   public Command undeployCMD() {
-    return run(() -> {
-      deployMotor.set(
-        controller.calculate(
-          deployEncoder.getPosition(), 
-          IntakeConstants.UP_POSITION.in(Radians)));
-    });
+    return run(
+        () -> {
+          deployMotor.set(
+              controller.calculate(
+                  deployEncoder.getPosition(), IntakeConstants.UP_POSITION.in(Radians)));
+        });
 
     // return Commands.run(
     //         () -> {
@@ -138,24 +133,12 @@ public class Deploy extends SubsystemBase {
     i = SmartDashboard.getNumber("INTAKE/kI", IntakeConstants.kI);
     d = SmartDashboard.getNumber("INTAKE/kD", IntakeConstants.kD);
     rest = SmartDashboard.getNumber("INTAKE/rest speed", rest);
-    SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployEncoder.getPosition());
-    SmartDashboard.putNumber("INTAKE/Deploy Encoder Velocity", deployEncoder.getVelocity());
+    SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder", deployEncoder.getPosition());
+    SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder Velocity", deployEncoder.getVelocity());
+    SmartDashboard.putNumber("INTAKE/Deploy/Deploy Current", deployMotor.getOutputCurrent());
 
     SmartDashboard.putString(
         "INTAKE/Deploy State",
         getCurrentCommand() == null ? "NONE" : getCurrentCommand().getName());
-
-    // config
-    //     .closedLoop
-    //     .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-    //     .p(p)
-    //     .i(i)
-    //     .d(d)
-    //     .feedForward
-    //     .kS(s)
-    //     .kG(g)
-    //     .kV(v);
-    // // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
-    // deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }
 }
