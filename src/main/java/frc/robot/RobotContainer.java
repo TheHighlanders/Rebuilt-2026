@@ -375,7 +375,9 @@ public class RobotContainer {
     operator.a().onTrue(intake.spitakeCMD());
     operator.a().onFalse(intake.stoptakeCMD());
     // retract intake
-    operator.b().onTrue(deploy.undeployCMD());
+    operator.b().onTrue(Commands.parallel(deploy.undeployCMD(), intake.killCMD()));
+
+    controller.povRight().onTrue(intake.killCMD());
 
     /* HOPPER COMMANDS */
 

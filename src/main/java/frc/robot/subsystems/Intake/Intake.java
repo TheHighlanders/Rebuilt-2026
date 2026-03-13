@@ -17,21 +17,27 @@ import frc.robot.Constants.IntakeConstants;
 
 public class Intake extends SubsystemBase {
   SparkMax intakeMotor = new SparkMax(IntakeConstants.SPINTAKEID, MotorType.kBrushless);
-  SparkMaxConfig config = new SparkMaxConfig();
   SparkClosedLoopController controller = intakeMotor.getClosedLoopController();
 
   public Intake() {
 
-    config.smartCurrentLimit(50).idleMode(IdleMode.kCoast);
-
-    intakeMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    intakeMotor.configure(getConfig(IdleMode.kCoast), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
+  private SparkMaxConfig getConfig(IdleMode idleMode) {
+    SparkMaxConfig config =  new SparkMaxConfig();
+    config
+      .smartCurrentLimit(50)
+      .idleMode(idleMode);
+
+    return config;
+  }
   // Intake commands to take in, spit out, and not move
   public Command intakeCMD() {
     // Takes in
     return runOnce(
         () -> {
+          intakeMotor.configure(getConfig(IdleMode.kCoast), ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);          
           intakeMotor.set(IntakeConstants.INTAKE_SPEED);
         });
   }
@@ -49,6 +55,14 @@ public class Intake extends SubsystemBase {
         () -> {
           intakeMotor.set(0);
         });
+  }
+
+  public Command killCMD() {
+    return runOnce(
+      () -> {
+        intakeMotor.configure(getConfig(IdleMode.kBrake), ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+      }
+    );
   }
 
   @Override
