@@ -55,10 +55,17 @@ public class Deploy extends SubsystemBase {
   }
 
   public Command deployCMD() {
-    return run(
+    return Commands.deadline(
+      Commands.waitSeconds(0.5),
+      Commands.runOnce(
         () -> {
           deployMotor.set(0.2);
-        });
+        }))
+      .andThen(
+        Commands.runOnce(
+        () -> {
+          deployMotor.set(0);
+        }));
   }
 
   public Command undeployCMD() {
