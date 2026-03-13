@@ -11,6 +11,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -37,10 +38,7 @@ public class Climber extends SubsystemBase {
 
   public Command raiseCMD() {
     return Commands.deadline(
-            Commands.waitUntil(
-                () ->
-                    climbEncoder.getPosition()
-                        <=  ClimberConstants.POS_TOLERANCE),
+            Commands.waitUntil(() -> climbEncoder.getPosition() <= ClimberConstants.POS_TOLERANCE),
             runCMD(ClimberConstants.RAISE_SPEED))
         .andThen(runCMD(0));
   }
@@ -52,21 +50,14 @@ public class Climber extends SubsystemBase {
                     climbEncoder.getPosition()
                         >= ClimberConstants.DOWN_POSITION - ClimberConstants.POS_TOLERANCE),
             runCMD(ClimberConstants.PULL_SPEED))
-        .andThen(runCMD(0));
-  }
-
-  public Command tuckCMD() {
-    return Commands.deadline(
-            Commands.waitUntil(
-                () ->
-                    climbEncoder.getPosition()
-                        >= ClimberConstants.DOWN_POSITION - (2*ClimberConstants.POS_TOLERANCE)),
-            runCMD(ClimberConstants.PULL_SPEED))
-        .andThen(runCMD(0));
+        .andThen(runCMD(0))
+        .andThen(Commands.runOnce(() -> climbEncoder.setPosition(0)));
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    SmartDashboard.putNumber("Shooter/Current", climbMotor.getOutputCurrent());
+    SmartDashboard.putNumber("Shooter/Voltage", climbMotor.getAppliedOutput());
   }
 }
