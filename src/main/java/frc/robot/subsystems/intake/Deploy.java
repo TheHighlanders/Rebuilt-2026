@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Radians;
-
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -15,7 +13,6 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -30,6 +27,7 @@ public class Deploy extends SubsystemBase {
   SparkClosedLoopController closedLoopController = deployMotor.getClosedLoopController();
   RelativeEncoder deployEncoder = deployMotor.getEncoder();
   ProfiledPIDController controller;
+  boolean raised = true;
 
   SparkMaxConfig config = new SparkMaxConfig();
   double rest = 0;
@@ -46,33 +44,39 @@ public class Deploy extends SubsystemBase {
 
   public Command deployCMD() {
     return Commands.deadline(
-      Commands.waitSeconds(0.5),
-      Commands.runOnce(
-        () -> {
-          deployMotor.set(0.2);
-        }))
-      .andThen(
-        Commands.runOnce(
-        () -> {
-          deployMotor.set(0);
-        }));
+            Commands.waitSeconds(0.5),
+            Commands.runOnce(
+                () -> {
+                  deployMotor.set(-0.2);
+                }))
+        .andThen(
+            Commands.runOnce(
+                () -> {
+                  deployMotor.set(0);
+                  raised = false;
+                }));
   }
 
   public Command undeployCMD() {
     return Commands.sequence(
-      Commands.runOnce(
-        () -> {
-          deployMotor.set(-0.3);
-        }),
-      Commands.waitSeconds(0.5),
-      Commands.runOnce(() -> {
-        deployMotor.set(-0.02);
-      }));
-
+        Commands.runOnce(
+            () -> {
+              deployMotor.set(0.3);
+            }),
+        Commands.waitSeconds(2),
+        Commands.runOnce(
+            () -> {
+              deployMotor.set(0.02);
+              raised = true;
+            }));
   }
 
   public Command mannualCMD(DoubleSupplier speed) {
     return run(() -> deployMotor.set(-0.3 * speed.getAsDouble()));
+  }
+
+  public boolean isRaised() {
+    return raised;
   }
 
   @Override
@@ -85,5 +89,9 @@ public class Deploy extends SubsystemBase {
     SmartDashboard.putString(
         "INTAKE/Deploy State",
         getCurrentCommand() == null ? "NONE" : getCurrentCommand().getName());
+  }
+
+  public Command swapCMD() {
+    return Commands.either(deployCMD(), undeployCMD(), () -> raised);
   }
 }

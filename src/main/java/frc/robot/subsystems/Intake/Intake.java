@@ -29,11 +29,20 @@ public class Intake extends SubsystemBase {
 
     config.smartCurrentLimit(50).idleMode(IdleMode.kCoast);
 
-    intakeMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    intakeMotor.configure(
+        getConfig(IdleMode.kCoast), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     SmartDashboard.putNumber("INTAKE/in speed", inSpeed);
     SmartDashboard.putNumber("INTAKE/out speed", outSpeed);
     SmartDashboard.putString("INTAKE/State", "NONE");
+  }
+
+  private SparkMaxConfig getConfig(IdleMode idleMode) {
+    SparkMaxConfig config = new SparkMaxConfig();
+
+    config.smartCurrentLimit(50).idleMode(idleMode);
+
+    return config;
   }
 
   // Intake commands to take in, spit out, and not move
@@ -41,6 +50,10 @@ public class Intake extends SubsystemBase {
     // Takes in
     return Commands.run(
         () -> {
+          intakeMotor.configure(
+              getConfig(IdleMode.kCoast),
+              ResetMode.kResetSafeParameters,
+              PersistMode.kNoPersistParameters);
           SmartDashboard.putString("INTAKE/State", "INTAKING");
           intakeMotor.set(inSpeed);
         },
@@ -61,6 +74,18 @@ public class Intake extends SubsystemBase {
     return Commands.runOnce(
         () -> {
           SmartDashboard.putString("INTAKE/State", "STOPPED");
+          intakeMotor.set(0);
+        },
+        this);
+  }
+
+  public Command killCMD() {
+    return Commands.runOnce(
+        () -> {
+          intakeMotor.configure(
+              getConfig(IdleMode.kBrake),
+              ResetMode.kResetSafeParameters,
+              PersistMode.kNoPersistParameters);
           intakeMotor.set(0);
         },
         this);

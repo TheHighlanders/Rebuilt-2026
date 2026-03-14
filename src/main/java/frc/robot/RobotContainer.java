@@ -41,7 +41,6 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -99,14 +98,11 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                new VisionIO(){});
-                // new VisionIOPhotonVision(
-                //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
-                // new VisionIOPhotonVision(
-                //     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {});
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
         // new VisionIOPhotonVision(
         //     VisionConstants.camera2Name, VisionConstants.robotToCamera2),
         // new VisionIOPhotonVision(
@@ -385,8 +381,7 @@ public class RobotContainer {
     operator.a().onTrue(intake.spitakeCMD());
     operator.a().onFalse(intake.stoptakeCMD());
     // retract intake
-    operator.b().toggleOnTrue(deploy.deployCMD());
-    operator.b().toggleOnFalse(deploy.undeployCMD());
+    operator.b().onTrue(deploy.swapCMD());
 
     operator.leftStick().onTrue(deploy.mannualCMD(operator::getLeftY));
 
