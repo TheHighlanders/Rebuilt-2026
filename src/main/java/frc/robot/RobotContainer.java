@@ -13,7 +13,6 @@ import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -366,8 +365,8 @@ public class RobotContainer {
                     drive.setPose(new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero))));
 
     // reset all odometry
-    operator
-        .povLeft()
+    controller
+        .povUp()
         .onTrue(Commands.runOnce(() -> drive.setPose(DriveConstants.POSE_RESET), drive));
     /* INTAKE COMMANDS. TODO */
     // intake and deploy
@@ -378,8 +377,8 @@ public class RobotContainer {
         .leftBumper()
         .onFalse(Commands.parallel(intake.stoptakeCMD())); // ,deploy.readyCMD()));
     // outtake
-    operator.a().onTrue(intake.spitakeCMD());
-    operator.a().onFalse(intake.stoptakeCMD());
+    operator.a().onTrue(Commands.runOnce(() -> intake.spitakeCMD(), intake));
+    operator.a().onFalse(Commands.runOnce(() -> intake.stoptakeCMD(), intake));
     // retract intake
     operator.b().onTrue(deploy.swapCMD());
 
@@ -405,16 +404,16 @@ public class RobotContainer {
     operator.x().onTrue(hopper.backdriveCMD());
     operator.x().onFalse(hopper.stopCMD());
 
-    controller
-        .povUp()
-        .onTrue(
-            DriveCommands.autoAlign(
-                drive,
-                drive
-                    .getPose()
-                    .plus(
-                        new Transform2d(
-                            new Translation2d(1, drive.getRotation()), drive.getRotation()))));
+    // controller
+    //     .povUp()
+    //     .onTrue(
+    //         DriveCommands.autoAlign(
+    //             drive,
+    //             drive
+    //                 .getPose()
+    //                 .plus(
+    //                     new Transform2d(
+    //                         new Translation2d(1, drive.getRotation()), drive.getRotation()))));
 
     /* SHOOTER COMMANDS */
 
@@ -475,6 +474,9 @@ public class RobotContainer {
     // backup---raise and lower climber with trigger
     operator.leftTrigger(0.95).onTrue(climber.raiseCMD());
     operator.leftTrigger(0.1).onFalse(climber.pullCMD());
+
+    operator.rightTrigger(0.5).onTrue(deploy.deployCMD());
+    operator.rightTrigger(0.5).onFalse(deploy.undeployCMD());
   }
 
   @SuppressWarnings("unused")

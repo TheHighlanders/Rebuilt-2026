@@ -11,6 +11,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -45,10 +46,12 @@ public class Intake extends SubsystemBase {
     // Takes in
     return Commands.run(
         () -> {
-          intakeMotor.configure(
-              getConfig(IdleMode.kCoast),
-              ResetMode.kResetSafeParameters,
-              PersistMode.kNoPersistParameters);
+          DriverStation.reportWarning("intakeCMD", false);
+
+          // intakeMotor.configure(
+          //     getConfig(IdleMode.kCoast),
+          //     ResetMode.kResetSafeParameters,
+          //     PersistMode.kNoPersistParameters);
           SmartDashboard.putString("INTAKE/State", "INTAKING");
           intakeMotor.set(inSpeed);
         },
@@ -58,6 +61,8 @@ public class Intake extends SubsystemBase {
   public Command spitakeCMD() {
     return Commands.run(
         () -> {
+          DriverStation.reportWarning("spitakeCMD", false);
+
           SmartDashboard.putString("INTAKE/State", "OUTTAKING");
           intakeMotor.set(outSpeed);
         },
@@ -66,8 +71,11 @@ public class Intake extends SubsystemBase {
 
   public Command stoptakeCMD() {
     // Stops motor
+
     return Commands.runOnce(
         () -> {
+          DriverStation.reportWarning("stoptakeCMD", false);
+
           SmartDashboard.putString("INTAKE/State", "STOPPED");
           intakeMotor.set(0);
         },

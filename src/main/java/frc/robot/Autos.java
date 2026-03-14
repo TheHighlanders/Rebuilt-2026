@@ -142,6 +142,26 @@ public class Autos {
     return routine;
   }
 
+  public AutoRoutine middleShootOnly() {
+    AutoRoutine routine = autoFactory.newRoutine("middleShootOnly");
+
+    routine
+        .active()
+        .onTrue(
+            Commands.parallel(
+                Commands.sequence(
+                    Commands.waitSeconds(1),
+                    shooter.rawFlywheelCMD(() -> 0.25),
+                    Commands.waitUntil(
+                        () -> {
+                          return shooter.atSpeed();
+                        }),
+                    // Commands.runOnce(drive::stopWithX),//maybe
+                    hopper.shootCMD())));
+
+    return routine;
+  }
+
   public AutoRoutine simplerShoot() {
     AutoRoutine routine = autoFactory.newRoutine("");
 
