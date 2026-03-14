@@ -26,22 +26,12 @@ public class Intake extends SubsystemBase {
 
   public Intake() {
 
-    config.smartCurrentLimit(50).idleMode(IdleMode.kCoast);
-
     intakeMotor.configure(
         getConfig(IdleMode.kCoast), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     SmartDashboard.putNumber("INTAKE/in speed", inSpeed);
     SmartDashboard.putNumber("INTAKE/out speed", outSpeed);
     SmartDashboard.putString("INTAKE/State", "NONE");
-  }
-
-  private SparkMaxConfig getConfig(IdleMode idleMode) {
-    SparkMaxConfig config = new SparkMaxConfig();
-
-    config.smartCurrentLimit(50).idleMode(idleMode);
-
-    return config;
   }
 
   private SparkMaxConfig getConfig(IdleMode idleMode) {
@@ -81,18 +71,6 @@ public class Intake extends SubsystemBase {
     return Commands.runOnce(
         () -> {
           SmartDashboard.putString("INTAKE/State", "STOPPED");
-          intakeMotor.set(0);
-        },
-        this);
-  }
-
-  public Command killCMD() {
-    return Commands.runOnce(
-        () -> {
-          intakeMotor.configure(
-              getConfig(IdleMode.kBrake),
-              ResetMode.kResetSafeParameters,
-              PersistMode.kNoPersistParameters);
           intakeMotor.set(0);
         },
         this);
