@@ -13,6 +13,7 @@ import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -40,8 +41,6 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -65,6 +64,7 @@ public class RobotContainer {
 
   private boolean robotRelative;
   private double speed;
+  private double mannualShotLength;
   double testDistance = 1;
 
   // Dashboard inputs
@@ -98,20 +98,18 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
-        vision =
-            new Vision(
-                drive::addVisionMeasurement, new VisionIO(){});
-                // new VisionIOPhotonVision(
-                //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
-                // new VisionIOPhotonVision(
-                //     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {});
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
         // new VisionIOPhotonVision(
         //     VisionConstants.camera2Name, VisionConstants.robotToCamera2),
         // new VisionIOPhotonVision(
         //     VisionConstants.camera3Name, VisionConstants.robotToCamera3));
         shooter = new Shooter();
         hopper = new Hopper();
-        configureShooterTestBindings(); // configureButtonBindings();
+        configureButtonBindings();
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -141,17 +139,15 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera2Name, VisionConstants.robotToCamera2, drive::getPose),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera3Name, VisionConstants.robotToCamera3, drive::getPose));
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        // new VisionIOPhotonVisionSim(
+        //     VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
+        // new VisionIOPhotonVisionSim(
+        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose),
+        // new VisionIOPhotonVisionSim(
+        //     VisionConstants.camera2Name, VisionConstants.robotToCamera2, drive::getPose),
+        // new VisionIOPhotonVisionSim(
+        //     VisionConstants.camera3Name, VisionConstants.robotToCamera3, drive::getPose));
         ShooterSim temp = new ShooterSim(fuelSim); // how do i destruct this
         shooter = temp;
         hopper = new HopperSim(temp);
@@ -250,6 +246,7 @@ public class RobotContainer {
     autoChooser.addRoutine("Subsystem Test", () -> autos.badLaptopTestAuto());
     autoChooser.addRoutine("Auto Test", () -> autos.testAuto());
     autoChooser.addRoutine("Simple Shoot", () -> autos.simpleShoot());
+    autoChooser.addRoutine("Simpler Shoot", () -> autos.simplerShoot());
     autoChooser.addRoutine("Depot + Climb", () -> autos.depotAndClimb(true));
     autoChooser.addRoutine("Depot", () -> autos.depotAndClimb(false));
     autoChooser.addRoutine("Outpost + Climb", () -> autos.outpostAndClimb(true));
@@ -268,6 +265,7 @@ public class RobotContainer {
   private void configureButtonBindings() {
     robotRelative = false;
     speed = 1;
+    mannualShotLength = 1;
 
     /* DRIVE COMMANDS */
     // Default command, normal field-relative drive
@@ -367,17 +365,25 @@ public class RobotContainer {
                 () ->
                     drive.setPose(new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero))));
 
-    /* INTAKE COMMANDS */
+    // reset all odometry
+    operator
+        .povLeft()
+        .onTrue(Commands.runOnce(() -> drive.setPose(DriveConstants.POSE_RESET), drive));
+    /* INTAKE COMMANDS. TODO */
     // intake and deploy
-    controller.leftBumper().onTrue(Commands.parallel(deploy.deployCMD(), intake.intakeCMD()));
-    controller.leftBumper().onFalse(Commands.parallel(deploy.readyCMD(), intake.stoptakeCMD()));
+    controller
+        .leftBumper()
+        .onTrue(Commands.parallel(intake.intakeCMD())); // , deploy.deployCMD()));
+    controller
+        .leftBumper()
+        .onFalse(Commands.parallel(intake.stoptakeCMD())); // ,deploy.readyCMD()));
     // outtake
     operator.a().onTrue(intake.spitakeCMD());
     operator.a().onFalse(intake.stoptakeCMD());
     // retract intake
-    operator.b().onTrue(Commands.parallel(deploy.undeployCMD(), intake.killCMD()));
+    operator.b().onTrue(deploy.swapCMD());
 
-    controller.povRight().onTrue(intake.killCMD());
+    operator.leftStick().onTrue(deploy.mannualCMD(operator::getLeftY));
 
     /* HOPPER COMMANDS */
 
@@ -385,10 +391,13 @@ public class RobotContainer {
     controller
         .a()
         .onTrue(
-            Commands.sequence(
-                Commands.waitUntil(
-                    () -> shooter.atSpeed() || DriveCommands.aligned().getAsBoolean()),
+            Commands.parallel(
+                // Commands.runOnce(drive::stopWithX, drive), //uncomment for stopping while
+                // shooting
                 hopper.shootCMD()));
+    // Commands.waitUntil(
+    //     () -> shooter.atSpeed() || DriveCommands.aligned().getAsBoolean()),
+    // spun up trigger
 
     controller.a().onFalse(hopper.stopCMD());
 
@@ -396,32 +405,55 @@ public class RobotContainer {
     operator.x().onTrue(hopper.backdriveCMD());
     operator.x().onFalse(hopper.stopCMD());
 
+    controller
+        .povUp()
+        .onTrue(
+            DriveCommands.autoAlign(
+                drive,
+                drive
+                    .getPose()
+                    .plus(
+                        new Transform2d(
+                            new Translation2d(1, drive.getRotation()), drive.getRotation()))));
+
     /* SHOOTER COMMANDS */
 
     // This trigger probably goes off way too much - maybe make shooter.atSpeed() lock this at true?
     DriveCommands.aligned()
-        .and(() -> shooter.atSpeed())// && false) // Armaan, turn off rumble
+        .and(() -> shooter.atSpeed()) // && false) // Armaan, turn off rumble
         .onTrue(
             Commands.sequence(
                 Commands.run(
                     () -> {
-                    controller.getHID().setRumble(RumbleType.kLeftRumble, 1);
-                    controller.getHID().setRumble(RumbleType.kRightRumble, 1);
-                    SmartDashboard.putString("Rumble?", "Yes");
+                      controller.getHID().setRumble(RumbleType.kLeftRumble, 1);
+                      controller.getHID().setRumble(RumbleType.kRightRumble, 1);
+                      SmartDashboard.putString("Rumble?", "Yes");
                     }),
                 Commands.waitSeconds(1),
                 Commands.run(
                     () -> {
-                    controller.getHID().setRumble(RumbleType.kBothRumble, 0);
-                    SmartDashboard.putString("Rumble?", "No");
+                      controller.getHID().setRumble(RumbleType.kBothRumble, 0);
+                      SmartDashboard.putString("Rumble?", "No");
                     })));
 
     // backup mannual flywheel spinup
     controller
         .rightTrigger(0.05)
-        .onTrue(shooter.rawFlywheelCMD(() -> controller.getRightTriggerAxis() * 10));
+        .onTrue(shooter.rawFlywheelCMD(() -> controller.getRightTriggerAxis() * 0.3));
 
     controller.rightTrigger(0.05).onFalse(shooter.stopCMD());
+    controller.rightBumper().onFalse(shooter.stopCMD());
+
+    // increment backup shot length
+    operator
+        .povRight()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  mannualShotLength += 0.5;
+                  if (mannualShotLength > 6) mannualShotLength = 1;
+                  SmartDashboard.putNumber("Shooter/Mannual shot length", mannualShotLength);
+                }));
 
     // flywheel pre-spin-up (not precise)
     operator.y().onTrue(shooter.flywheelGndCMD(() -> 6));
@@ -445,6 +477,7 @@ public class RobotContainer {
     operator.leftTrigger(0.1).onFalse(climber.pullCMD());
   }
 
+  @SuppressWarnings("unused")
   private void configureShooterTestBindings() {
     testDistance = 1;
     Command shootCommand = shooter.flywheelGndCMD(() -> testDistance);

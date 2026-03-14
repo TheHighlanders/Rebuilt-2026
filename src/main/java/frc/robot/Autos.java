@@ -142,6 +142,30 @@ public class Autos {
     return routine;
   }
 
+  public AutoRoutine simplerShoot() {
+    AutoRoutine routine = autoFactory.newRoutine("");
+
+    routine
+        .active()
+        .onTrue(
+            Commands.sequence(
+                Commands.deadline(
+                    Commands.waitSeconds(1.5),
+                    DriveCommands.joystickDrive(drive, () -> 0, () -> 0.4, () -> 0, () -> true)),
+                Commands.deadline(
+                    Commands.waitSeconds(12.5),
+                    Commands.parallel(
+                        shooter.rawFlywheelCMD(() -> 0.25),
+                        Commands.sequence(Commands.waitSeconds(1), hopper.shootCMD())),
+                    Commands.deadline(
+                        Commands.waitSeconds(2),
+                        Commands.parallel(climber.pullCMD(), hopper.stopCMD(), shooter.stopCMD())),
+                    Commands.deadline(Commands.waitSeconds(2), climber.raiseCMD()),
+                    Commands.deadline(Commands.waitSeconds(2), climber.pullCMD()))));
+
+    return routine;
+  }
+
   public AutoRoutine depotAndClimb(boolean addClimb) {
     AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
 
@@ -152,8 +176,9 @@ public class Autos {
         .active()
         .onTrue(
             Commands.sequence(
-                collect.resetOdometry(),
                 sendState("Auto Started!"),
+                DriveCommands.autoAlign(drive, collect.getInitialPose().orElse(drive.getPose())),
+                collect.resetOdometry(),
                 Commands.parallel(collect.cmd(), deploy.deployCMD())));
 
     collect.atTime("intake").onTrue(Commands.sequence(intake.intakeCMD(), sendState("Intaking!")));
@@ -170,12 +195,11 @@ public class Autos {
 
     if (addClimb) {
       collect
-          .doneDelayed(8)
+          .doneDelayed(10)
           .onTrue(
               Commands.parallel(
                   sendState("Aligning!"),
-                  climb.cmd(),
-                  climber.raiseCMD(),
+                  DriveCommands.autoClimb(drive, climber),
                   hopper.stopCMD(),
                   shooter.stopCMD(),
                   deploy.undeployCMD()));
