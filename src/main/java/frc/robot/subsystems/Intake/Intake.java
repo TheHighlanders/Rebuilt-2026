@@ -35,10 +35,8 @@ public class Intake extends SubsystemBase {
   }
 
   private SparkMaxConfig getConfig(IdleMode idleMode) {
-    SparkMaxConfig config =  new SparkMaxConfig();
-    config
-      .smartCurrentLimit(50)
-      .idleMode(idleMode);
+    SparkMaxConfig config = new SparkMaxConfig();
+    config.smartCurrentLimit(50).idleMode(idleMode);
 
     return config;
   }
@@ -78,16 +76,19 @@ public class Intake extends SubsystemBase {
 
   public Command killCMD() {
     return runOnce(
-      () -> {
-        intakeMotor.configure(getConfig(IdleMode.kBrake), ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
-      }
-    );
+        () -> {
+          intakeMotor.configure(
+              getConfig(IdleMode.kBrake),
+              ResetMode.kResetSafeParameters,
+              PersistMode.kNoPersistParameters);
+        });
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    inSpeed = SmartDashboard.getNumber("INTAKE/in speed", IntakeConstants.INTAKE_SPEED);
+    // disabled bc not sure what htis is doing //inSpeed = SmartDashboard.getNumber("INTAKE/in
+    // speed", IntakeConstants.INTAKE_SPEED);
     outSpeed = SmartDashboard.getNumber("INTAKE/out speed", IntakeConstants.SPITAKE_SPEED);
     SmartDashboard.putNumber("INTAKE/Encoder Velocity", intakeMotor.getEncoder().getVelocity());
     SmartDashboard.putNumber("INTAKE/Encoder Pose", intakeMotor.getEncoder().getPosition());

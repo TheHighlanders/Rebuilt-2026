@@ -420,7 +420,7 @@ public class RobotContainer {
 
     // This trigger probably goes off way too much - maybe make shooter.atSpeed() lock this at true?
     DriveCommands.aligned()
-        .and(() -> shooter.atSpeed()) // && false) // Armaan, turn off rumble
+        .and(() -> shooter.atSpeed() && false) // Armaan, turn off rumble
         .onTrue(
             Commands.sequence(
                 Commands.run(
@@ -439,7 +439,7 @@ public class RobotContainer {
     // backup mannual flywheel spinup
     controller
         .rightTrigger(0.05)
-        .onTrue(shooter.rawFlywheelCMD(() -> controller.getRightTriggerAxis() * 0.3));
+        .onTrue(shooter.rawFlywheelCMD(() -> controller.getRightTriggerAxis() * 3));
 
     controller.rightTrigger(0.05).onFalse(shooter.stopCMD());
     controller.rightBumper().onFalse(shooter.stopCMD());
