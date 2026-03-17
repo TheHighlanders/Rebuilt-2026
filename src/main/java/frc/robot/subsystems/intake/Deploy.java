@@ -10,13 +10,12 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.FeedbackSensor;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,26 +31,23 @@ public class Deploy extends SubsystemBase {
   RelativeEncoder deployEncoder = deployMotor.getEncoder();
 
   SparkMaxConfig config = new SparkMaxConfig();
-  ArmFeedforward feedforward = 
-    new ArmFeedforward(
-      IntakeConstants.kS, 
-      IntakeConstants.kG,
-      IntakeConstants.kV);
+  ArmFeedforward feedforward =
+      new ArmFeedforward(IntakeConstants.kS, IntakeConstants.kG, IntakeConstants.kV);
 
   public Deploy() {
     config.smartCurrentLimit(50).idleMode(IdleMode.kBrake);
     config.encoder.positionConversionFactor(IntakeConstants.DEPLOY_RATIO);
     config
         .closedLoop
-          .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-          .p(IntakeConstants.kP)
-          .i(IntakeConstants.kI)
-          .d(IntakeConstants.kD)
+        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+        .p(IntakeConstants.kP)
+        .i(IntakeConstants.kI)
+        .d(IntakeConstants.kD)
         .feedForward
-          .kS(IntakeConstants.kS)
-          .kG(IntakeConstants.kG)
-          .kV(IntakeConstants.kV);
-          //.kCosRatio(IntakeConstants.DEPLOY_RATIO);
+        .kS(IntakeConstants.kS)
+        .kG(IntakeConstants.kG)
+        .kV(IntakeConstants.kV);
+    // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
     deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     deployEncoder.setPosition(0);
@@ -70,9 +66,12 @@ public class Deploy extends SubsystemBase {
   // Adds start and stop for deploying
   public Command deployCMD() {
     // Deploys fuel
-    return Commands.runOnce(() -> {
-      closedLoopController.setSetpoint(IntakeConstants.DEPLOY_POSITION.in(Radians), ControlType.kPosition);
-    }).withName("Deployed");
+    return Commands.runOnce(
+            () -> {
+              closedLoopController.setSetpoint(
+                  IntakeConstants.DEPLOY_POSITION.in(Radians), ControlType.kPosition);
+            })
+        .withName("Deployed");
     // return Commands.deadline(
     //         Commands.waitUntil(
     //             () ->
@@ -83,9 +82,12 @@ public class Deploy extends SubsystemBase {
   }
 
   public Command readyCMD() {
-    return Commands.runOnce(() -> {
-      closedLoopController.setSetpoint(IntakeConstants.READY_POSITION.in(Radians), ControlType.kPosition);
-    }).withName("Ready");
+    return Commands.runOnce(
+            () -> {
+              closedLoopController.setSetpoint(
+                  IntakeConstants.READY_POSITION.in(Radians), ControlType.kPosition);
+            })
+        .withName("Ready");
     // return Commands.deadline(
     //         Commands.waitUntil(
     //             () ->
@@ -96,9 +98,12 @@ public class Deploy extends SubsystemBase {
   }
 
   public Command undeployCMD() {
-    return Commands.run(() -> {
-      closedLoopController.setSetpoint(IntakeConstants.UP_POSITION.in(Radians), ControlType.kPosition);
-    }).withName("Retracted");
+    return Commands.run(
+            () -> {
+              closedLoopController.setSetpoint(
+                  IntakeConstants.UP_POSITION.in(Radians), ControlType.kPosition);
+            })
+        .withName("Retracted");
     // return Commands.deadline(
     //         Commands.waitUntil(
     //             () -> deployEncoder.getPosition() <= IntakeConstants.DEPLOY_TOLERANCE),

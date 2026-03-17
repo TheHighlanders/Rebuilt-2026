@@ -37,10 +37,7 @@ public class Climber extends SubsystemBase {
 
   public Command raiseCMD() {
     return Commands.deadline(
-            Commands.waitUntil(
-                () ->
-                    climbEncoder.getPosition()
-                        <=  ClimberConstants.POS_TOLERANCE),
+            Commands.waitUntil(() -> climbEncoder.getPosition() <= ClimberConstants.POS_TOLERANCE),
             runCMD(ClimberConstants.RAISE_SPEED))
         .andThen(runCMD(0));
   }
@@ -60,7 +57,7 @@ public class Climber extends SubsystemBase {
             Commands.waitUntil(
                 () ->
                     climbEncoder.getPosition()
-                        >= ClimberConstants.DOWN_POSITION - (2*ClimberConstants.POS_TOLERANCE)),
+                        >= ClimberConstants.DOWN_POSITION - (2 * ClimberConstants.POS_TOLERANCE)),
             runCMD(ClimberConstants.PULL_SPEED))
         .andThen(runCMD(0));
   }

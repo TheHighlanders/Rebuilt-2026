@@ -40,7 +40,6 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 
 /**
@@ -98,13 +97,11 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
-        vision =
-            new Vision(
-                drive::addVisionMeasurement, new VisionIO(){});
-                // new VisionIOPhotonVision(
-                //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
-                // new VisionIOPhotonVision(
-                //     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {});
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
         // new VisionIOPhotonVision(
         //     VisionConstants.camera2Name, VisionConstants.robotToCamera2),
         // new VisionIOPhotonVision(
@@ -279,7 +276,7 @@ public class RobotContainer {
             () -> -controller.getRightX() * speed,
             () -> robotRelative));
 
- // toggles between robot- and field-relative drive
+    // toggles between robot- and field-relative drive
     controller
         .leftStick()
         .onTrue(
@@ -342,7 +339,7 @@ public class RobotContainer {
                   SmartDashboard.putNumber("Drive/Speed", speed);
                 }));
     // reset drive commands
-// reset drive commands
+    // reset drive commands
     operator
         .povUp()
         .onTrue(
@@ -358,7 +355,7 @@ public class RobotContainer {
                     () -> -controller.getLeftX() * speed,
                     () -> -controller.getRightX() * speed,
                     () -> robotRelative)));
-// reset gyro
+    // reset gyro
     controller
         .povDown()
         .onTrue(
@@ -396,7 +393,7 @@ public class RobotContainer {
 
     /* SHOOTER COMMANDS */
 
- // This trigger probably goes off way too much - maybe make shooter.atSpeed() lock this at true?
+    // This trigger probably goes off way too much - maybe make shooter.atSpeed() lock this at true?
     DriveCommands.aligned()
         .and(() -> shooter.atSpeed() && false) // Armaan, turn off rumble
         .onTrue(
