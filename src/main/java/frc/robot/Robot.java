@@ -30,6 +30,7 @@ public class Robot extends LoggedRobot {
   Timer gcTimer = new Timer();
 
   public Robot() {
+    // super(0.04);
     gcTimer.start();
     // Record metadata
     Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
@@ -49,8 +50,8 @@ public class Robot extends LoggedRobot {
     switch (Constants.currentMode) {
       case REAL:
         // Running on a real robot, log to a USB stick ("/U/logs")
-        Logger.addDataReceiver(new WPILOGWriter());
-        Logger.addDataReceiver(new NT4Publisher());
+        // Logger.addDataReceiver(new WPILOGWriter());
+        // Logger.addDataReceiver(new NT4Publisher());
         break;
 
       case SIM:

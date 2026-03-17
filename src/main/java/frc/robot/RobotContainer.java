@@ -14,6 +14,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
@@ -21,7 +22,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Constants.*;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
@@ -34,14 +34,13 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.intake.Deploy;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeTalon;
 import frc.robot.subsystems.shooter.Hopper;
 import frc.robot.subsystems.shooter.HopperSim;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -65,6 +64,7 @@ public class RobotContainer {
 
   private boolean robotRelative;
   private double speed;
+  private double mannualShotLength;
   double testDistance = 1;
 
   // Dashboard inputs
@@ -82,7 +82,7 @@ public class RobotContainer {
     // Define Climber
     climber = new Climber();
     // Define Intake
-    intake = new Intake();
+    intake = new IntakeTalon();
     // Define Intake Deployer
     deploy = new Deploy();
 
@@ -98,20 +98,18 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
-        vision =
-            new Vision(
-                drive::addVisionMeasurement, new VisionIO(){});
-                // new VisionIOPhotonVision(
-                //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
-                // new VisionIOPhotonVision(
-                //     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {});
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
+        // new VisionIOPhotonVision(
+        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
         // new VisionIOPhotonVision(
         //     VisionConstants.camera2Name, VisionConstants.robotToCamera2),
         // new VisionIOPhotonVision(
         //     VisionConstants.camera3Name, VisionConstants.robotToCamera3));
         shooter = new Shooter();
         hopper = new Hopper();
-        configureShooterTestBindings(); // configureButtonBindings();
+        configureButtonBindings();
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -123,13 +121,6 @@ public class RobotContainer {
         // Please see the AdvantageKit template documentation for more information:
         // https://docs.advantagekit.org/getting-started/template-projects/talonfx-swerve-template#custom-module-implementations
         //
-        // drive =
-        // new Drive(
-        // new GyroIONavX(),
-        // new ModuleIOTalonFXS(TunerConstants.FrontLeft),
-        // new ModuleIOTalonFXS(TunerConstants.FrontRight),
-        // new ModuleIOTalonFXS(TunerConstants.BackLeft),
-        // new ModuleIOTalonFXS(TunerConstants.BackRight));
         break;
 
       case SIM:
@@ -141,17 +132,15 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera2Name, VisionConstants.robotToCamera2, drive::getPose),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera3Name, VisionConstants.robotToCamera3, drive::getPose));
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        // new VisionIOPhotonVisionSim(
+        //     VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
+        // new VisionIOPhotonVisionSim(
+        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose),
+        // new VisionIOPhotonVisionSim(
+        //     VisionConstants.camera2Name, VisionConstants.robotToCamera2, drive::getPose),
+        // new VisionIOPhotonVisionSim(
+        //     VisionConstants.camera3Name, VisionConstants.robotToCamera3, drive::getPose));
         ShooterSim temp = new ShooterSim(fuelSim); // how do i destruct this
         shooter = temp;
         hopper = new HopperSim(temp);
@@ -245,18 +234,21 @@ public class RobotContainer {
 
     // Set up auto routines
     autos = new Autos(drive, deploy, intake, hopper, shooter, climber);
-    //  autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoFactory.buildAutoChooser());
+    // //  autoChooser = new LoggedDashboardChooser<>("Auto Choices",
+    // AutoFactory.buildAutoChooser();
     autoChooser = new AutoChooser();
     autoChooser.addRoutine("Subsystem Test", () -> autos.badLaptopTestAuto());
     autoChooser.addRoutine("Auto Test", () -> autos.testAuto());
     autoChooser.addRoutine("Simple Shoot", () -> autos.simpleShoot());
+    autoChooser.addRoutine("Simpler Shoot", () -> autos.simplerShoot());
     autoChooser.addRoutine("Depot + Climb", () -> autos.depotAndClimb(true));
     autoChooser.addRoutine("Depot", () -> autos.depotAndClimb(false));
     autoChooser.addRoutine("Outpost + Climb", () -> autos.outpostAndClimb(true));
     autoChooser.addRoutine("Outpost", () -> autos.outpostAndClimb(false));
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
-    RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
+    // RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
+
   }
 
   /**
@@ -268,6 +260,7 @@ public class RobotContainer {
   private void configureButtonBindings() {
     robotRelative = false;
     speed = 1;
+    mannualShotLength = 1;
 
     /* DRIVE COMMANDS */
     // Default command, normal field-relative drive
@@ -305,6 +298,15 @@ public class RobotContainer {
 
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+
+    // REVERSE CONTROLS
+    // operator
+    //     .rightStick()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () -> {
+    //               speed = 0 - speed;
+    //             }));
 
     // snaps intake forward
     controller
@@ -359,34 +361,53 @@ public class RobotContainer {
                     () -> -controller.getRightX() * speed,
                     () -> robotRelative)));
 
-    // reset gyro TODO: might not work with photonvision
+    // reset gyro
     controller
-        .back()
+        .povDown()
         .onTrue(
             Commands.runOnce(
                 () ->
-                    drive.setPose(new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero))));
+                    drive.setPose(
+                        new Pose2d(drive.getPose().getTranslation(), Rotation2d.kCCW_90deg))));
 
-    /* INTAKE COMMANDS */
+    // reset all odometry
+    controller
+        .povUp()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  DriverStation.reportWarning("reset all odometry", false);
+                  drive.setPose(DriveConstants.POSE_RESET);
+                },
+                drive));
+    /* INTAKE COMMANDS. TODO */
     // intake and deploy
-    controller.leftBumper().onTrue(Commands.parallel(deploy.deployCMD(), intake.intakeCMD()));
-    controller.leftBumper().onFalse(Commands.parallel(deploy.readyCMD(), intake.stoptakeCMD()));
+    controller
+        .leftBumper()
+        .onTrue(Commands.parallel(intake.intakeCMD())); // , deploy.deployCMD()));
+    controller
+        .leftBumper()
+        .onFalse(Commands.parallel(intake.stoptakeCMD())); // ,deploy.readyCMD()));
     // outtake
     operator.a().onTrue(intake.spitakeCMD());
     operator.a().onFalse(intake.stoptakeCMD());
     // retract intake
-    operator.b().onTrue(deploy.undeployCMD());
+    operator.b().onTrue(deploy.swapCMD());
 
+    operator.leftStick().onTrue(deploy.mannualCMD(operator::getLeftY));
     /* HOPPER COMMANDS */
 
     // shoot
     controller
         .a()
         .onTrue(
-            Commands.sequence(
-                Commands.waitUntil(
-                    () -> shooter.atSpeed() || DriveCommands.aligned().getAsBoolean()),
+            Commands.parallel(
+                // Commands.runOnce(drive::stopWithX, drive), //uncomment for stopping while
+                // shooting
                 hopper.shootCMD()));
+    // Commands.waitUntil(
+    //     () -> shooter.atSpeed() || DriveCommands.aligned().getAsBoolean()),
+    // spun up trigger
 
     controller.a().onFalse(hopper.stopCMD());
 
@@ -394,32 +415,59 @@ public class RobotContainer {
     operator.x().onTrue(hopper.backdriveCMD());
     operator.x().onFalse(hopper.stopCMD());
 
+    // controller
+    //     .povUp()
+    //     .onTrue(
+    //         DriveCommands.autoAlign(
+    //             drive,
+    //             drive
+    //                 .getPose()
+    //                 .plus(
+    //                     new Transform2d(
+    //                         new Translation2d(1, drive.getRotation()), drive.getRotation()))));
+
     /* SHOOTER COMMANDS */
 
     // This trigger probably goes off way too much - maybe make shooter.atSpeed() lock this at true?
     DriveCommands.aligned()
-        .and(() -> shooter.atSpeed())// && false) // Armaan, turn off rumble
+        .and(() -> shooter.atSpeed() && false) // Armaan, turn off rumble
         .onTrue(
             Commands.sequence(
                 Commands.run(
                     () -> {
-                    controller.getHID().setRumble(RumbleType.kLeftRumble, 1);
-                    controller.getHID().setRumble(RumbleType.kRightRumble, 1);
-                    SmartDashboard.putString("Rumble?", "Yes");
+                      controller.getHID().setRumble(RumbleType.kLeftRumble, 1);
+                      controller.getHID().setRumble(RumbleType.kRightRumble, 1);
+                      SmartDashboard.putString("Rumble?", "Yes");
                     }),
                 Commands.waitSeconds(1),
                 Commands.run(
                     () -> {
-                    controller.getHID().setRumble(RumbleType.kBothRumble, 0);
-                    SmartDashboard.putString("Rumble?", "No");
+                      controller.getHID().setRumble(RumbleType.kBothRumble, 0);
+                      SmartDashboard.putString("Rumble?", "No");
                     })));
 
     // backup mannual flywheel spinup
     controller
         .rightTrigger(0.05)
-        .onTrue(shooter.rawFlywheelCMD(() -> controller.getRightTriggerAxis() * 10));
+        .onTrue(
+            shooter.rawFlywheelCMD(
+                () -> {
+                  return controller.getRightTriggerAxis() * 3;
+                }));
 
     controller.rightTrigger(0.05).onFalse(shooter.stopCMD());
+    controller.rightBumper().onFalse(shooter.stopCMD());
+
+    // increment backup shot length
+    operator
+        .povRight()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  mannualShotLength += 0.5;
+                  if (mannualShotLength > 6) mannualShotLength = 1;
+                  SmartDashboard.putNumber("Shooter/Mannual shot length", mannualShotLength);
+                }));
 
     // flywheel pre-spin-up (not precise)
     operator.y().onTrue(shooter.flywheelGndCMD(() -> 6));
@@ -439,10 +487,18 @@ public class RobotContainer {
                     operator.leftBumper().and(operator.rightBumper())::getAsBoolean)));
 
     // backup---raise and lower climber with trigger
-    operator.leftTrigger(0.95).onTrue(climber.raiseCMD());
+    // op axis 5 is right y
+    // operator.axisGreaterThan(5, 0.1).whileTrue(climber.runDown());
+    // operator.axisLessThan(5, -0.1).whileTrue(climber.runUp());
+    operator.rightStick().onTrue(climber.rawCMD(operator::getRightY));
     operator.leftTrigger(0.1).onFalse(climber.pullCMD());
+    // operator.rightTrigger()
+
+    operator.rightTrigger(0.5).onTrue(deploy.deployCMD());
+    operator.rightTrigger(0.5).onFalse(deploy.undeployCMD());
   }
 
+  @SuppressWarnings("unused")
   private void configureShooterTestBindings() {
     testDistance = 1;
     Command shootCommand = shooter.flywheelGndCMD(() -> testDistance);
@@ -493,6 +549,10 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoChooser.selectedCommand();
+    return Commands.sequence(
+        Commands.runOnce(
+            () ->
+                drive.setPose(new Pose2d(drive.getPose().getTranslation(), Rotation2d.kCCW_90deg))),
+        autoChooser.selectedCommand());
   }
 }
