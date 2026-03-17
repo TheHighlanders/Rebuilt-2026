@@ -38,7 +38,7 @@ public final class Constants {
     public static final double SLOWMODE = 0.6;
     public static final double POINT_DEADBAND = 0.4;
     public static final Pose2d POSE_RESET =
-        new Pose2d(Meters.of(3.61), Meters.of(3.87), Rotation2d.kZero);//CHANGED
+        new Pose2d(Meters.of(2), Meters.of(2), Rotation2d.kZero);
     public static final int GYRO_ID = 0; // TODO
     public static final Angle ALIGN_SHOOTER_COMP =
         Radians.of(
@@ -66,10 +66,10 @@ public final class Constants {
         new Transform3d(Units.inchesToMeters(12), 0, 0.5, new Rotation3d(0.0, 0.0, 0.0));
     public static Transform3d robotToCamera1 =
         new Transform3d(
-            -0.132,
-            -0.248,
-            0.0513 + 0.115 + 0.0375,
-            new Rotation3d(0.0, Units.degreesToRadians(-25), Math.PI / 2));
+            Units.inchesToMeters(7),
+            Units.inchesToMeters(12),
+            0.1,
+            new Rotation3d(0.0, -0.6, Math.PI / 2));
     public static Transform3d robotToCamera2 =
         new Transform3d(
             Units.inchesToMeters(7.5),
@@ -129,19 +129,18 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-    public static final int SPINTAKEID = 42;
-    public static final int SPINTAKEID_KRAKEN = 43;
-    public static final int DEPLOYID = 41;
+    public static final int SPINTAKEID = 41;
+    public static final int DEPLOYID = 42;
 
-    public static final double INTAKE_SPEED = 0.5;
-    public static final double SPITAKE_SPEED = -0.5;
+    public static final double INTAKE_SPEED = 1;
+    public static final double SPITAKE_SPEED = -1;
     public static final double DEPLOY_SPEED = 1;
-    public static final Angle DEPLOY_POSITION = Degrees.of(70);
+    public static final Angle DEPLOY_POSITION = Degrees.of(70); 
     public static final Angle READY_POSITION = Degrees.of(40);
     public static final Angle UP_POSITION = Degrees.of(0);
     public static final Angle DEPLOY_TOLERANCE = Degrees.of(5);
 
-    public static final double kP = 1; // 1.33;
+    public static final double kP = 1;//1.33;
     public static final double kI = 0;
     public static final double kD = 7.84;
     public static final double DEPLOY_RATIO = 25;

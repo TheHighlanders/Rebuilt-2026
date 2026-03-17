@@ -6,7 +6,6 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -143,43 +142,6 @@ public class Autos {
     return routine;
   }
 
-  public AutoRoutine middleShootOnly() {
-    AutoRoutine routine = autoFactory.newRoutine("middleShootOnly");
-
-    routine
-        .active()
-        .onTrue(
-            Commands.parallel(
-                Commands.sequence(
-                    Commands.waitSeconds(1),
-                    shooter.rawFlywheelCMD(() -> 0.25),
-                    Commands.waitUntil(
-                        () -> {
-                          return shooter.atSpeed();
-                        }),
-                    // Commands.runOnce(drive::stopWithX),//maybe
-                    hopper.shootCMD())));
-
-    return routine;
-  }
-
-  public AutoRoutine simplerShoot() {
-    AutoRoutine routine = autoFactory.newRoutine("");
-
-    routine
-        .active()
-        .onTrue(
-            Commands.sequence(
-                Commands.deadline(
-                    Commands.waitSeconds(12.5),
-                    Commands.parallel(
-                        shooter.rawFlywheelCMD(() -> 3.2),
-                        Commands.sequence(Commands.waitSeconds(1), hopper.shootCMD()))),
-                Commands.parallel(Commands.waitSeconds(1), shooter.stopCMD(), hopper.stopCMD())));
-
-    return routine;
-  }
-
   public AutoRoutine depotAndClimb(boolean addClimb) {
     AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
 
@@ -190,9 +152,8 @@ public class Autos {
         .active()
         .onTrue(
             Commands.sequence(
-                sendState("Auto Started!"),
-                DriveCommands.autoAlign(drive, collect.getInitialPose().orElse(drive.getPose())),
                 collect.resetOdometry(),
+                sendState("Auto Started!"),
                 Commands.parallel(collect.cmd(), deploy.deployCMD())));
 
     collect.atTime("intake").onTrue(Commands.sequence(intake.intakeCMD(), sendState("Intaking!")));
@@ -209,11 +170,12 @@ public class Autos {
 
     if (addClimb) {
       collect
-          .doneDelayed(10)
+          .doneDelayed(8)
           .onTrue(
               Commands.parallel(
                   sendState("Aligning!"),
-                  DriveCommands.autoClimb(drive, climber),
+                  climb.cmd(),
+                  climber.raiseCMD(),
                   hopper.stopCMD(),
                   shooter.stopCMD(),
                   deploy.undeployCMD()));
@@ -273,19 +235,5 @@ public class Autos {
 
   public AutoRoutine midClimbRight() {
     return null;
-  }
-
-  public Command theOnlyAuto() {
-    return Commands.parallel(
-        Commands.sequence(
-            Commands.waitSeconds(1),
-            shooter.rawFlywheelCMD(() -> 0.25),
-            Commands.waitUntil(
-                () -> {
-                  DriverStation.reportWarning("theonlyauto", false);
-                  return shooter.atSpeed();
-                }),
-            // Commands.runOnce(drive::stopWithX),//maybe
-            hopper.shootCMD()));
   }
 }

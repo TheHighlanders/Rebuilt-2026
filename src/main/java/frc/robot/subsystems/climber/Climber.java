@@ -11,13 +11,10 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimberConstants;
-import java.util.function.DoubleSupplier;
 
 public class Climber extends SubsystemBase {
   SparkMax climbMotor = new SparkMax(ClimberConstants.CLIMBERID, MotorType.kBrushless);
@@ -38,42 +35,12 @@ public class Climber extends SubsystemBase {
         });
   }
 
-  public Command runUp() {
-    return Commands.runEnd(
-        () -> {
-          DriverStation.reportWarning("run up", false);
-          // if (climbEncoder.getPosition() > ClimberConstants.POS_TOLERANCE) {
-          climbMotor.set(ClimberConstants.RAISE_SPEED);
-          // } else {
-          //   climbMotor.set(0);
-          // }
-        },
-        () -> {
-          climbMotor.set(0);
-        },
-        this);
-  }
-
-  public Command runDown() {
-    return Commands.runEnd(
-        () -> {
-          DriverStation.reportWarning("run down", false);
-          // if (climbEncoder.getPosition()
-          //     >= ClimberConstants.DOWN_POSITION - ClimberConstants.POS_TOLERANCE) {
-          climbMotor.set(ClimberConstants.PULL_SPEED);
-          //   } else {
-          //     climbMotor.set(0);
-          //   }
-        },
-        () -> {
-          climbMotor.set(0);
-        },
-        this);
-  }
-
   public Command raiseCMD() {
     return Commands.deadline(
-            Commands.waitUntil(() -> climbEncoder.getPosition() <= ClimberConstants.POS_TOLERANCE),
+            Commands.waitUntil(
+                () ->
+                    climbEncoder.getPosition()
+                        <=  ClimberConstants.POS_TOLERANCE),
             runCMD(ClimberConstants.RAISE_SPEED))
         .andThen(runCMD(0));
   }
@@ -85,19 +52,21 @@ public class Climber extends SubsystemBase {
                     climbEncoder.getPosition()
                         >= ClimberConstants.DOWN_POSITION - ClimberConstants.POS_TOLERANCE),
             runCMD(ClimberConstants.PULL_SPEED))
-        .andThen(runCMD(0))
-        .andThen(Commands.runOnce(() -> climbEncoder.setPosition(0)));
+        .andThen(runCMD(0));
   }
 
-  public Command rawCMD(DoubleSupplier speed) {
-    return Commands.run(() -> climbMotor.set(speed.getAsDouble()));
+  public Command tuckCMD() {
+    return Commands.deadline(
+            Commands.waitUntil(
+                () ->
+                    climbEncoder.getPosition()
+                        >= ClimberConstants.DOWN_POSITION - (2*ClimberConstants.POS_TOLERANCE)),
+            runCMD(ClimberConstants.PULL_SPEED))
+        .andThen(runCMD(0));
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    SmartDashboard.putNumber("Climber/Encoder", climbEncoder.getPosition());
-    SmartDashboard.putNumber("Climber/Current", climbMotor.getOutputCurrent());
-    SmartDashboard.putNumber("Climber/Voltage", climbMotor.getAppliedOutput());
   }
 }

@@ -49,7 +49,7 @@ public class DriveCommands {
   private static final double DEADBAND = 0.1;
   private static final double ANGLE_KP = 30.0;
   private static final double ANGLE_KI = 0;
-  private static final double ANGLE_KD = 5;
+  private static final double ANGLE_KD = 0;
   private static final double POS_KP = 10.0; // TODO
   private static final double POS_KI = 0;
   private static final double POS_KD = 0;
@@ -246,9 +246,9 @@ public class DriveCommands {
                       linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega * drive.getMaxAngularSpeedRadPerSec());
 
-              boolean isFlipped = false;
-              // DriverStation.getAlliance().isPresent()
-              //     && DriverStation.getAlliance().get() == Alliance.Red;
+              boolean isFlipped =
+                  DriverStation.getAlliance().isPresent()
+                      && DriverStation.getAlliance().get() == Alliance.Red;
 
               drive.runVelocity(
                   robotRelative.getAsBoolean()
@@ -296,9 +296,9 @@ public class DriveCommands {
                       linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega);
 
-              boolean isFlipped = false;
-              // DriverStation.getAlliance().isPresent()
-              //     && DriverStation.getAlliance().get() == Alliance.Red;
+              boolean isFlipped =
+                  DriverStation.getAlliance().isPresent()
+                      && DriverStation.getAlliance().get() == Alliance.Red;
 
               drive.runVelocity(
                   robotRelative.getAsBoolean()

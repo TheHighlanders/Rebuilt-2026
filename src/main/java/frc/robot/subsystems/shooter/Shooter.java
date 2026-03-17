@@ -38,6 +38,7 @@ public class Shooter extends SubsystemBase {
   TalonFXConfiguration config = new TalonFXConfiguration();
 
   VelocityVoltage velocityVoltage = new VelocityVoltage(0).withSlot(0);
+  // VelocityTorqueCurrentFOC velocityTorque = new VelocityTorqueCurrentFOC(0).withSlot(1);
   VoltageOut voltage = new VoltageOut(12 * 0.3);
   NeutralOut brake = new NeutralOut();
 
@@ -53,24 +54,23 @@ public class Shooter extends SubsystemBase {
     config.Slot0.kI = ShooterConstants.kI;
     config.Slot0.kD = ShooterConstants.kD;
 
-    config.Voltage.withPeakForwardVoltage(8).withPeakReverseVoltage(-8); // sus
+    config.Voltage.withPeakForwardVoltage(8).withPeakReverseVoltage(8);
 
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     config.Feedback.SensorToMechanismRatio = ShooterConstants.GEAR_RATIO;
 
     currentLimits.StatorCurrentLimit = 80;
-    currentLimits.SupplyCurrentLowerLimit = 80; // sus
+    currentLimits.SupplyCurrentLowerLimit = -80;
     currentLimits.StatorCurrentLimitEnable = true;
 
     tryUntilOk(5, () -> flywheel.getConfigurator().apply(config));
     tryUntilOk(5, () -> flywheel.getConfigurator().apply(currentLimits));
 
-    SmartDashboard.putNumber("Shooter/Target RPS", 0.0); // sus
-    SmartDashboard.putNumber(
-        "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
-    SmartDashboard.putNumber(
-        "Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
+    SmartDashboard.putNumber("Shooter/Target RPS", 0.0);
+    SmartDashboard.putNumber("Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
+    SmartDashboard.putNumber("Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
+
   }
 
   public void intake() {} // for sim
@@ -103,8 +103,6 @@ public class Shooter extends SubsystemBase {
                         * (trajectory.getX() * Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians))
                             - trajectory.getY())))
             + (trajectory.getX() / 25); // air resistance fudge factor works way too well
-
-    SmartDashboard.putNumber("Shooter/Linear Velocity", linearVelocity);
 
     return linearVelocity / (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 2 * Math.PI);
   }
@@ -259,7 +257,7 @@ public class Shooter extends SubsystemBase {
   public Command rawFlywheelCMD(DoubleSupplier drive) {
     return Commands.run(
         () -> {
-          flywheel.setControl(voltage.withOutput(drive.getAsDouble()));
+          flywheel.setControl(voltage.withOutput(drive.getAsDouble() * 4));
         },
         this);
   }
@@ -275,11 +273,12 @@ public class Shooter extends SubsystemBase {
   @Override
   public void periodic() {
     SmartDashboard.putNumber(
-        "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
-    SmartDashboard.putNumber(
-        "Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
-    SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
-    SmartDashboard.putNumber("Shooter/Flywheel RPS", flywheel.getVelocity().getValueAsDouble());
+              "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
+          SmartDashboard.putNumber(
+              "Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
+          SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
+          SmartDashboard.putNumber(
+              "Shooter/Flywheel RPS", flywheel.getVelocity().getValueAsDouble());
   }
 
   @Override
