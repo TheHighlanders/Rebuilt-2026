@@ -276,11 +276,10 @@ public class RobotContainer {
     controller
         .leftStick()
         .onTrue(
-            Commands.runOnce(
                 () -> {
                   robotRelative = !robotRelative;
                   SmartDashboard.putBoolean("Robot Relative Drive", robotRelative);
-                }));
+                });
 
     controller
         .rightStick()
@@ -337,19 +336,17 @@ public class RobotContainer {
     operator
         .povDown()
         .onTrue(
-            Commands.runOnce(
                 () -> {
                   speed -= 0.1;
                   if (speed < DriveConstants.SLOWMODE) speed = 1;
                   SmartDashboard.putNumber("Drive/Speed", speed);
-                }));
+                });
 
     // reset drive commands
     operator
         .povUp()
         .onTrue(
             Commands.sequence(
-                Commands.runOnce(
                     () -> {
                       speed = 1;
                       robotRelative = false;
@@ -359,27 +356,25 @@ public class RobotContainer {
                     () -> -controller.getLeftY() * speed,
                     () -> -controller.getLeftX() * speed,
                     () -> -controller.getRightX() * speed,
-                    () -> robotRelative)));
+                    () -> robotRelative));
 
     // reset gyro
     controller
         .povDown()
         .onTrue(
-            Commands.runOnce(
                 () ->
                     drive.setPose(
-                        new Pose2d(drive.getPose().getTranslation(), Rotation2d.kCCW_90deg))));
+                        new Pose2d(drive.getPose().getTranslation(), Rotation2d.kCCW_90deg)));
 
     // reset all odometry
     controller
         .povUp()
         .onTrue(
-            Commands.runOnce(
                 () -> {
                   DriverStation.reportWarning("reset all odometry", false);
                   drive.setPose(DriveConstants.POSE_RESET);
                 },
-                drive));
+                drive);
     /* INTAKE COMMANDS. TODO */
     // intake and deploy
     controller
@@ -433,7 +428,6 @@ public class RobotContainer {
         .and(() -> shooter.atSpeed() && false) // Armaan, turn off rumble
         .onTrue(
             Commands.sequence(
-                Commands.run(
                     () -> {
                       controller.getHID().setRumble(RumbleType.kLeftRumble, 1);
                       controller.getHID().setRumble(RumbleType.kRightRumble, 1);
@@ -444,7 +438,7 @@ public class RobotContainer {
                     () -> {
                       controller.getHID().setRumble(RumbleType.kBothRumble, 0);
                       SmartDashboard.putString("Rumble?", "No");
-                    })));
+                    }));
 
     // backup mannual flywheel spinup
     controller
