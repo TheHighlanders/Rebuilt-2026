@@ -585,6 +585,54 @@ public class DriveCommands {
         });
   }
 
+   public static Command joystickGyroOverride(
+    Drive drive,
+    DoubleSupplier xSupplier,
+    DoubleSupplier ySupplier,
+    DoubleSupplier angleSupplier,
+    DoubleSupplier gyroXSupplier,
+    DoubleSupplier gyroYSupplier,
+    BooleanSupplier robotRelative) {
+      return Commands.run(
+            () -> {
+              // Get linear velocity
+              Translation2d linearVelocity =
+                  getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+
+              // Apply rotation deadband
+              double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
+
+              // Square rotation value for more precise control
+              omega = Math.copySign(omega * omega, omega);
+
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                      omega * drive.getMaxAngularSpeedRadPerSec());
+
+              boolean isFlipped =
+                  DriverStation.getAlliance().isPresent()
+                      && DriverStation.getAlliance().get() == Alliance.Red;
+              
+              // reset gyro
+              drive.setPose(new Pose2d(drive.getPose().getTranslation(), getAngleFromJoysticks(gyroXSupplier.getAsBoolean(), gyroYSupplier.getAsBoolean())));
+
+              drive.runVelocity(
+                  robotRelative.getAsBoolean()
+                      ? ChassisSpeeds.fromRobotRelativeSpeeds(speeds, Rotation2d.fromDegrees(0))
+                      : ChassisSpeeds.fromFieldRelativeSpeeds(
+                          speeds,
+                          isFlipped
+                              ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                              : drive.getRotation()));
+            },
+            drive)
+        .withName("Joystic Drive");
+      
+    }
+
   /**
    * Measures the velocity feedforward constants for the drive motors.
    *

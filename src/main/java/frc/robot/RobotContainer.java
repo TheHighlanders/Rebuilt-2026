@@ -338,7 +338,7 @@ public class RobotContainer {
                   if (speed < DriveConstants.SLOWMODE) speed = 1;
                   SmartDashboard.putNumber("Drive/Speed", speed);
                 }));
-    // reset drive commands
+    
     // reset drive commands
     operator
         .povUp()
@@ -355,6 +355,19 @@ public class RobotContainer {
                     () -> -controller.getLeftX() * speed,
                     () -> -controller.getRightX() * speed,
                     () -> robotRelative)));
+    
+    //fancy gyro reset
+    operator
+        .leftStick()
+        .onTrue(
+            DriveCommands.joystickGyroOverride(
+                () -> -controller.getLeftX() * speed,
+                () -> -controller.getLeftY() * speed,
+                () -> -controller.getRightX() * speed,
+                () -> -operator.getLeftY(),
+                () -> -operator.getLeftX(),
+                () -> robotRelative)
+        .until(() -> !operator.leftStick().getAsBoolean()));
     // reset gyro
     controller
         .povDown()
