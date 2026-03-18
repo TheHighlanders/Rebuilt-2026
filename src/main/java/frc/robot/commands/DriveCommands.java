@@ -633,7 +633,7 @@ public class DriveCommands {
                               : drive.getRotation()));
             },
             drive)
-        .withName("Joystic Drive");
+        .withName("Joystic Gyro Override");
   }
 
   /**
