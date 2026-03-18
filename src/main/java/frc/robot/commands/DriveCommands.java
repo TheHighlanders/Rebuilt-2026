@@ -585,15 +585,15 @@ public class DriveCommands {
         });
   }
 
-   public static Command joystickGyroOverride(
-    Drive drive,
-    DoubleSupplier xSupplier,
-    DoubleSupplier ySupplier,
-    DoubleSupplier angleSupplier,
-    DoubleSupplier gyroXSupplier,
-    DoubleSupplier gyroYSupplier,
-    BooleanSupplier robotRelative) {
-      return Commands.run(
+  public static Command joystickGyroOverride(
+      Drive drive,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      DoubleSupplier omegaSupplier,
+      DoubleSupplier gyroXSupplier,
+      DoubleSupplier gyroYSupplier,
+      BooleanSupplier robotRelative) {
+    return Commands.run(
             () -> {
               // Get linear velocity
               Translation2d linearVelocity =
@@ -615,9 +615,13 @@ public class DriveCommands {
               boolean isFlipped =
                   DriverStation.getAlliance().isPresent()
                       && DriverStation.getAlliance().get() == Alliance.Red;
-              
+
               // reset gyro
-              drive.setPose(new Pose2d(drive.getPose().getTranslation(), getAngleFromJoysticks(gyroXSupplier.getAsBoolean(), gyroYSupplier.getAsBoolean())));
+              drive.setPose(
+                  new Pose2d(
+                      drive.getPose().getTranslation(),
+                      getAngleFromJoysticks(
+                          gyroXSupplier.getAsDouble(), gyroYSupplier.getAsDouble())));
 
               drive.runVelocity(
                   robotRelative.getAsBoolean()
@@ -630,8 +634,7 @@ public class DriveCommands {
             },
             drive)
         .withName("Joystic Drive");
-      
-    }
+  }
 
   /**
    * Measures the velocity feedforward constants for the drive motors.
