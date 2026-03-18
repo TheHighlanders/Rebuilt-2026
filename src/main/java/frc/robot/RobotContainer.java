@@ -370,6 +370,19 @@ public class RobotContainer {
                     drive.setPose(
                         new Pose2d(drive.getPose().getTranslation(), Rotation2d.kCCW_90deg))));
 
+    operator
+        .leftStick()
+        .onTrue(
+            DriveCommands.joystickGyroOverride(
+                    drive,
+                    () -> -controller.getLeftX() * speed,
+                    () -> -controller.getLeftY() * speed,
+                    () -> -controller.getRightX() * speed,
+                    () -> -operator.getLeftY(),
+                    () -> -operator.getLeftX(),
+                    () -> robotRelative)
+                .until(() -> !operator.leftStick().getAsBoolean()));
+
     // reset all odometry
     controller
         .povUp()
