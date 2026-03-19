@@ -49,7 +49,7 @@ public class DriveCommands {
   private static final double DEADBAND = 0.1;
   private static final double ANGLE_KP = 30.0;
   private static final double ANGLE_KI = 0;
-  private static final double ANGLE_KD = 0;
+  private static final double ANGLE_KD = 20;
   private static final double POS_KP = 10.0; // TODO
   private static final double POS_KI = 0;
   private static final double POS_KD = 0;
@@ -163,11 +163,12 @@ public class DriveCommands {
         .getTranslation();
   }
 
-  private static Rotation2d getAngleFromJoysticks(double angleXSupplier, double angleYSupplier) {
+  private static Rotation2d getAngleFromJoysticks(
+      double angleXSupplier, double angleYSupplier, boolean flipped) {
     if (Math.hypot(angleXSupplier, angleYSupplier) > DriveConstants.POINT_DEADBAND) {
       pointAngle = Rotation2d.fromRadians(Math.atan2(angleYSupplier, angleXSupplier));
     }
-    return pointAngle;
+    return flipped ? pointAngle.plus(Rotation2d.k180deg) : pointAngle;
   }
 
   private static Pose2d[] getAutoClimbAlignSequence(boolean red, boolean outpost) {
@@ -431,14 +432,20 @@ public class DriveCommands {
                 ySupplier,
                 () ->
                     getAngleFromJoysticks(
-                        angleXSupplier.getAsDouble(), angleYSupplier.getAsDouble()),
+                        angleXSupplier.getAsDouble(),
+                        angleYSupplier.getAsDouble(),
+                        DriverStation.getAlliance().isPresent()
+                            && DriverStation.getAlliance().get() == Alliance.Red),
                 robotRelative),
             Commands.run(
                 () -> {
                   Logger.recordOutput(
                       "Drive/point angle",
                       getAngleFromJoysticks(
-                          angleXSupplier.getAsDouble(), angleYSupplier.getAsDouble()));
+                          angleXSupplier.getAsDouble(),
+                          angleYSupplier.getAsDouble(),
+                          DriverStation.getAlliance().isPresent()
+                              && DriverStation.getAlliance().get() == Alliance.Red));
                 }))
         .withName("Joystic Point Drive");
   }
@@ -621,7 +628,7 @@ public class DriveCommands {
                   new Pose2d(
                       drive.getPose().getTranslation(),
                       getAngleFromJoysticks(
-                          gyroXSupplier.getAsDouble(), gyroYSupplier.getAsDouble())));
+                          gyroXSupplier.getAsDouble(), gyroYSupplier.getAsDouble(), isFlipped)));
 
               drive.runVelocity(
                   robotRelative.getAsBoolean()
@@ -629,7 +636,7 @@ public class DriveCommands {
                       : ChassisSpeeds.fromFieldRelativeSpeeds(
                           speeds,
                           isFlipped
-                              ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                              ? drive.getRotation().plus(Rotation2d.k180deg)
                               : drive.getRotation()));
             },
             drive)
