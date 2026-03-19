@@ -41,8 +41,6 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -418,7 +416,7 @@ public class RobotContainer {
     // retract intake
     operator.b().onTrue(deploy.swapCMD());
 
-    operator.leftStick().onTrue(deploy.mannualCMD(operator::getLeftY));
+    /// operator.leftStick().onTrue(deploy.mannualCMD(operator::getLeftY));
 
     /* HOPPER COMMANDS */
 

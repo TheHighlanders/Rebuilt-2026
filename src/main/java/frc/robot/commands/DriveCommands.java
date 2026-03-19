@@ -238,7 +238,7 @@ public class DriveCommands {
               double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
 
               // Square rotation value for more precise control
-              omega = Math.copySign(omega * omega, omega);
+              omega = -Math.copySign(omega * omega, omega); // TODO: CHANGED
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =
@@ -628,7 +628,7 @@ public class DriveCommands {
                   new Pose2d(
                       drive.getPose().getTranslation(),
                       getAngleFromJoysticks(
-                          gyroXSupplier.getAsDouble(), gyroYSupplier.getAsDouble(), isFlipped)));
+                          gyroXSupplier.getAsDouble(), gyroYSupplier.getAsDouble(), !isFlipped)));
 
               drive.runVelocity(
                   robotRelative.getAsBoolean()
