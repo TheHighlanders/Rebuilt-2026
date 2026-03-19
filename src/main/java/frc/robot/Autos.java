@@ -186,6 +186,29 @@ public class Autos {
     return routine;
   }
 
+  public AutoRoutine shootandClimb() {
+    AutoRoutine routine = autoFactory.newRoutine("ShootandClimb");
+
+    routine
+        .active()
+        .onTrue(
+            Commands.parallel(
+                DriveCommands.joystickAlignDrive(drive, shooter, () -> 0, () -> 0, () -> true),
+                Commands.sequence(
+                    Commands.waitSeconds(1),
+                    Commands.waitUntil(
+                        () -> {
+                          return shooter.atSpeed() && DriveCommands.aligned().getAsBoolean();
+                        }),
+                    // Commands.runOnce(drive::stopWithX),//maybe
+                    hopper.shootCMD()),
+                    Commands.waitSeconds(1),
+                    DriveCommands.autoClimb(drive, climber))
+                    );
+
+    return routine;
+  }
+
   public AutoRoutine depotAndClimb(boolean addClimb) {
     AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
 
