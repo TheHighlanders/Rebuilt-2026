@@ -14,7 +14,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
@@ -274,7 +273,7 @@ public class RobotContainer {
             drive,
             () -> -controller.getLeftY() * speed,
             () -> -controller.getLeftX() * speed,
-            () -> -controller.getRightX() * speed,
+            () -> controller.getRightX() * speed,
             () -> robotRelative));
 
     // toggles between robot- and field-relative drive
@@ -354,7 +353,7 @@ public class RobotContainer {
                     drive,
                     () -> -controller.getLeftY() * speed,
                     () -> -controller.getLeftX() * speed,
-                    () -> -controller.getRightX() * speed,
+                    () -> controller.getRightX() * speed,
                     () -> robotRelative)));
 
     // fancy gyro reset
@@ -365,19 +364,14 @@ public class RobotContainer {
                     drive,
                     () -> -controller.getLeftX() * speed,
                     () -> -controller.getLeftY() * speed,
-                    () -> -controller.getRightX() * speed,
+                    () -> controller.getRightX() * speed,
                     () -> -operator.getLeftY(),
                     () -> -operator.getLeftX(),
                     () -> robotRelative)
                 .until(() -> !operator.leftStick().getAsBoolean()));
+
     // reset gyro
-    controller
-        .povDown()
-        .onTrue(
-            Commands.runOnce(
-                () ->
-                    drive.setPose(
-                        new Pose2d(drive.getPose().getTranslation(), Rotation2d.kCCW_90deg))));
+    controller.povDown().onTrue(Commands.runOnce(() -> drive.setPose(DriveConstants.POSE_RESET)));
 
     operator
         .leftStick()
@@ -386,22 +380,12 @@ public class RobotContainer {
                     drive,
                     () -> -controller.getLeftX() * speed,
                     () -> -controller.getLeftY() * speed,
-                    () -> -controller.getRightX() * speed,
+                    () -> controller.getRightX() * speed,
                     () -> -operator.getLeftY(),
                     () -> -operator.getLeftX(),
                     () -> robotRelative)
                 .until(() -> !operator.leftStick().getAsBoolean()));
 
-    // reset all odometry
-    controller
-        .povUp()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  DriverStation.reportWarning("reset all odometry", false);
-                  drive.setPose(DriveConstants.POSE_RESET);
-                },
-                drive));
     /* INTAKE COMMANDS. TODO */
     // intake and deploy
     controller
@@ -438,16 +422,12 @@ public class RobotContainer {
     operator.x().onTrue(hopper.backdriveCMD());
     operator.x().onFalse(hopper.stopCMD());
 
-    // controller
-    //     .povUp()
-    //     .onTrue(
-    //         DriveCommands.autoAlign(
-    //             drive,
-    //             drive
-    //                 .getPose()
-    //                 .plus(
-    //                     new Transform2d(
-    //                         new Translation2d(1, drive.getRotation()), drive.getRotation()))));
+    controller.povUp().onTrue(DriveCommands.autoAlign(drive, DriveConstants.POSE_RESET));
+    // drive
+    //     .getPose()
+    //     .plus(
+    //         new Transform2d(
+    //             new Translation2d(0.2, drive.getRotation()), drive.getRotation()))));
 
     /* SHOOTER COMMANDS */
 
@@ -508,9 +488,7 @@ public class RobotContainer {
     // backup---raise and lower climber with trigger
     operator.leftTrigger(0.95).onTrue(climber.raiseCMD());
     operator.leftTrigger(0.1).onFalse(climber.pullCMD());
-
-    operator.rightTrigger(0.5).onTrue(deploy.deployCMD());
-    operator.rightTrigger(0.5).onFalse(deploy.undeployCMD());
+    operator.rightStick().onTrue(climber.manualCMD(() -> operator.getRightY()));
   }
 
   @SuppressWarnings("unused")

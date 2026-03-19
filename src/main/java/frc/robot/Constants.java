@@ -37,8 +37,6 @@ public final class Constants {
   public static final class DriveConstants {
     public static final double SLOWMODE = 0.6;
     public static final double POINT_DEADBAND = 0.4;
-    public static final Pose2d POSE_RESET =
-        new Pose2d(Meters.of(3.61), Meters.of(3.87), Rotation2d.kZero); // CHANGED
     public static final int GYRO_ID = 0; // TODO
     public static final Angle ALIGN_SHOOTER_COMP =
         Radians.of(
@@ -46,6 +44,13 @@ public final class Constants {
                 / 2); // 1.67); // could make this a function of distance, but this works for now
     public static final Translation2d TO_CORNER_BUMPERS =
         new Translation2d(Units.inchesToMeters(33.25 / 2), Units.inchesToMeters(33.6 / 2));
+    public static final Pose2d POSE_RESET =
+        new Pose2d(Meters.of(3.61), Meters.of(3.87), Rotation2d.kZero); // CHANGED
+    // new Pose2d(
+    //     FieldConstants.CLIMB_DEPOT_CORNER
+    //         .plus(TO_CORNER_BUMPERS)
+    //         .plus(new Translation2d(-0.1, 0)),
+    //     Rotation2d.kCCW_90deg);
   }
 
   public static final class VisionConstants {
@@ -110,11 +115,11 @@ public final class Constants {
 
   public static class ClimberConstants {
     public static final int CLIMBERID = 51;
-    public static final double UP_POSITION = 0; // Rotations. TODO
-    public static final double DOWN_POSITION = 4;
+    public static final double UP_POSITION = -30; // Rotations. TODO
+    public static final double DOWN_POSITION = 0;
     public static final double POS_TOLERANCE = 0.1;
 
-    public static final double RAISE_SPEED = -0.3;
+    public static final double RAISE_SPEED = -1;
     public static final double PULL_SPEED = 1;
   }
 
@@ -156,7 +161,7 @@ public final class Constants {
 
     public static final double kP = 0.11;
     public static final double kI = 0;
-    public static final double kD = 0;
+    public static final double kD = 0.01;
     public static final double kS = 0.1;
     public static final double kV = 0.12;
     public static final double GEAR_RATIO = 2;

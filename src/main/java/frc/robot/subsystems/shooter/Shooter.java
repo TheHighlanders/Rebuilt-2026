@@ -46,7 +46,7 @@ public class Shooter extends SubsystemBase {
 
   public Shooter() {
 
-    config.Voltage.withPeakForwardVoltage(8).withPeakReverseVoltage(8);
+    config.Voltage.withPeakForwardVoltage(12).withPeakReverseVoltage(-12);
 
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
@@ -99,7 +99,9 @@ public class Shooter extends SubsystemBase {
 
     SmartDashboard.putNumber("Shooter/Linear Velocity", linearVelocity);
 
-    return linearVelocity / (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 2 * Math.PI);
+    double rotationalVelocity =
+        linearVelocity / (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 2 * Math.PI);
+    return rotationalVelocity * 2; // to account for a rotating ball. TODO
   }
 
   /*

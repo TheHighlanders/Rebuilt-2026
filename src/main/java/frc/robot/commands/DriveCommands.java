@@ -47,10 +47,10 @@ import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double DEADBAND = 0.1;
-  private static final double ANGLE_KP = 30.0;
+  private static final double ANGLE_KP = 17.0;
   private static final double ANGLE_KI = 0;
-  private static final double ANGLE_KD = 20;
-  private static final double POS_KP = 10.0; // TODO
+  private static final double ANGLE_KD = 0.4;
+  private static final double POS_KP = 15.0;
   private static final double POS_KI = 0;
   private static final double POS_KD = 0;
   private static final double ANGLE_MAX_VELOCITY = 8.0;
@@ -70,6 +70,16 @@ public class DriveCommands {
           new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
   private static final PIDController xController = new PIDController(POS_KP, POS_KI, POS_KD);
   private static final PIDController yController = new PIDController(POS_KP, POS_KI, POS_KD);
+
+  static {
+    SmartDashboard.putNumber("Align/Angle kP", ANGLE_KP);
+    SmartDashboard.putNumber("Align/Angle kI", ANGLE_KI);
+    SmartDashboard.putNumber("Align/Angle kD", ANGLE_KD);
+
+    SmartDashboard.putNumber("Align/Position kP", POS_KP);
+    SmartDashboard.putNumber("Align/Position kI", POS_KI);
+    SmartDashboard.putNumber("Align/Position kD", POS_KD);
+  }
 
   private static Rotation2d pointAngle = Rotation2d.kZero;
 
@@ -285,6 +295,18 @@ public class DriveCommands {
               Translation2d linearVelocity =
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
+              // get values
+              angleController.setP(SmartDashboard.getNumber("Align/Angle kP", ANGLE_KP));
+              angleController.setI(SmartDashboard.getNumber("Align/Angle kI", ANGLE_KI));
+              angleController.setD(SmartDashboard.getNumber("Align/Angle kD", ANGLE_KD));
+
+              xController.setP(SmartDashboard.getNumber("Align/Position kP", POS_KP));
+              xController.setI(SmartDashboard.getNumber("Align/Position kI", POS_KI));
+              xController.setD(SmartDashboard.getNumber("Align/Position kD", POS_KD));
+
+              yController.setP(SmartDashboard.getNumber("Align/Position kP", POS_KP));
+              yController.setI(SmartDashboard.getNumber("Align/Position kI", POS_KI));
+              yController.setD(SmartDashboard.getNumber("Align/Position kD", POS_KD));
               // Calculate angular speed
               double omega =
                   angleController.calculate(
@@ -450,7 +472,7 @@ public class DriveCommands {
         .withName("Joystic Point Drive");
   }
 
-  public static Command autoAlign(Drive drive, Pose2d pose) { // TODO: Tune PID
+  public static Command autoAlign(Drive drive, Pose2d pose) {
 
     xController.setTolerance(0.05);
     yController.setTolerance(0.05);
@@ -478,6 +500,17 @@ public class DriveCommands {
 
               Logger.recordOutput("Drive/Align/Target", pose);
               Logger.recordOutput("Drive/Align/Error", pose.minus(drive.getPose()));
+              Logger.recordOutput("Drive/Align/x at setpoint", xController.atSetpoint());
+              Logger.recordOutput("Drive/Align/y at setpoint", yController.atSetpoint());
+              Logger.recordOutput("Drive/Align/angle at setpoint", angleController.atSetpoint());
+              Logger.recordOutput(
+                  "Drive/Align/angle still",
+                  drive.getSpeeds().omegaRadiansPerSecond < ALIGN_ANGLE_SPEED_TOLERANCE);
+              Logger.recordOutput(
+                  "Drive/Align/pos still",
+                  Math.atan2(
+                          drive.getSpeeds().vyMetersPerSecond, drive.getSpeeds().vxMetersPerSecond)
+                      < ALIGN_POS_SPEED_TOLERANCE);
             },
             drive)
         .until(
@@ -490,7 +523,12 @@ public class DriveCommands {
                           drive.getSpeeds().vyMetersPerSecond, drive.getSpeeds().vxMetersPerSecond)
                       < ALIGN_POS_SPEED_TOLERANCE;
             })
-        .andThen(Commands.runOnce(() -> drive.stop()))
+        .andThen(
+            Commands.runOnce(
+                () -> {
+                  drive.stop();
+                  SmartDashboard.putString("Auto/Success", "YES");
+                }))
 
         // Reset PID controller when command starts
         .beforeStarting(
@@ -500,14 +538,6 @@ public class DriveCommands {
               yController.setSetpoint(pose.getY());
             })
         .withName("Auto-Align");
-  }
-
-  private static Command autoAlign(Drive drive, Pose2d[] poses) {
-    Command alignCMD = Commands.waitSeconds(0);
-    for (Pose2d pose : poses) {
-      alignCMD = alignCMD.andThen(autoAlign(drive, pose));
-    }
-    return alignCMD;
   }
 
   public static Command autoClimb(Drive drive, Climber climber) {
@@ -560,15 +590,25 @@ public class DriveCommands {
         });
   }
 
+  private static Command autoAlign(Drive drive, Pose2d[] poses) {
+    Command alignCMD = Commands.waitSeconds(0);
+    for (Pose2d pose : poses) {
+      alignCMD = alignCMD.andThen(autoAlign(drive, pose));
+    }
+    return alignCMD;
+  }
+
   // auto climb tool that aligns to the tower given a sequence of Pose2ds, then pulls the robot up.
   private static Command autoClimb(Drive drive, Climber climber, Pose2d[] autoClimbSequence) {
 
     return Commands.either(
         Commands.sequence(
-                Commands.deadline( // parallel
-                    autoAlign(drive, autoClimbSequence), climber.raiseCMD()),
                 Commands.deadline(
-                    Commands.sequence(Commands.waitSeconds(0.5), climber.pullCMD()),
+                    Commands.waitSeconds(4),
+                    autoAlign(drive, autoClimbSequence),
+                    climber.raiseCMD()),
+                Commands.deadline(
+                    Commands.sequence(Commands.waitSeconds(1.8), climber.pullCMD()),
                     joystickDriveAtAngle(
                         drive, () -> 0, () -> 0.3, () -> drive.getRotation(), () -> true)))
             .beforeStarting(
@@ -628,7 +668,7 @@ public class DriveCommands {
                   new Pose2d(
                       drive.getPose().getTranslation(),
                       getAngleFromJoysticks(
-                          gyroXSupplier.getAsDouble(), gyroYSupplier.getAsDouble(), !isFlipped)));
+                          gyroXSupplier.getAsDouble(), gyroYSupplier.getAsDouble(), isFlipped)));
 
               drive.runVelocity(
                   robotRelative.getAsBoolean()

@@ -117,7 +117,7 @@ public class Autos {
 
     square
         .done()
-        .onTrue(Commands.sequence(Commands.waitSeconds(2), turn.resetOdometry(), turn.cmd()));
+        .onTrue(Commands.sequence(Commands.waitSeconds(2), Commands.runOnce(() -> drive.stop())));
 
     return routine;
   }
@@ -170,18 +170,16 @@ public class Autos {
         .onTrue(
             Commands.sequence(
                 Commands.deadline(
-                    Commands.waitSeconds(1.5),
-                    DriveCommands.joystickDrive(drive, () -> 0, () -> 0.4, () -> 0, () -> true)),
+                    Commands.waitSeconds(0),
+                    DriveCommands.joystickDrive(drive, () -> 0, () -> 0, () -> 0, () -> true)),
                 Commands.deadline(
                     Commands.waitSeconds(12.5),
                     Commands.parallel(
                         shooter.rawFlywheelCMD(() -> 0.25),
-                        Commands.sequence(Commands.waitSeconds(1), hopper.shootCMD())),
-                    Commands.deadline(
-                        Commands.waitSeconds(2),
-                        Commands.parallel(climber.pullCMD(), hopper.stopCMD(), shooter.stopCMD())),
-                    Commands.deadline(Commands.waitSeconds(2), climber.raiseCMD()),
-                    Commands.deadline(Commands.waitSeconds(2), climber.pullCMD()))));
+                        Commands.sequence(Commands.waitSeconds(1), hopper.shootCMD()))),
+                Commands.deadline(
+                    Commands.waitSeconds(2),
+                    Commands.parallel(climber.pullCMD(), hopper.stopCMD(), shooter.stopCMD()))));
 
     return routine;
   }
