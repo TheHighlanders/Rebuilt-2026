@@ -11,10 +11,9 @@ import static frc.robot.util.PhoenixUtil.*;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.NeutralOut;
-import com.ctre.phoenix6.controls.VelocityVoltage;
-import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -37,9 +36,9 @@ public class Shooter extends SubsystemBase {
   // Config for PID
   TalonFXConfiguration config = new TalonFXConfiguration();
 
-  VelocityVoltage velocityVoltage = new VelocityVoltage(0).withSlot(0);
-  VoltageOut voltage = new VoltageOut(12 * 0.3);
   NeutralOut brake = new NeutralOut();
+  PIDController controller =
+      new PIDController(ShooterConstants.kP, ShooterConstants.kI, ShooterConstants.kD);
 
   CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
@@ -47,13 +46,7 @@ public class Shooter extends SubsystemBase {
 
   public Shooter() {
 
-    config.Slot0.kS = ShooterConstants.kS;
-    config.Slot0.kV = ShooterConstants.kV;
-    config.Slot0.kP = ShooterConstants.kP;
-    config.Slot0.kI = ShooterConstants.kI;
-    config.Slot0.kD = ShooterConstants.kD;
-
-    config.Voltage.withPeakForwardVoltage(8).withPeakReverseVoltage(-8); // sus
+    config.Voltage.withPeakForwardVoltage(8).withPeakReverseVoltage(8);
 
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
@@ -66,7 +59,7 @@ public class Shooter extends SubsystemBase {
     tryUntilOk(5, () -> flywheel.getConfigurator().apply(config));
     tryUntilOk(5, () -> flywheel.getConfigurator().apply(currentLimits));
 
-    SmartDashboard.putNumber("Shooter/Target RPS", 0.0); // sus
+    SmartDashboard.putNumber("Shooter/Target RPS", 0.0);
     SmartDashboard.putNumber(
         "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
     SmartDashboard.putNumber(
@@ -226,12 +219,14 @@ public class Shooter extends SubsystemBase {
     return Math.abs(flywheel.getVelocity().getValueAsDouble() - targetRPS) < 0.4;
   }
 
-  public Command flywheelCMD(Supplier<Translation2d> distance) {
+  public Command flywheelCMD(Supplier<Translation2d> shotPoint) {
     return Commands.run(
         () -> {
-          targetRPS = calculateRR(distance.get());
-          flywheel.setControl(velocityVoltage.withVelocity(targetRPS));
-          SmartDashboard.putNumber("Shooter/Distance", distance.get().getX());
+          targetRPS = calculateRR(shotPoint.get());
+          double voltage =
+              controller.calculate(flywheel.getVelocity().getValueAsDouble(), targetRPS);
+          flywheel.setVoltage(voltage);
+          SmartDashboard.putNumber("Shooter/Distance", shotPoint.get().getX());
         },
         this);
   }
@@ -240,7 +235,9 @@ public class Shooter extends SubsystemBase {
     return Commands.run(
         () -> {
           targetRPS = calculateRRGround(distance.getAsDouble());
-          flywheel.setControl(velocityVoltage.withVelocity(targetRPS));
+          double voltage =
+              controller.calculate(flywheel.getVelocity().getValueAsDouble(), targetRPS);
+          flywheel.setVoltage(voltage);
           SmartDashboard.putNumber("Shooter/Distance", distance.getAsDouble());
         },
         this);
@@ -250,7 +247,9 @@ public class Shooter extends SubsystemBase {
     return Commands.run(
         () -> {
           targetRPS = calculateRRHub(distance.getAsDouble());
-          flywheel.setControl(velocityVoltage.withVelocity(targetRPS));
+          double voltage =
+              controller.calculate(flywheel.getVelocity().getValueAsDouble(), targetRPS);
+          flywheel.setVoltage(voltage);
           SmartDashboard.putNumber("Shooter/Distance", distance.getAsDouble());
         },
         this);
@@ -259,7 +258,7 @@ public class Shooter extends SubsystemBase {
   public Command rawFlywheelCMD(DoubleSupplier drive) {
     return Commands.run(
         () -> {
-          flywheel.setControl(voltage.withOutput(drive.getAsDouble()));
+          flywheel.setVoltage(drive.getAsDouble() * 4);
         },
         this);
   }

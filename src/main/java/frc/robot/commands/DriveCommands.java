@@ -49,7 +49,7 @@ public class DriveCommands {
   private static final double DEADBAND = 0.1;
   private static final double ANGLE_KP = 30.0;
   private static final double ANGLE_KI = 0;
-  private static final double ANGLE_KD = 5;
+  private static final double ANGLE_KD = 20;
   private static final double POS_KP = 10.0; // TODO
   private static final double POS_KI = 0;
   private static final double POS_KD = 0;
@@ -163,11 +163,12 @@ public class DriveCommands {
         .getTranslation();
   }
 
-  private static Rotation2d getAngleFromJoysticks(double angleXSupplier, double angleYSupplier) {
+  private static Rotation2d getAngleFromJoysticks(
+      double angleXSupplier, double angleYSupplier, boolean flipped) {
     if (Math.hypot(angleXSupplier, angleYSupplier) > DriveConstants.POINT_DEADBAND) {
       pointAngle = Rotation2d.fromRadians(Math.atan2(angleYSupplier, angleXSupplier));
     }
-    return pointAngle;
+    return flipped ? pointAngle.plus(Rotation2d.k180deg) : pointAngle;
   }
 
   private static Pose2d[] getAutoClimbAlignSequence(boolean red, boolean outpost) {
@@ -431,14 +432,20 @@ public class DriveCommands {
                 ySupplier,
                 () ->
                     getAngleFromJoysticks(
-                        angleXSupplier.getAsDouble(), angleYSupplier.getAsDouble()),
+                        angleXSupplier.getAsDouble(),
+                        angleYSupplier.getAsDouble(),
+                        DriverStation.getAlliance().isPresent()
+                            && DriverStation.getAlliance().get() == Alliance.Red),
                 robotRelative),
             Commands.run(
                 () -> {
                   Logger.recordOutput(
                       "Drive/point angle",
                       getAngleFromJoysticks(
-                          angleXSupplier.getAsDouble(), angleYSupplier.getAsDouble()));
+                          angleXSupplier.getAsDouble(),
+                          angleYSupplier.getAsDouble(),
+                          DriverStation.getAlliance().isPresent()
+                              && DriverStation.getAlliance().get() == Alliance.Red));
                 }))
         .withName("Joystic Point Drive");
   }
@@ -583,6 +590,57 @@ public class DriveCommands {
           // returns if the robot is inside the alliance side
           return testPose.getMeasureX().in(Meters) < FieldConstants.HUB_POSE_BLUE.getX() - 0.597154;
         });
+  }
+
+  public static Command joystickGyroOverride(
+      Drive drive,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      DoubleSupplier omegaSupplier,
+      DoubleSupplier gyroXSupplier,
+      DoubleSupplier gyroYSupplier,
+      BooleanSupplier robotRelative) {
+    return Commands.run(
+            () -> {
+              // Get linear velocity
+              Translation2d linearVelocity =
+                  getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+
+              // Apply rotation deadband
+              double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
+
+              // Square rotation value for more precise control
+              omega = Math.copySign(omega * omega, omega);
+
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                      omega * drive.getMaxAngularSpeedRadPerSec());
+
+              boolean isFlipped =
+                  DriverStation.getAlliance().isPresent()
+                      && DriverStation.getAlliance().get() == Alliance.Red;
+
+              // reset gyro
+              drive.setPose(
+                  new Pose2d(
+                      drive.getPose().getTranslation(),
+                      getAngleFromJoysticks(
+                          gyroXSupplier.getAsDouble(), gyroYSupplier.getAsDouble(), isFlipped)));
+
+              drive.runVelocity(
+                  robotRelative.getAsBoolean()
+                      ? ChassisSpeeds.fromRobotRelativeSpeeds(speeds, Rotation2d.fromDegrees(0))
+                      : ChassisSpeeds.fromFieldRelativeSpeeds(
+                          speeds,
+                          isFlipped
+                              ? drive.getRotation().plus(Rotation2d.k180deg)
+                              : drive.getRotation()));
+            },
+            drive)
+        .withName("Joystic Gyro Override");
   }
 
   /**

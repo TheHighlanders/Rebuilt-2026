@@ -50,8 +50,17 @@ public class Climber extends SubsystemBase {
                     climbEncoder.getPosition()
                         >= ClimberConstants.DOWN_POSITION - ClimberConstants.POS_TOLERANCE),
             runCMD(ClimberConstants.PULL_SPEED))
-        .andThen(runCMD(0))
-        .andThen(Commands.runOnce(() -> climbEncoder.setPosition(0)));
+        .andThen(runCMD(0));
+  }
+
+  public Command tuckCMD() {
+    return Commands.deadline(
+            Commands.waitUntil(
+                () ->
+                    climbEncoder.getPosition()
+                        >= ClimberConstants.DOWN_POSITION - (2 * ClimberConstants.POS_TOLERANCE)),
+            runCMD(ClimberConstants.PULL_SPEED))
+        .andThen(runCMD(0));
   }
 
   @Override

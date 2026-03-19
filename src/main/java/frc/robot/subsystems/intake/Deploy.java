@@ -7,6 +7,8 @@ package frc.robot.subsystems.intake;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.FeedbackSensor;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
@@ -14,11 +16,15 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
+
+import static edu.wpi.first.units.Units.Radians;
+
 import java.util.function.DoubleSupplier;
 
 public class Deploy extends SubsystemBase {
@@ -31,12 +37,23 @@ public class Deploy extends SubsystemBase {
   boolean raised = true;
 
   SparkMaxConfig config = new SparkMaxConfig();
-  double rest = 0;
+  ArmFeedforward feedforward =
+      new ArmFeedforward(IntakeConstants.kS, IntakeConstants.kG, IntakeConstants.kV);
 
   public Deploy() {
     config.smartCurrentLimit(50).idleMode(IdleMode.kBrake);
     config.encoder.positionConversionFactor(IntakeConstants.DEPLOY_RATIO);
-
+    config
+        .closedLoop
+        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+        .p(IntakeConstants.kP)
+        .i(IntakeConstants.kI)
+        .d(IntakeConstants.kD)
+        .feedForward
+        .kS(IntakeConstants.kS)
+        .kG(IntakeConstants.kG)
+        .kV(IntakeConstants.kV);
+    // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
     deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployEncoder.getPosition());
 
@@ -44,40 +61,50 @@ public class Deploy extends SubsystemBase {
   }
 
   public Command deployCMD() {
-    return Commands.deadline(
-            Commands.waitSeconds(0.5),
-            Commands.runOnce(
-                () -> {
-                  deployMotor.set(-0.2);
-                }))
-        .andThen(
-            Commands.runOnce(
-                () -> {
-                  deployMotor.set(0);
-                  raised = false;
-                }));
+    // Deploys fuel
+    return Commands.runOnce(
+            () -> {
+              closedLoopController.setSetpoint(
+                  IntakeConstants.DEPLOY_POSITION.in(Radians), ControlType.kPosition);
+            })
+        .withName("Deployed");
+    // return Commands.deadline(
+    //         Commands.waitUntil(
+    //             () ->
+    //                 deployEncoder.getPosition()
+    //                     >= IntakeConstants.DEPLOY_POSITION - IntakeConstants.DEPLOY_TOLERANCE),
+    //         runCMD(IntakeConstants.DEPLOY_SPEED))
+    //     .andThen(runCMD(0));
+  }
+
+  public Command readyCMD() {
+    return Commands.runOnce(
+            () -> {
+              closedLoopController.setSetpoint(
+                  IntakeConstants.READY_POSITION.in(Radians), ControlType.kPosition);
+            })
+        .withName("Ready");
+    // return Commands.deadline(
+    //         Commands.waitUntil(
+    //             () ->
+    //                 deployEncoder.getPosition()
+    //                     >= IntakeConstants.READY_POSITION - IntakeConstants.DEPLOY_TOLERANCE),
+    //         runCMD(IntakeConstants.DEPLOY_SPEED))
+    //     .andThen(runCMD(0));
   }
 
   public Command undeployCMD() {
-    return Commands.sequence(
-        Commands.runOnce(
+    return Commands.run(
             () -> {
-              deployMotor.set(0.3);
-            }),
-        Commands.waitSeconds(2),
-        Commands.runOnce(
-            () -> {
-              deployMotor.set(0.02);
-              raised = true;
-            }));
-  }
-
-  public Command mannualCMD(DoubleSupplier speed) {
-    return run(() -> deployMotor.set(-0.3 * speed.getAsDouble()));
-  }
-
-  public boolean isRaised() {
-    return raised;
+              closedLoopController.setSetpoint(
+                  IntakeConstants.UP_POSITION.in(Radians), ControlType.kPosition);
+            })
+        .withName("Retracted");
+    // return Commands.deadline(
+    //         Commands.waitUntil(
+    //             () -> deployEncoder.getPosition() <= IntakeConstants.DEPLOY_TOLERANCE),
+    //         runCMD(0 - IntakeConstants.DEPLOY_SPEED))
+    //     .andThen(runCMD(0));
   }
 
   @Override

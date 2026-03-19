@@ -14,6 +14,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
@@ -40,6 +41,8 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -295,8 +298,8 @@ public class RobotContainer {
                         drive,
                         () -> -controller.getLeftY(),
                         () -> -controller.getLeftX(),
-                        () -> controller.getRightY(),
-                        () -> controller.getRightX(),
+                        () -> -controller.getRightY(),
+                        () -> -controller.getRightX(),
                         () -> robotRelative)
                     .until(() -> controller.rightStick().getAsBoolean())));
 
@@ -356,18 +359,51 @@ public class RobotContainer {
                     () -> -controller.getRightX() * speed,
                     () -> robotRelative)));
 
-    // reset gyro TODO: might not work with photonvision
+    // fancy gyro reset
+    operator
+        .leftStick()
+        .onTrue(
+            DriveCommands.joystickGyroOverride(
+                    drive,
+                    () -> -controller.getLeftX() * speed,
+                    () -> -controller.getLeftY() * speed,
+                    () -> -controller.getRightX() * speed,
+                    () -> -operator.getLeftY(),
+                    () -> -operator.getLeftX(),
+                    () -> robotRelative)
+                .until(() -> !operator.leftStick().getAsBoolean()));
+    // reset gyro
     controller
-        .back()
+        .povDown()
         .onTrue(
             Commands.runOnce(
                 () ->
-                    drive.setPose(new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero))));
+                    drive.setPose(
+                        new Pose2d(drive.getPose().getTranslation(), Rotation2d.kCCW_90deg))));
+
+    operator
+        .leftStick()
+        .onTrue(
+            DriveCommands.joystickGyroOverride(
+                    drive,
+                    () -> -controller.getLeftX() * speed,
+                    () -> -controller.getLeftY() * speed,
+                    () -> -controller.getRightX() * speed,
+                    () -> -operator.getLeftY(),
+                    () -> -operator.getLeftX(),
+                    () -> robotRelative)
+                .until(() -> !operator.leftStick().getAsBoolean()));
 
     // reset all odometry
     controller
         .povUp()
-        .onTrue(Commands.runOnce(() -> drive.setPose(DriveConstants.POSE_RESET), drive));
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  DriverStation.reportWarning("reset all odometry", false);
+                  drive.setPose(DriveConstants.POSE_RESET);
+                },
+                drive));
     /* INTAKE COMMANDS. TODO */
     // intake and deploy
     controller
