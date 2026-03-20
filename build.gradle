@@ -34,12 +34,25 @@ deploy {
                     jvmArgs.add("-XX:+UseSerialGC")
                     jvmArgs.add("-XX:MaxGCPauseMillis=50")
 
+                    // Enable automatic heap dumps on OutOfMemoryError
+                    // Note: the heap dump path here is a path on a USB flash drive, see below
+                    // jvmArgs.add("-XX:+HeapDumpOnOutOfMemoryError")
+                    // jvmArgs.add("-XX:HeapDumpPath=/tmp/frc-usercode.hprof")
+
                     // The options below may improve performance, but should only be enabled on the RIO 2
                     //
                     // final MAX_JAVA_HEAP_SIZE_MB = 100;
                     // jvmArgs.add("-Xmx" + MAX_JAVA_HEAP_SIZE_MB + "M")
                     // jvmArgs.add("-Xms" + MAX_JAVA_HEAP_SIZE_MB + "M")
                     // jvmArgs.add("-XX:+AlwaysPreTouch")
+
+                    //for VisualVM connection
+                    jvmArgs.add("-Dcom.sun.management.jmxremote=true")
+                    jvmArgs.add("-Dcom.sun.management.jmxremote.port=1198")
+                    jvmArgs.add("-Dcom.sun.management.jmxremote.local.only=false")
+                    jvmArgs.add("-Dcom.sun.management.jmxremote.ssl=false")
+                    jvmArgs.add("-Dcom.sun.management.jmxremote.authenticate=false")
+                    jvmArgs.add("-Djava.rmi.server.hostname=10.62.01.2") // Replace TE.AM with team number
                 }
 
                 // Static files artifact
@@ -108,7 +121,7 @@ test {
 // The sim GUI is *disabled* by default to support running
 // AdvantageKit log replay, which requires that all HAL
 // sim extensions be disabled.
-wpi.sim.addGui().defaultEnabled = false
+wpi.sim.addGui().defaultEnabled = true
 wpi.sim.addDriverstation()
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
