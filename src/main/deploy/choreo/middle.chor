@@ -1,5 +1,5 @@
 {
- "name":"HubDepot",
+ "name":"middle",
  "version":2,
  "type":"Swerve",
  "variables":{
@@ -76,7 +76,7 @@
  },
  "generationFeatures":[],
  "codegen":{
-  "root":null,
+  "root":"..\\C:\\Users\\shsfa\\GitHub\\Rebuilt-2026\\src\\main\\deploy\\choreo",
   "genVars":true,
   "genTrajData":true,
   "useChoreoLib":true

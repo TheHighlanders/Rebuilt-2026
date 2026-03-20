@@ -119,5 +119,5 @@
   "splits":[0]
  },
  "events":[
-   {"name":"halfway!", "from":{"target":2, "targetTimestamp":null, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
+   {"name":"halfway!", "from":{"target":2, "targetTimestamp":1.15854, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
 }

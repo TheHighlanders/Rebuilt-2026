@@ -30,7 +30,7 @@ public class ShooterSim extends Shooter {
 
   public void shoot() {
     fuelSim.launchFuel(
-        MetersPerSecond.of(targetRPS * (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 2 * Math.PI)),
+        MetersPerSecond.of(targetRPS * (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * Math.PI)),
         ShooterConstants.SHOOTER_HOOD,
         Degrees.of(-90),
         ShooterConstants.SHOOTER_RR_POS);

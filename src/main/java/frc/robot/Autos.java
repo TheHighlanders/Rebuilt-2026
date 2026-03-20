@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
@@ -61,7 +62,7 @@ public class Autos {
     AutoRoutine routine = autoFactory.newRoutine("Test");
 
     AutoTrajectory square = routine.trajectory("TestSquare");
-    AutoTrajectory turn = routine.trajectory("TestSquareTurn");
+    // AutoTrajectory turn = routine.trajectory("TestSquareTurn");
 
     routine
         .active()
@@ -128,46 +129,6 @@ public class Autos {
     routine
         .active()
         .onTrue(
-            Commands.parallel(
-                DriveCommands.joystickAlignDrive(drive, shooter, () -> 0, () -> 0, () -> true),
-                Commands.sequence(
-                    Commands.waitSeconds(1),
-                    Commands.waitUntil(
-                        () -> {
-                          return shooter.atSpeed() && DriveCommands.aligned().getAsBoolean();
-                        }),
-                    // Commands.runOnce(drive::stopWithX),//maybe
-                    hopper.shootCMD())));
-
-    return routine;
-  }
-
-  public AutoRoutine middleShootOnly() {
-    AutoRoutine routine = autoFactory.newRoutine("middleShootOnly");
-
-    routine
-        .active()
-        .onTrue(
-            Commands.parallel(
-                Commands.sequence(
-                    Commands.waitSeconds(1),
-                    shooter.rawFlywheelCMD(() -> 0.25),
-                    Commands.waitUntil(
-                        () -> {
-                          return shooter.atSpeed();
-                        }),
-                    // Commands.runOnce(drive::stopWithX),//maybe
-                    hopper.shootCMD())));
-
-    return routine;
-  }
-
-  public AutoRoutine simplerShoot() {
-    AutoRoutine routine = autoFactory.newRoutine("");
-
-    routine
-        .active()
-        .onTrue(
             Commands.sequence(
                 Commands.deadline(
                     Commands.waitSeconds(0),
@@ -190,19 +151,91 @@ public class Autos {
     routine
         .active()
         .onTrue(
-            Commands.parallel(
-                DriveCommands.joystickAlignDrive(drive, shooter, () -> 0, () -> 0, () -> true),
-                Commands.sequence(
-                    Commands.waitSeconds(1),
-                    Commands.waitUntil(
-                        () -> {
-                          return shooter.atSpeed() && DriveCommands.aligned().getAsBoolean();
-                        }),
-                    // Commands.runOnce(drive::stopWithX),//maybe
-                    hopper.shootCMD()),
-                    Commands.waitSeconds(1),
-                    DriveCommands.autoClimb(drive, climber))
-                    );
+            Commands.sequence(
+                Commands.deadline(
+                    Commands.waitSeconds(0),
+                    DriveCommands.joystickDrive(drive, () -> 0, () -> 0, () -> 0, () -> true)),
+                Commands.deadline(
+                    Commands.waitSeconds(12.5),
+                    Commands.parallel(
+                        shooter.rawFlywheelCMD(() -> 0.25),
+                        Commands.sequence(Commands.waitSeconds(1), hopper.shootCMD()))),
+                Commands.parallel(hopper.stopCMD(), shooter.stopCMD()),
+                DriveCommands.autoClimb(drive, climber)));
+
+    return routine;
+  }
+
+  public AutoRoutine middle() {
+    AutoRoutine routine = autoFactory.newRoutine("middle");
+
+    AutoTrajectory outpost = routine.trajectory("midToOutpost");
+    AutoTrajectory shoot = routine.trajectory("outpostToShoot");
+    AutoTrajectory depot = routine.trajectory("shootToDepot");
+
+    routine
+        .active()
+        .onTrue(
+            Commands.sequence(sendState("mid -> outpost"), outpost.resetOdometry(), outpost.cmd()));
+
+    outpost
+        .doneDelayed(2)
+        .onTrue(
+            Commands.sequence(
+                sendState("outpost -> shooting"), shoot.resetOdometry(), shoot.cmd()));
+
+    shoot
+        .atTimeBeforeEnd(1)
+        .onTrue(
+            shooter.flywheelHubCMD(
+                () ->
+                    Math.min(
+                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
+                        drive
+                            .getPose()
+                            .getTranslation()
+                            .getDistance(FieldConstants.HUB_POSE_RED))));
+
+    shoot.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
+
+    shoot
+        .doneDelayed(4)
+        .onTrue(
+            Commands.sequence(
+                sendState("shooting -> depot"),
+                hopper.stopCMD(),
+                shooter.stopCMD(),
+                depot.resetOdometry(),
+                depot.cmd()));
+
+    depot.atTime("intake").onTrue(Commands.parallel(deploy.deployCMD(), intake.intakeCMD()));
+
+    depot
+        .atTime("retract")
+        .onTrue(
+            Commands.sequence(deploy.readyCMD(), Commands.waitSeconds(0.5), intake.stoptakeCMD()));
+
+    depot
+        .done()
+        .onTrue(
+            shooter.flywheelHubCMD(
+                () ->
+                    Math.min(
+                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
+                        drive
+                            .getPose()
+                            .getTranslation()
+                            .getDistance(FieldConstants.HUB_POSE_RED))));
+
+    depot
+        .done()
+        .onTrue(
+            Commands.sequence(
+                sendState("final shots!"),
+                hopper.shootCMD(),
+                Commands.waitSeconds(5),
+                hopper.stopCMD(),
+                shooter.stopCMD()));
 
     return routine;
   }
@@ -292,13 +325,5 @@ public class Autos {
     }
 
     return routine;
-  }
-
-  public AutoRoutine midClimbLeft() {
-    return null;
-  }
-
-  public AutoRoutine midClimbRight() {
-    return null;
   }
 }
