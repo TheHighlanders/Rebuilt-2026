@@ -246,6 +246,9 @@ public class RobotContainer {
     autoChooser.addRoutine("Auto Test", () -> autos.testAuto());
     autoChooser.addRoutine("Simple Shoot", () -> autos.simpleShoot());
     autoChooser.addRoutine("middle -> outpost -> depot", () -> autos.middle());
+    autoChooser.addRoutine("middle -> depot", () -> autos.middleDepot());
+    autoChooser.addRoutine("left -> neutral", () -> autos.leftMid(true));
+    autoChooser.addRoutine("left -> neutral (chill)", () -> autos.leftMid(false));
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());

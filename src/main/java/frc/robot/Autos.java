@@ -240,22 +240,19 @@ public class Autos {
     return routine;
   }
 
-  public AutoRoutine depotAndClimb(boolean addClimb) {
+  public AutoRoutine middleDepot() {
     AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
 
-    AutoTrajectory collect = routine.trajectory("collectDepot");
-    AutoTrajectory climb = routine.trajectory("climbFromDepot");
+    AutoTrajectory collect = routine.trajectory("midToDepotShoot");
 
     routine
         .active()
         .onTrue(
-            Commands.sequence(
-                sendState("Auto Started!"),
-                DriveCommands.autoAlign(drive, collect.getInitialPose().orElse(drive.getPose())),
-                collect.resetOdometry(),
-                Commands.parallel(collect.cmd(), deploy.deployCMD())));
+            Commands.sequence(sendState("Auto Started!"), collect.resetOdometry(), collect.cmd()));
 
-    collect.atTime("intake").onTrue(Commands.sequence(intake.intakeCMD(), sendState("Intaking!")));
+    collect
+        .atTime("intake")
+        .onTrue(Commands.sequence(deploy.deployCMD(), intake.intakeCMD(), sendState("Intaking!")));
 
     collect
         .done()
@@ -267,63 +264,85 @@ public class Autos {
 
     collect.doneDelayed(1).onTrue(hopper.shootCMD());
 
-    if (addClimb) {
-      collect
-          .doneDelayed(10)
-          .onTrue(
-              Commands.parallel(
-                  sendState("Aligning!"),
-                  DriveCommands.autoClimb(drive, climber),
-                  hopper.stopCMD(),
-                  shooter.stopCMD(),
-                  deploy.undeployCMD()));
-
-      climb
-          .atTime("aligning")
-          .onTrue(
-              Commands.sequence(Commands.waitSeconds(1), sendState("Pulling!"), climber.pullCMD()));
-    } else {
-      collect.doneDelayed(12).onTrue(Commands.parallel(hopper.stopCMD(), shooter.stopCMD()));
-    }
-
-    return routine;
-  }
-
-  public AutoRoutine outpostAndClimb(boolean addClimb) {
-    AutoRoutine routine = autoFactory.newRoutine("OutpostAndClimb");
-
-    AutoTrajectory collect = routine.trajectory("collectOutpost");
-    AutoTrajectory shoot = routine.trajectory("shootFromOutpost");
-    AutoTrajectory climb = routine.trajectory("climbFromOutpost");
-
-    routine
-        .active()
-        .onTrue(
-            Commands.sequence(collect.resetOdometry(), sendState("Auto started!"), collect.cmd()));
-
     collect
-        .doneDelayed(4)
+        .atTimeBeforeEnd(1)
         .onTrue(
-            Commands.sequence(
-                shoot.cmd(),
-                DriveCommands.joystickAlignDrive(drive, shooter, () -> 0, () -> 0, () -> true)));
+            shooter.flywheelHubCMD(
+                () ->
+                    Math.min(
+                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
+                        drive
+                            .getPose()
+                            .getTranslation()
+                            .getDistance(FieldConstants.HUB_POSE_RED))));
 
-    shoot.doneDelayed(1).onTrue(hopper.shootCMD());
-
-    if (addClimb) {
-      shoot
-          .doneDelayed(8)
-          .onTrue(
-              Commands.sequence(
-                  shooter.stopCMD(),
-                  hopper.stopCMD(),
-                  Commands.parallel(climber.raiseCMD(), climb.cmd())));
-
-      climb.atTimeBeforeEnd(0.1).onTrue(climber.pullCMD());
-    } else {
-      shoot.doneDelayed(12).onTrue(Commands.sequence(shooter.stopCMD(), hopper.stopCMD()));
-    }
+    collect.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
 
     return routine;
   }
+
+  public AutoRoutine leftMid(boolean aggressive) {
+    AutoRoutine routine = autoFactory.newRoutine("");
+
+    AutoTrajectory midInitial =
+        aggressive
+            ? routine.trajectory("leftToMidAggressive")
+            : routine.trajectory("leftToMidChill");
+    AutoTrajectory midSecondary = routine.trajectory("leftToMidAgain");
+
+    routine.active().onTrue(Commands.sequence(midInitial.resetOdometry(), midInitial.cmd()));
+
+    midInitial.atTime("intake").onTrue(Commands.sequence(deploy.deployCMD(), intake.intakeCMD()));
+
+    midInitial
+        .atTime("retract")
+        .onTrue(Commands.sequence(deploy.undeployCMD(), intake.stoptakeCMD()));
+
+    midInitial
+        .atTimeBeforeEnd(1)
+        .onTrue(
+            shooter.flywheelHubCMD(
+                () ->
+                    Math.min(
+                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
+                        drive
+                            .getPose()
+                            .getTranslation()
+                            .getDistance(FieldConstants.HUB_POSE_RED))));
+
+    midInitial.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
+
+    midInitial
+        .doneDelayed(5)
+        .onTrue(Commands.sequence(hopper.stopCMD(), shooter.stopCMD(), midSecondary.cmd()));
+
+    midSecondary.atTime("intake").onTrue(Commands.sequence(deploy.deployCMD(), intake.intakeCMD()));
+
+    midSecondary
+        .atTime("retract")
+        .onTrue(Commands.sequence(deploy.undeployCMD(), intake.stoptakeCMD()));
+
+    midSecondary
+        .atTimeBeforeEnd(1)
+        .onTrue(
+            shooter.flywheelHubCMD(
+                () ->
+                    Math.min(
+                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
+                        drive
+                            .getPose()
+                            .getTranslation()
+                            .getDistance(FieldConstants.HUB_POSE_RED))));
+
+    midSecondary.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
+
+    return routine;
+  }
+
+  public AutoRoutine rightMid(boolean aggressive) {//TODO
+    AutoRoutine routine = autoFactory.newRoutine("");
+
+    return routine;
+  }
+
 }
