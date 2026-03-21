@@ -92,6 +92,12 @@ public class RobotContainer {
         // ModuleIOTalonFX is intended for modules with TalonFX drive, TalonFX turn, and
         // a CANcoder
         drive =
+            // new Drive(
+            //     new GyroIO() {},
+            //     new ModuleIO() {},
+            //     new ModuleIO() {},
+            //     new ModuleIO() {},
+            //     new ModuleIO() {});
             new Drive(
                 new GyroIOBoron(), // new GyroIOBoron(),
                 new ModuleIOTalonFX(TunerConstants.FrontLeft),
@@ -402,7 +408,7 @@ public class RobotContainer {
     // retract intake
     operator.b().onTrue(deploy.swapCMD());
 
-    /// operator.leftStick().onTrue(deploy.mannualCMD(operator::getLeftY));
+    operator.rightStick().onTrue(climber.manualCMD(operator::getLeftY));
 
     /* HOPPER COMMANDS */
 
@@ -423,6 +429,7 @@ public class RobotContainer {
     // clear hopper
     operator.x().onTrue(hopper.backdriveCMD());
     operator.x().onFalse(hopper.stopCMD());
+    
 
     controller.povUp().onTrue(DriveCommands.autoAlign(drive, DriveConstants.POSE_RESET));
     // drive
@@ -454,7 +461,9 @@ public class RobotContainer {
     // backup mannual flywheel spinup
     controller
         .rightTrigger(0.05)
-        .onTrue(shooter.rawFlywheelCMD(() -> controller.getRightTriggerAxis() * 3));
+        .onTrue(shooter.rawFlywheelCMD(() -> controller.getRightTriggerAxis() / 4));
+
+    controller.povRight().onTrue(shooter.tuneCMD());
 
     controller.rightTrigger(0.05).onFalse(shooter.stopCMD());
     controller.rightBumper().onFalse(shooter.stopCMD());

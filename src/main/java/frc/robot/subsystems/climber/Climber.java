@@ -56,7 +56,7 @@ public class Climber extends SubsystemBase {
                         climbEncoder.getPosition()
                             >= ClimberConstants.DOWN_POSITION - ClimberConstants.POS_TOLERANCE)),
             runCMD(ClimberConstants.PULL_SPEED))
-        .andThen(runCMD(0))
+        .andThen(runCMD(1))
         .andThen(Commands.runOnce(() -> climbEncoder.setPosition(0)));
   }
 

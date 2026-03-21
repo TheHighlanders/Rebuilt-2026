@@ -11,6 +11,7 @@ import static frc.robot.util.PhoenixUtil.*;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.first.math.controller.PIDController;
@@ -39,12 +40,22 @@ public class Shooter extends SubsystemBase {
   NeutralOut brake = new NeutralOut();
   PIDController controller =
       new PIDController(ShooterConstants.kP, ShooterConstants.kI, ShooterConstants.kD);
+  VelocityVoltage velocity = new VelocityVoltage(0).withSlot(0);
 
   CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
   double targetRPS;
 
   public Shooter() {
+
+    SmartDashboard.putNumber("Shooter/Mannual Target RPS", 0);
+    SmartDashboard.putNumber("Shooter/Distance Tune", 1);
+
+    config.Slot0.kP = ShooterConstants.kP;
+    config.Slot0.kI = ShooterConstants.kI;
+    config.Slot0.kD = ShooterConstants.kD;
+    config.Slot0.kS = ShooterConstants.kS;
+    config.Slot0.kV = ShooterConstants.kV;
 
     config.Voltage.withPeakForwardVoltage(12).withPeakReverseVoltage(-12);
 
@@ -88,19 +99,23 @@ public class Shooter extends SubsystemBase {
   protected static double calculate(Translation2d trajectory) {
     double linearVelocity =
         Math.sqrt(
-                ShooterConstants.GRAVITY
-                    * Math.pow(trajectory.getX(), 2)
-                    / (2
-                        * Math.pow(Math.cos(ShooterConstants.SHOOTER_HOOD.in(Radians)), 2)
-                        * (trajectory.getX() * Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians))
-                            - trajectory.getY())))
-            + (trajectory.getX() / 25); // air resistance fudge factor works way too well
+            ShooterConstants.GRAVITY
+                * Math.pow(trajectory.getX(), 2)
+                / (2
+                    * Math.pow(Math.cos(ShooterConstants.SHOOTER_HOOD.in(Radians)), 2)
+                    * (trajectory.getX() * Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians))
+                        - trajectory.getY())));
+    // + (trajectory.getX() / 25); // air resistance fudge factor works way too well
 
     SmartDashboard.putNumber("Shooter/Linear Velocity", linearVelocity);
 
     double rotationalVelocity =
         linearVelocity / (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 2 * Math.PI);
-    return rotationalVelocity * 2; // to account for a rotating ball.
+    return rotationalVelocity;
+    // * SmartDashboard.getNumber(
+    //     "Shooter/Distance Tune",
+    //     1); // * 2; // to account for a rotating ball. - but I think the gearbox
+    // does that
   }
 
   /*
@@ -224,9 +239,7 @@ public class Shooter extends SubsystemBase {
     return Commands.run(
         () -> {
           targetRPS = calculateRR(shotPoint.get());
-          double voltage =
-              controller.calculate(flywheel.getVelocity().getValueAsDouble(), targetRPS);
-          flywheel.setVoltage(voltage);
+          flywheel.setControl(velocity.withVelocity(targetRPS));
           SmartDashboard.putNumber("Shooter/Distance", shotPoint.get().getX());
         },
         this);
@@ -236,10 +249,9 @@ public class Shooter extends SubsystemBase {
     return Commands.run(
             () -> {
               targetRPS = calculateRRGround(distance.getAsDouble());
-              double voltage =
-                  controller.calculate(flywheel.getVelocity().getValueAsDouble(), targetRPS);
-              flywheel.setVoltage(voltage);
+              flywheel.setControl(velocity.withVelocity(targetRPS));
               SmartDashboard.putNumber("Shooter/Distance", distance.getAsDouble());
+              SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
             },
             this)
         .withName("Ground Align");
@@ -249,10 +261,9 @@ public class Shooter extends SubsystemBase {
     return Commands.run(
             () -> {
               targetRPS = calculateRRHub(distance.getAsDouble());
-              double voltage =
-                  controller.calculate(flywheel.getVelocity().getValueAsDouble(), targetRPS);
-              flywheel.setVoltage(voltage);
+              flywheel.setControl(velocity.withVelocity(targetRPS));
               SmartDashboard.putNumber("Shooter/Distance", distance.getAsDouble());
+              SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
             },
             this)
         .withName("Hub Align");
@@ -265,6 +276,18 @@ public class Shooter extends SubsystemBase {
             },
             this)
         .withName("Raw Flywheel");
+  }
+
+  public Command tuneCMD() {
+    return Commands.run(
+            () -> {
+              flywheel.setControl(
+                  velocity.withVelocity(
+                      SmartDashboard.getNumber(
+                          "Shooter/Mannual Target RPS", 0))); // .setVoltage(voltage);
+            },
+            this)
+        .withName("Tuning");
   }
 
   public Command stopCMD() {
@@ -283,7 +306,7 @@ public class Shooter extends SubsystemBase {
         "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
     SmartDashboard.putNumber(
         "Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
-    SmartDashboard.putNumber("Shooter/Target RPS", controller.getSetpoint());
+    SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
     SmartDashboard.putNumber("Shooter/Flywheel RPS", flywheel.getVelocity().getValueAsDouble());
     SmartDashboard.putString(
         "Shooter/Current Command",
