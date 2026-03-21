@@ -388,7 +388,7 @@ public class RobotContainer {
                     () -> robotRelative)
                 .until(() -> !operator.leftStick().getAsBoolean()));
 
-    /* INTAKE COMMANDS. TODO */
+    /* INTAKE COMMANDS. */
     // intake and deploy
     controller
         .leftBumper()

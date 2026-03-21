@@ -357,7 +357,7 @@ public class Autos {
     return routine;
   }
 
-  public AutoRoutine rightMid(boolean aggressive) { // TODO
+  public AutoRoutine rightMid(boolean aggressive) {
     AutoRoutine routine = autoFactory.newRoutine("");
 
     AutoTrajectory midInitial =

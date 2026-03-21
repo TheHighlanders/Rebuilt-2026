@@ -86,7 +86,6 @@ public class Shooter extends SubsystemBase {
    * using a physics simulation.
    */
   protected static double calculate(Translation2d trajectory) {
-    // TODO: tune.
     double linearVelocity =
         Math.sqrt(
                 ShooterConstants.GRAVITY
@@ -101,7 +100,7 @@ public class Shooter extends SubsystemBase {
 
     double rotationalVelocity =
         linearVelocity / (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 2 * Math.PI);
-    return rotationalVelocity * 2; // to account for a rotating ball. TODO
+    return rotationalVelocity * 2; // to account for a rotating ball. 
   }
 
   /*

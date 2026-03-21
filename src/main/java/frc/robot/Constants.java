@@ -37,7 +37,7 @@ public final class Constants {
   public static final class DriveConstants {
     public static final double SLOWMODE = 0.6;
     public static final double POINT_DEADBAND = 0.4;
-    public static final int GYRO_ID = 0; // TODO
+    public static final int GYRO_ID = 0;
     public static final Angle ALIGN_SHOOTER_COMP =
         Radians.of(
             Math.PI
@@ -115,7 +115,7 @@ public final class Constants {
 
   public static class ClimberConstants {
     public static final int CLIMBERID = 51;
-    public static final double UP_POSITION = -30; // Rotations. TODO
+    public static final double UP_POSITION = -31;
     public static final double DOWN_POSITION = 0;
     public static final double POS_TOLERANCE = 0.1;
 
@@ -210,7 +210,7 @@ public final class Constants {
         new Translation2d(Units.inchesToMeters(33.25 / 2), Units.inchesToMeters(26.22));
     public static final Translation2d DEPOT_POSE_BLUE =
         new Translation2d(
-            Units.inchesToMeters(27 / 2), Units.inchesToMeters(158.84 + 75.93)); // TODO: measure
+            Units.inchesToMeters(27 / 2), Units.inchesToMeters(158.84 + 75.93));
   }
 
   public static enum Mode {
