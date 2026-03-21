@@ -159,7 +159,7 @@ public final class Constants {
 
     public static final int SHOOTERID = 32;
 
-    public static final double kP = 0.11;
+    public static final double kP = 0.2;
     public static final double kI = 0;
     public static final double kD = 0.01;
     public static final double kS = 0.1;
@@ -209,8 +209,7 @@ public final class Constants {
     public static final Translation2d OUTPOST_POSE_BLUE =
         new Translation2d(Units.inchesToMeters(33.25 / 2), Units.inchesToMeters(26.22));
     public static final Translation2d DEPOT_POSE_BLUE =
-        new Translation2d(
-            Units.inchesToMeters(27 / 2), Units.inchesToMeters(158.84 + 75.93));
+        new Translation2d(Units.inchesToMeters(27 / 2), Units.inchesToMeters(158.84 + 75.93));
   }
 
   public static enum Mode {
