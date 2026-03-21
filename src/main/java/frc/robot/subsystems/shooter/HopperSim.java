@@ -25,7 +25,7 @@ public class HopperSim extends Hopper {
                     Commands.waitUntil(
                         () -> {
                           return ballsIn > 0
-                           || true; // Armaan, delete the semicolon and the forward
+                              || true; // Armaan, delete the semicolon and the forward
                           // slashes for unlimited fuel
                         }),
                     Commands.waitSeconds(0.15),

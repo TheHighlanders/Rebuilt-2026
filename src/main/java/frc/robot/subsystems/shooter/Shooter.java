@@ -100,7 +100,7 @@ public class Shooter extends SubsystemBase {
 
     double rotationalVelocity =
         linearVelocity / (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 2 * Math.PI);
-    return rotationalVelocity * 2; // to account for a rotating ball. 
+    return rotationalVelocity * 2; // to account for a rotating ball.
   }
 
   /*
@@ -283,7 +283,7 @@ public class Shooter extends SubsystemBase {
         "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
     SmartDashboard.putNumber(
         "Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
-    SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
+    SmartDashboard.putNumber("Shooter/Target RPS", controller.getSetpoint());
     SmartDashboard.putNumber("Shooter/Flywheel RPS", flywheel.getVelocity().getValueAsDouble());
     SmartDashboard.putString(
         "Shooter/Current Command",
