@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -242,13 +243,15 @@ public class RobotContainer {
     autos = new Autos(drive, deploy, intake, hopper, shooter, climber);
     //  autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoFactory.buildAutoChooser());
     autoChooser = new AutoChooser();
-    autoChooser.addRoutine("Subsystem Test", () -> autos.badLaptopTestAuto());
-    autoChooser.addRoutine("Auto Test", () -> autos.testAuto());
-    autoChooser.addRoutine("Simple Shoot", () -> autos.simpleShoot());
+    // autoChooser.addRoutine("Subsystem Test", () -> autos.badLaptopTestAuto());
+    autoChooser.addRoutine("Test Square", () -> autos.testAuto());
+    autoChooser.addRoutine("middle -> shoot", () -> autos.simpleShoot());
     autoChooser.addRoutine("middle -> outpost -> depot", () -> autos.middle());
     autoChooser.addRoutine("middle -> depot", () -> autos.middleDepot());
     autoChooser.addRoutine("left -> neutral", () -> autos.leftMid(true));
     autoChooser.addRoutine("left -> neutral (chill)", () -> autos.leftMid(false));
+    autoChooser.addRoutine("right -> neutral", () -> autos.rightMid(true));
+    autoChooser.addRoutine("right -> neutral (chill)", () -> autos.rightMid(false));
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
@@ -533,6 +536,10 @@ public class RobotContainer {
     controller.rightBumper().onFalse(shooter.stopCMD());
 
     controller.x().onFalse(hopper.stopCMD());
+  }
+
+  public void teleopInit() {
+    CommandScheduler.getInstance().schedule(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
   }
 
   /**

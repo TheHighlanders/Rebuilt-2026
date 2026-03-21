@@ -242,7 +242,7 @@ public class Shooter extends SubsystemBase {
           flywheel.setVoltage(voltage);
           SmartDashboard.putNumber("Shooter/Distance", distance.getAsDouble());
         },
-        this);
+        this).withName("Ground Align");
   }
 
   public Command flywheelHubCMD(DoubleSupplier distance) {
@@ -254,23 +254,24 @@ public class Shooter extends SubsystemBase {
           flywheel.setVoltage(voltage);
           SmartDashboard.putNumber("Shooter/Distance", distance.getAsDouble());
         },
-        this);
+        this).withName("Hub Align");
   }
 
   public Command rawFlywheelCMD(DoubleSupplier drive) {
     return Commands.run(
         () -> {
-          flywheel.setVoltage(drive.getAsDouble() * 4);
+          flywheel.setVoltage(drive.getAsDouble() * 12);
         },
-        this);
+        this).withName("Raw Flywheel");
   }
 
   public Command stopCMD() {
     return Commands.runOnce(
         () -> {
           flywheel.setControl(brake);
+          targetRPS = 0;
         },
-        this);
+        this).withName("Stop");
   }
 
   @Override
@@ -281,15 +282,8 @@ public class Shooter extends SubsystemBase {
         "Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
     SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
     SmartDashboard.putNumber("Shooter/Flywheel RPS", flywheel.getVelocity().getValueAsDouble());
-  }
-
-  @Override
-  public void simulationPeriodic() {
-    SmartDashboard.putNumber(
-        "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
-    SmartDashboard.putNumber(
-        "Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
-    SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
-    SmartDashboard.putNumber("Shooter/Flywheel RPS", flywheel.getVelocity().getValueAsDouble());
+    SmartDashboard.putString(
+        "Shooter/Current Command",
+        this.getCurrentCommand() == null ? "None" : this.getCurrentCommand().getName());
   }
 }

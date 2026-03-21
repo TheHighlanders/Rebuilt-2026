@@ -199,12 +199,17 @@ public class Autos {
     shoot.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
 
     shoot
+        .doneDelayed(3.9)
+        .onTrue(
+            Commands.sequence(
+                hopper.stopCMD(),
+                shooter.stopCMD()));
+
+    shoot
         .doneDelayed(4)
         .onTrue(
             Commands.sequence(
                 sendState("shooting -> depot"),
-                hopper.stopCMD(),
-                shooter.stopCMD(),
                 depot.resetOdometry(),
                 depot.cmd()));
 
@@ -313,8 +318,12 @@ public class Autos {
     midInitial.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
 
     midInitial
+        .doneDelayed(4.9)
+        .onTrue(hopper.stopCMD().andThen(shooter.stopCMD()));
+
+    midInitial
         .doneDelayed(5)
-        .onTrue(Commands.sequence(hopper.stopCMD(), shooter.stopCMD(), midSecondary.cmd()));
+        .onTrue(midSecondary.cmd());
 
     midSecondary.atTime("intake").onTrue(Commands.sequence(deploy.deployCMD(), intake.intakeCMD()));
 
@@ -339,10 +348,65 @@ public class Autos {
     return routine;
   }
 
-  public AutoRoutine rightMid(boolean aggressive) {//TODO
+  public AutoRoutine rightMid(boolean aggressive) { // TODO
     AutoRoutine routine = autoFactory.newRoutine("");
+
+    AutoTrajectory midInitial =
+        aggressive
+            ? routine.trajectory("rightToMidAggressive")
+            : routine.trajectory("rightToMidChill");
+    AutoTrajectory midSecondary = routine.trajectory("rightToMidAgain");
+
+    routine.active().onTrue(Commands.sequence(midInitial.resetOdometry(), midInitial.cmd()));
+
+    midInitial.atTime("intake").onTrue(Commands.sequence(deploy.deployCMD(), intake.intakeCMD()));
+
+    midInitial
+        .atTime("retract")
+        .onTrue(Commands.sequence(deploy.undeployCMD(), intake.stoptakeCMD()));
+
+    midInitial
+        .atTimeBeforeEnd(1)
+        .onTrue(
+            shooter.flywheelHubCMD(
+                () ->
+                    Math.min(
+                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
+                        drive
+                            .getPose()
+                            .getTranslation()
+                            .getDistance(FieldConstants.HUB_POSE_RED))));
+
+    midInitial.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
+
+    midInitial
+        .doneDelayed(4.9)
+        .onTrue(hopper.stopCMD().andThen(shooter.stopCMD()));
+
+    midInitial
+        .doneDelayed(5)
+        .onTrue(midSecondary.cmd());
+    
+    midSecondary.atTime("intake").onTrue(Commands.sequence(deploy.deployCMD(), intake.intakeCMD()));
+
+    midSecondary
+        .atTime("retract")
+        .onTrue(Commands.sequence(deploy.undeployCMD(), intake.stoptakeCMD()));
+
+    midSecondary
+        .atTimeBeforeEnd(1)
+        .onTrue(
+            shooter.flywheelHubCMD(
+                () ->
+                    Math.min(
+                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
+                        drive
+                            .getPose()
+                            .getTranslation()
+                            .getDistance(FieldConstants.HUB_POSE_RED))));
+
+    midSecondary.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));        
 
     return routine;
   }
-
 }
