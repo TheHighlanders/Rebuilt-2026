@@ -235,43 +235,47 @@ public class Shooter extends SubsystemBase {
 
   public Command flywheelGndCMD(DoubleSupplier distance) {
     return Commands.run(
-        () -> {
-          targetRPS = calculateRRGround(distance.getAsDouble());
-          double voltage =
-              controller.calculate(flywheel.getVelocity().getValueAsDouble(), targetRPS);
-          flywheel.setVoltage(voltage);
-          SmartDashboard.putNumber("Shooter/Distance", distance.getAsDouble());
-        },
-        this).withName("Ground Align");
+            () -> {
+              targetRPS = calculateRRGround(distance.getAsDouble());
+              double voltage =
+                  controller.calculate(flywheel.getVelocity().getValueAsDouble(), targetRPS);
+              flywheel.setVoltage(voltage);
+              SmartDashboard.putNumber("Shooter/Distance", distance.getAsDouble());
+            },
+            this)
+        .withName("Ground Align");
   }
 
   public Command flywheelHubCMD(DoubleSupplier distance) {
     return Commands.run(
-        () -> {
-          targetRPS = calculateRRHub(distance.getAsDouble());
-          double voltage =
-              controller.calculate(flywheel.getVelocity().getValueAsDouble(), targetRPS);
-          flywheel.setVoltage(voltage);
-          SmartDashboard.putNumber("Shooter/Distance", distance.getAsDouble());
-        },
-        this).withName("Hub Align");
+            () -> {
+              targetRPS = calculateRRHub(distance.getAsDouble());
+              double voltage =
+                  controller.calculate(flywheel.getVelocity().getValueAsDouble(), targetRPS);
+              flywheel.setVoltage(voltage);
+              SmartDashboard.putNumber("Shooter/Distance", distance.getAsDouble());
+            },
+            this)
+        .withName("Hub Align");
   }
 
   public Command rawFlywheelCMD(DoubleSupplier drive) {
     return Commands.run(
-        () -> {
-          flywheel.setVoltage(drive.getAsDouble() * 12);
-        },
-        this).withName("Raw Flywheel");
+            () -> {
+              flywheel.setVoltage(drive.getAsDouble() * 12);
+            },
+            this)
+        .withName("Raw Flywheel");
   }
 
   public Command stopCMD() {
     return Commands.runOnce(
-        () -> {
-          flywheel.setControl(brake);
-          targetRPS = 0;
-        },
-        this).withName("Stop");
+            () -> {
+              flywheel.setControl(brake);
+              targetRPS = 0;
+            },
+            this)
+        .withName("Stop");
   }
 
   @Override

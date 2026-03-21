@@ -27,6 +27,7 @@ public class Autos {
   Hopper hopper;
   Shooter shooter;
   Climber climber;
+  private static final double boost = 0.3;
 
   public Autos(
       Drive drive, Deploy deploy, Intake intake, Hopper hopper, Shooter shooter, Climber climber) {
@@ -190,28 +191,24 @@ public class Autos {
             shooter.flywheelHubCMD(
                 () ->
                     Math.min(
-                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
-                        drive
-                            .getPose()
-                            .getTranslation()
-                            .getDistance(FieldConstants.HUB_POSE_RED))));
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_BLUE),
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_RED))
+                        + boost));
 
     shoot.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
 
-    shoot
-        .doneDelayed(3.9)
-        .onTrue(
-            Commands.sequence(
-                hopper.stopCMD(),
-                shooter.stopCMD()));
+    shoot.doneDelayed(3.9).onTrue(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
 
     shoot
         .doneDelayed(4)
         .onTrue(
-            Commands.sequence(
-                sendState("shooting -> depot"),
-                depot.resetOdometry(),
-                depot.cmd()));
+            Commands.sequence(sendState("shooting -> depot"), depot.resetOdometry(), depot.cmd()));
 
     depot.atTime("intake").onTrue(Commands.parallel(deploy.deployCMD(), intake.intakeCMD()));
 
@@ -221,16 +218,20 @@ public class Autos {
             Commands.sequence(deploy.readyCMD(), Commands.waitSeconds(0.5), intake.stoptakeCMD()));
 
     depot
-        .done()
+        .atTimeBeforeEnd(1)
         .onTrue(
             shooter.flywheelHubCMD(
                 () ->
                     Math.min(
-                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
-                        drive
-                            .getPose()
-                            .getTranslation()
-                            .getDistance(FieldConstants.HUB_POSE_RED))));
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_BLUE),
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_RED))
+                        + boost));
 
     depot
         .done()
@@ -275,11 +276,15 @@ public class Autos {
             shooter.flywheelHubCMD(
                 () ->
                     Math.min(
-                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
-                        drive
-                            .getPose()
-                            .getTranslation()
-                            .getDistance(FieldConstants.HUB_POSE_RED))));
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_BLUE),
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_RED))
+                        + boost));
 
     collect.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
 
@@ -309,21 +314,21 @@ public class Autos {
             shooter.flywheelHubCMD(
                 () ->
                     Math.min(
-                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
-                        drive
-                            .getPose()
-                            .getTranslation()
-                            .getDistance(FieldConstants.HUB_POSE_RED))));
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_BLUE),
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_RED))
+                        + boost));
 
     midInitial.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
 
-    midInitial
-        .doneDelayed(4.9)
-        .onTrue(hopper.stopCMD().andThen(shooter.stopCMD()));
+    midInitial.doneDelayed(4.9).onTrue(hopper.stopCMD().andThen(shooter.stopCMD()));
 
-    midInitial
-        .doneDelayed(5)
-        .onTrue(midSecondary.cmd());
+    midInitial.doneDelayed(5).onTrue(midSecondary.cmd());
 
     midSecondary.atTime("intake").onTrue(Commands.sequence(deploy.deployCMD(), intake.intakeCMD()));
 
@@ -337,11 +342,15 @@ public class Autos {
             shooter.flywheelHubCMD(
                 () ->
                     Math.min(
-                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
-                        drive
-                            .getPose()
-                            .getTranslation()
-                            .getDistance(FieldConstants.HUB_POSE_RED))));
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_BLUE),
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_RED))
+                        + boost));
 
     midSecondary.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
 
@@ -371,22 +380,22 @@ public class Autos {
             shooter.flywheelHubCMD(
                 () ->
                     Math.min(
-                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
-                        drive
-                            .getPose()
-                            .getTranslation()
-                            .getDistance(FieldConstants.HUB_POSE_RED))));
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_BLUE),
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_RED))
+                        + boost));
 
     midInitial.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
 
-    midInitial
-        .doneDelayed(4.9)
-        .onTrue(hopper.stopCMD().andThen(shooter.stopCMD()));
+    midInitial.doneDelayed(4.9).onTrue(hopper.stopCMD().andThen(shooter.stopCMD()));
 
-    midInitial
-        .doneDelayed(5)
-        .onTrue(midSecondary.cmd());
-    
+    midInitial.doneDelayed(5).onTrue(midSecondary.cmd());
+
     midSecondary.atTime("intake").onTrue(Commands.sequence(deploy.deployCMD(), intake.intakeCMD()));
 
     midSecondary
@@ -399,13 +408,17 @@ public class Autos {
             shooter.flywheelHubCMD(
                 () ->
                     Math.min(
-                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
-                        drive
-                            .getPose()
-                            .getTranslation()
-                            .getDistance(FieldConstants.HUB_POSE_RED))));
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_BLUE),
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_RED))
+                        + boost));
 
-    midSecondary.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));        
+    midSecondary.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
 
     return routine;
   }
