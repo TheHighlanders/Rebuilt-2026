@@ -563,7 +563,7 @@ public class FuelSim {
             * Math.sin(turretYaw.plus(launchPose.getRotation().getMeasureZ()).in(Radians));
 
     xVel += fieldSpeeds.vxMetersPerSecond;
-    yVel += fieldSpeeds.vyMetersPerSecond; // TODO
+    yVel += fieldSpeeds.vyMetersPerSecond;
 
     spawnFuel(launchPose.getTranslation(), new Translation3d(xVel, yVel, verticalVel));
   }
