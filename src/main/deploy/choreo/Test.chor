@@ -4,7 +4,64 @@
  "type":"Swerve",
  "variables":{
   "expressions":{},
-  "poses":{}
+  "poses":{
+   "leftshotclose":{
+    "x":{
+     "exp":"2.8 m",
+     "val":2.8
+    },
+    "y":{
+     "exp":"5 m",
+     "val":5.0
+    },
+    "heading":{
+     "exp":"60 deg",
+     "val":1.0471975511965976
+    }
+   },
+   "leftshotfar":{
+    "x":{
+     "exp":"2.8 m",
+     "val":2.8
+    },
+    "y":{
+     "exp":"6.2 m",
+     "val":6.2
+    },
+    "heading":{
+     "exp":"40 deg",
+     "val":0.6981317007977318
+    }
+   },
+   "rightshotclose":{
+    "x":{
+     "exp":"2.8 m",
+     "val":2.8
+    },
+    "y":{
+     "exp":"3 m",
+     "val":3.0
+    },
+    "heading":{
+     "exp":"115 deg",
+     "val":2.007128639793479
+    }
+   },
+   "rightshotfar":{
+    "x":{
+     "exp":"2.8 m",
+     "val":2.8
+    },
+    "y":{
+     "exp":"1.9 m",
+     "val":1.9
+    },
+    "heading":{
+     "exp":"140 deg",
+     "val":2.443460952792061
+    }
+   }
+  }
  },
  "config":{
   "frontLeft":{
