@@ -339,10 +339,9 @@ public class Autos {
     return routine;
   }
 
-  public AutoRoutine rightMid(boolean aggressive) {//TODO
+  public AutoRoutine rightMid(boolean aggressive) { // TODO
     AutoRoutine routine = autoFactory.newRoutine("");
 
     return routine;
   }
-
 }
