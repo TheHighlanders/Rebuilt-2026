@@ -33,8 +33,8 @@ public class Deploy extends SubsystemBase {
   /** Creates a new Deploy. */
   TalonFX deployMotor = new TalonFX(IntakeConstants.DEPLOYID);
 
-  SparkClosedLoopController closedLoopController = deployMotor.getClosedLoopController();
-  ProfiledPIDController controller;
+  PIDController controller = new PIDController(IntakeConstants.kP,IntakeConstants.kI,IntakeConstants.kD);
+  ProfiledPIDController controller_;
   boolean raised = true;
 
 CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
@@ -55,7 +55,7 @@ CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
     config.Slot0.kG = IntakeConstants.kG;
     config.Slot0.kV = IntakeConstants.kV;
     // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
-        SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployMotor.getPosition());
+        //SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployMotor.getPosition());
 
     deployMotor.setPosition(0);
   }
@@ -64,7 +64,7 @@ CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
     // Deploys fuel
     return Commands.runOnce(
             () -> {
-              closedLoopController.setSetpoint(
+              controller.setSetpoint(
                   IntakeConstants.DEPLOY_POSITION.in(Radians), ControlType.kPosition);
             })
         .withName("Deployed");
@@ -80,7 +80,7 @@ CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
   public Command readyCMD() {
     return Commands.runOnce(
             () -> {
-              closedLoopController.setSetpoint(
+              controller.setSetpoint(
                   IntakeConstants.READY_POSITION.in(Radians), ControlType.kPosition);
             })
         .withName("Ready");
@@ -96,7 +96,7 @@ CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
   public Command undeployCMD() {
     return Commands.run(
             () -> {
-              closedLoopController.setSetpoint(
+              controller.setSetpoint(
                   IntakeConstants.UP_POSITION.in(Radians), ControlType.kPosition);
             })
         .withName("Retracted");
@@ -110,9 +110,9 @@ CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder", deployMotor.getPosition());
-    SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder Velocity", deployMotor.getVelocity());
-    SmartDashboard.putNumber("INTAKE/Deploy/Deploy Current", deployMotor.getOutputCurrent());
+    //SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder", deployMotor.getPosition());
+    //SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder Velocity", deployMotor.getVelocity());
+   // SmartDashboard.putNumber("INTAKE/Deploy/Deploy Current", deployMotor.getStatorCurrent());
 
     SmartDashboard.putString(
         "INTAKE/Deploy State",

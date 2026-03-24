@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.intake;
 
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -19,8 +20,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
 
 public class Intake extends SubsystemBase {
-  SparkMax intakeMotor = new SparkMax(IntakeConstants.SPINTAKEID, MotorType.kBrushless);
-  SparkClosedLoopController controller = intakeMotor.getClosedLoopController();
+  TalonFX intakeMotor = new TalonFX(IntakeConstants.SPINTAKEID);
+  //SparkClosedLoopController controller = intakeMotor.getClosedLoopController();
 
   double inSpeed = IntakeConstants.INTAKE_SPEED;
   double outSpeed = IntakeConstants.SPITAKE_SPEED;
