@@ -4,12 +4,11 @@
 
 package frc.robot.subsystems.intake;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -21,15 +20,14 @@ import frc.robot.Constants.IntakeConstants;
 
 public class Intake extends SubsystemBase {
   TalonFX intakeMotor = new TalonFX(IntakeConstants.SPINTAKEID);
-  //SparkClosedLoopController controller = intakeMotor.getClosedLoopController();
+  // SparkClosedLoopController controller = intakeMotor.getClosedLoopController();
 
   double inSpeed = IntakeConstants.INTAKE_SPEED;
   double outSpeed = IntakeConstants.SPITAKE_SPEED;
 
-  public Intake() {
+TalonFXConfiguration config = new TalonFXConfiguration();
 
-    intakeMotor.configure(
-        getConfig(IdleMode.kCoast), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+  public Intake() {
 
     SmartDashboard.putNumber("INTAKE/in speed", inSpeed);
     SmartDashboard.putNumber("INTAKE/out speed", outSpeed);
@@ -86,10 +84,7 @@ public class Intake extends SubsystemBase {
   public Command killCMD() {
     return runOnce(
         () -> {
-          intakeMotor.configure(
-              getConfig(IdleMode.kBrake),
-              ResetMode.kResetSafeParameters,
-              PersistMode.kNoPersistParameters);
+          intakeMotor.setNeutralMode(NeutralModeValue.Brake);
         });
   }
 
@@ -99,8 +94,6 @@ public class Intake extends SubsystemBase {
     // disabled bc not sure what htis is doing //inSpeed = SmartDashboard.getNumber("INTAKE/in
     // speed", IntakeConstants.INTAKE_SPEED);
     outSpeed = SmartDashboard.getNumber("INTAKE/out speed", IntakeConstants.SPITAKE_SPEED);
-    SmartDashboard.putNumber("INTAKE/Encoder Velocity", intakeMotor.getEncoder().getVelocity());
-    SmartDashboard.putNumber("INTAKE/Encoder Pose", intakeMotor.getEncoder().getPosition());
-    SmartDashboard.putNumber("INTAKE/Current", intakeMotor.getOutputCurrent());
+    //SmartDashboard.putNumber("INTAKE/Current", intakeMotor.getStatorCurrent());
   }
 }

@@ -429,7 +429,6 @@ public class RobotContainer {
     // clear hopper
     operator.x().onTrue(hopper.backdriveCMD());
     operator.x().onFalse(hopper.stopCMD());
-    
 
     controller.povUp().onTrue(DriveCommands.autoAlign(drive, DriveConstants.POSE_RESET));
     // drive

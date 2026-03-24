@@ -10,17 +10,9 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -32,21 +24,20 @@ import frc.robot.Constants.IntakeConstants;
 public class Deploy extends SubsystemBase {
   /** Creates a new Deploy. */
   TalonFX deployMotor = new TalonFX(IntakeConstants.DEPLOYID);
-
-  PIDController controller = new PIDController(IntakeConstants.kP,IntakeConstants.kI,IntakeConstants.kD);
-  ProfiledPIDController controller_;
-  boolean raised = true;
-
-CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
-
   TalonFXConfiguration config = new TalonFXConfiguration();
+  CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
+
+  PIDController controller =
+      new PIDController(IntakeConstants.kP, IntakeConstants.kI, IntakeConstants.kD);
+      
   ArmFeedforward feedforward =
       new ArmFeedforward(IntakeConstants.kS, IntakeConstants.kG, IntakeConstants.kV);
+  
+  boolean raised = true;
 
   public Deploy() {
     smartCurrentLimit.StatorCurrentLimit = 50;
     deployMotor.setNeutralMode(NeutralModeValue.Brake);
-
 
     config.Slot0.kP = IntakeConstants.kP;
     config.Slot0.kI = IntakeConstants.kI;
@@ -55,7 +46,7 @@ CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
     config.Slot0.kG = IntakeConstants.kG;
     config.Slot0.kV = IntakeConstants.kV;
     // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
-        //SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployMotor.getPosition());
+    // SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployMotor.getPosition());
 
     deployMotor.setPosition(0);
   }
@@ -65,7 +56,7 @@ CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
     return Commands.runOnce(
             () -> {
               controller.setSetpoint(
-                  IntakeConstants.DEPLOY_POSITION.in(Radians), ControlType.kPosition);
+                  IntakeConstants.DEPLOY_POSITION.in(Radians));
             })
         .withName("Deployed");
     // return Commands.deadline(
@@ -81,7 +72,7 @@ CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
     return Commands.runOnce(
             () -> {
               controller.setSetpoint(
-                  IntakeConstants.READY_POSITION.in(Radians), ControlType.kPosition);
+                  IntakeConstants.READY_POSITION.in(Radians));
             })
         .withName("Ready");
     // return Commands.deadline(
@@ -97,7 +88,7 @@ CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
     return Commands.run(
             () -> {
               controller.setSetpoint(
-                  IntakeConstants.UP_POSITION.in(Radians), ControlType.kPosition);
+                  IntakeConstants.UP_POSITION.in(Radians));
             })
         .withName("Retracted");
     // return Commands.deadline(
@@ -110,9 +101,9 @@ CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    //SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder", deployMotor.getPosition());
-    //SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder Velocity", deployMotor.getVelocity());
-   // SmartDashboard.putNumber("INTAKE/Deploy/Deploy Current", deployMotor.getStatorCurrent());
+    // SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder", deployMotor.getPosition());
+    // SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder Velocity", deployMotor.getVelocity());
+    // SmartDashboard.putNumber("INTAKE/Deploy/Deploy Current", deployMotor.getStatorCurrent());
 
     SmartDashboard.putString(
         "INTAKE/Deploy State",
