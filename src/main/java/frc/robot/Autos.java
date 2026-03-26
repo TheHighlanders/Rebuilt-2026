@@ -125,12 +125,15 @@ public class Autos {
   }
 
   public AutoRoutine simpleShoot() {
-    AutoRoutine routine = autoFactory.newRoutine("");
+    AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
+
+    AutoTrajectory collect = routine.trajectory("midToDepotShoot");
 
     routine
         .active()
         .onTrue(
             Commands.sequence(
+                collect.resetOdometry(),
                 Commands.deadline(
                     Commands.waitSeconds(0),
                     DriveCommands.joystickDrive(drive, () -> 0, () -> 0, () -> 0, () -> true)),
