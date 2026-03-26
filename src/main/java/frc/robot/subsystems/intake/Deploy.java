@@ -8,18 +8,20 @@ import static edu.wpi.first.units.Units.Radians;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.PositionDutyCycle;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.revrobotics.spark.SparkBase.ControlType;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
+import frc.robot.Constants.ShooterConstants;
 
 public class Deploy extends SubsystemBase {
   /** Creates a new Deploy. */
@@ -27,6 +29,7 @@ public class Deploy extends SubsystemBase {
   TalonFXConfiguration config = new TalonFXConfiguration();
   CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
 
+  PositionVoltage controller2 = new PositionVoltage(0).withSlot(0);
   PIDController controller =
       new PIDController(IntakeConstants.kP, IntakeConstants.kI, IntakeConstants.kD);
       
@@ -45,8 +48,11 @@ public class Deploy extends SubsystemBase {
     config.Slot0.kS = IntakeConstants.kS;
     config.Slot0.kG = IntakeConstants.kG;
     config.Slot0.kV = IntakeConstants.kV;
-    // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
     // SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployMotor.getPosition());
+    
+    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+    config.Feedback.SensorToMechanismRatio = IntakeConstants.DEPLOY_RATIO;
 
     deployMotor.setPosition(0);
   }
@@ -59,13 +65,6 @@ public class Deploy extends SubsystemBase {
                   IntakeConstants.DEPLOY_POSITION.in(Radians));
             })
         .withName("Deployed");
-    // return Commands.deadline(
-    //         Commands.waitUntil(
-    //             () ->
-    //                 deployEncoder.getPosition()
-    //                     >= IntakeConstants.DEPLOY_POSITION - IntakeConstants.DEPLOY_TOLERANCE),
-    //         runCMD(IntakeConstants.DEPLOY_SPEED))
-    //     .andThen(runCMD(0));
   }
 
   public Command readyCMD() {
@@ -75,13 +74,6 @@ public class Deploy extends SubsystemBase {
                   IntakeConstants.READY_POSITION.in(Radians));
             })
         .withName("Ready");
-    // return Commands.deadline(
-    //         Commands.waitUntil(
-    //             () ->
-    //                 deployEncoder.getPosition()
-    //                     >= IntakeConstants.READY_POSITION - IntakeConstants.DEPLOY_TOLERANCE),
-    //         runCMD(IntakeConstants.DEPLOY_SPEED))
-    //     .andThen(runCMD(0));
   }
 
   public Command undeployCMD() {
@@ -91,23 +83,15 @@ public class Deploy extends SubsystemBase {
                   IntakeConstants.UP_POSITION.in(Radians));
             })
         .withName("Retracted");
-    // return Commands.deadline(
-    //         Commands.waitUntil(
-    //             () -> deployEncoder.getPosition() <= IntakeConstants.DEPLOY_TOLERANCE),
-    //         runCMD(0 - IntakeConstants.DEPLOY_SPEED))
-    //     .andThen(runCMD(0));
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    // SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder", deployMotor.getPosition());
-    // SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder Velocity", deployMotor.getVelocity());
-    // SmartDashboard.putNumber("INTAKE/Deploy/Deploy Current", deployMotor.getStatorCurrent());
-
-    SmartDashboard.putString(
-        "INTAKE/Deploy State",
-        getCurrentCommand() == null ? "NONE" : getCurrentCommand().getName());
+    SmartDashboard.putNumber("Intake/Deploy/Motor Current", deployMotor.getStatorCurrent().getValueAsDouble());
+    SmartDashboard.putNumber("Intake/Deploy/Motor Voltage", deployMotor.getMotorVoltage().getValueAsDouble());
+    SmartDashboard.putNumber("Intake/Deploy/Motor Temp", deployMotor.getDeviceTemp().getValueAsDouble());
+    SmartDashboard.putNumber("Intake/Deploy/Motor Position", deployMotor.getPosition().getValueAsDouble());
   }
 
   public Command swapCMD() {
