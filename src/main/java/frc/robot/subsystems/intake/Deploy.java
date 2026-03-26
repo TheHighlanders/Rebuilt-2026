@@ -49,7 +49,7 @@ public class Deploy extends SubsystemBase {
         .d(IntakeConstants.kD)
         .feedForward
         .kS(IntakeConstants.kS)
-        .kG(IntakeConstants.kG)
+        .kCos(IntakeConstants.kG)
         .kV(IntakeConstants.kV);
     // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
     deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
