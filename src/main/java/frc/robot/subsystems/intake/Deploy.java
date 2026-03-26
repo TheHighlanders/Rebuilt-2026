@@ -6,10 +6,6 @@ package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Radians;
 
-import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -31,33 +27,35 @@ import frc.robot.Constants.IntakeConstants;
 
 public class Deploy extends SubsystemBase {
   /** Creates a new Deploy. */
-  TalonFX deployMotor = new TalonFX(IntakeConstants.DEPLOYID);
+  SparkMax deployMotor = new SparkMax(IntakeConstants.DEPLOYID, MotorType.kBrushless);
 
   SparkClosedLoopController closedLoopController = deployMotor.getClosedLoopController();
+  RelativeEncoder deployEncoder = deployMotor.getEncoder();
   ProfiledPIDController controller;
   boolean raised = true;
 
-CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
-
-  TalonFXConfiguration config = new TalonFXConfiguration();
+  SparkMaxConfig config = new SparkMaxConfig();
   ArmFeedforward feedforward =
       new ArmFeedforward(IntakeConstants.kS, IntakeConstants.kG, IntakeConstants.kV);
 
   public Deploy() {
-    smartCurrentLimit.StatorCurrentLimit = 50;
-    deployMotor.setNeutralMode(NeutralModeValue.Brake);
-
-
-    config.Slot0.kP = IntakeConstants.kP;
-    config.Slot0.kI = IntakeConstants.kI;
-    config.Slot0.kD = IntakeConstants.kD;
-    config.Slot0.kS = IntakeConstants.kS;
-    config.Slot0.kG = IntakeConstants.kG;
-    config.Slot0.kV = IntakeConstants.kV;
+    config.smartCurrentLimit(50).idleMode(IdleMode.kBrake);
+    config.encoder.positionConversionFactor(IntakeConstants.DEPLOY_RATIO);
+    config
+        .closedLoop
+        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+        .p(IntakeConstants.kP)
+        .i(IntakeConstants.kI)
+        .d(IntakeConstants.kD)
+        .feedForward
+        .kS(IntakeConstants.kS)
+        .kG(IntakeConstants.kG)
+        .kV(IntakeConstants.kV);
     // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
-        SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployMotor.getPosition());
+    deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployEncoder.getPosition());
 
-    deployMotor.setPosition(0);
+    deployEncoder.setPosition(0);
   }
 
   public Command deployCMD() {
@@ -110,8 +108,8 @@ CurrentLimitsConfigs smartCurrentLimit = new CurrentLimitsConfigs();
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder", deployMotor.getPosition());
-    SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder Velocity", deployMotor.getVelocity());
+    SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder", deployEncoder.getPosition());
+    SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder Velocity", deployEncoder.getVelocity());
     SmartDashboard.putNumber("INTAKE/Deploy/Deploy Current", deployMotor.getOutputCurrent());
 
     SmartDashboard.putString(
