@@ -149,6 +149,7 @@ public final class Constants {
     public static final double kI = 0;
     public static final double kD = 7.84;
     public static final double DEPLOY_RATIO = 25;
+    public static final double INTAKE_RATIO = 1;
 
     public static double kS = 1.68;
     public static double kG = 3.05;

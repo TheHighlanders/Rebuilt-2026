@@ -4,14 +4,13 @@
 
 package frc.robot.subsystems.intake;
 
-import com.revrobotics.PersistMode;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.wpilibj.DriverStation;
+import static frc.robot.util.PhoenixUtil.*;
+
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.StaticBrake;
+import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -19,87 +18,80 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
 
 public class Intake extends SubsystemBase {
-  SparkMax intakeMotor = new SparkMax(IntakeConstants.SPINTAKEID, MotorType.kBrushless);
-  SparkClosedLoopController controller = intakeMotor.getClosedLoopController();
+  TalonFX intakeMotor = new TalonFX(IntakeConstants.SPINTAKEID);
+  TalonFXConfiguration config = new TalonFXConfiguration();
+  CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
+
+  VelocityVoltage controller = new VelocityVoltage(0).withSlot(0);
 
   double inSpeed = IntakeConstants.INTAKE_SPEED;
   double outSpeed = IntakeConstants.SPITAKE_SPEED;
 
   public Intake() {
+    config.Feedback.SensorToMechanismRatio = IntakeConstants.INTAKE_RATIO;
 
-    intakeMotor.configure(
-        getConfig(IdleMode.kCoast), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    config.Slot0.kP = 1;
+    config.Slot0.kI = 0;
+    config.Slot0.kD = 0;
 
-    SmartDashboard.putNumber("INTAKE/in speed", inSpeed);
-    SmartDashboard.putNumber("INTAKE/out speed", outSpeed);
-    SmartDashboard.putString("INTAKE/State", "NONE");
-  }
+    currentLimits.StatorCurrentLimit = 80;
+    currentLimits.StatorCurrentLimitEnable = true;
 
-  private SparkMaxConfig getConfig(IdleMode idleMode) {
-    SparkMaxConfig config = new SparkMaxConfig();
-    config.smartCurrentLimit(50).idleMode(idleMode);
+    tryUntilOk(5, () -> intakeMotor.getConfigurator().apply(config));
+    tryUntilOk(5, () -> intakeMotor.getConfigurator().apply(currentLimits));
 
-    return config;
+    SmartDashboard.putNumber("Intake/in speed", inSpeed);
+    SmartDashboard.putNumber("Intake/out speed", outSpeed);
+    SmartDashboard.putString("Intake/State", "NONE");
   }
   // Intake commands to take in, spit out, and not move
   public Command intakeCMD() {
     // Takes in
-    return Commands.run(
+    return Commands.runOnce(
         () -> {
-          DriverStation.reportWarning("intakeCMD", false);
-
-          // intakeMotor.configure(
-          //     getConfig(IdleMode.kCoast),
-          //     ResetMode.kResetSafeParameters,
-          //     PersistMode.kNoPersistParameters);
-          SmartDashboard.putString("INTAKE/State", "INTAKING");
-          intakeMotor.set(inSpeed);
+          SmartDashboard.putString("Intake/State", "INTAKING");
+          intakeMotor.setControl(controller.withVelocity(inSpeed));
         },
         this);
   }
   // Spits out
   public Command spitakeCMD() {
-    return Commands.run(
+    return Commands.runOnce(
         () -> {
-          DriverStation.reportWarning("spitakeCMD", false);
-
-          SmartDashboard.putString("INTAKE/State", "OUTTAKING");
-          intakeMotor.set(outSpeed);
+          SmartDashboard.putString("Intake/State", "SPITTING");
+          intakeMotor.setControl(controller.withVelocity(outSpeed));
         },
         this);
   }
 
   public Command stoptakeCMD() {
     // Stops motor
-
-    return Commands.runOnce(
+  return Commands.runOnce(
         () -> {
-          DriverStation.reportWarning("stoptakeCMD", false);
-
-          SmartDashboard.putString("INTAKE/State", "STOPPED");
-          intakeMotor.set(0);
+          SmartDashboard.putString("Intake/State", "NONE");
+          intakeMotor.setControl(controller.withVelocity(0));
         },
         this);
   }
 
   public Command killCMD() {
-    return runOnce(
+    return Commands.runOnce(
         () -> {
-          intakeMotor.configure(
-              getConfig(IdleMode.kBrake),
-              ResetMode.kResetSafeParameters,
-              PersistMode.kNoPersistParameters);
-        });
+          SmartDashboard.putString("Intake/State", "BRAKED");
+          intakeMotor.setControl(new StaticBrake());
+        },
+        this);
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    // disabled bc not sure what htis is doing //inSpeed = SmartDashboard.getNumber("INTAKE/in
-    // speed", IntakeConstants.INTAKE_SPEED);
-    outSpeed = SmartDashboard.getNumber("INTAKE/out speed", IntakeConstants.SPITAKE_SPEED);
-    SmartDashboard.putNumber("INTAKE/Encoder Velocity", intakeMotor.getEncoder().getVelocity());
-    SmartDashboard.putNumber("INTAKE/Encoder Pose", intakeMotor.getEncoder().getPosition());
-    SmartDashboard.putNumber("INTAKE/Current", intakeMotor.getOutputCurrent());
+    inSpeed = SmartDashboard.getNumber("Intake/in speed", IntakeConstants.INTAKE_SPEED);
+    outSpeed = SmartDashboard.getNumber("Intake/out speed", IntakeConstants.SPITAKE_SPEED);
+    SmartDashboard.putNumber("Intake/Velocity", intakeMotor.getVelocity().getValueAsDouble());
+    SmartDashboard.putNumber("Intake/Current", intakeMotor.getStatorCurrent().getValueAsDouble());
+    SmartDashboard.putNumber("Intake/Voltage", intakeMotor.getMotorVoltage().getValueAsDouble());
+    SmartDashboard.putNumber("Intake/Temp", intakeMotor.getDeviceTemp().getValueAsDouble());
+
   }
 }
