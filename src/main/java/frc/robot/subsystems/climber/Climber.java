@@ -64,10 +64,13 @@ public class Climber extends SubsystemBase {
     return Commands.run(() -> climbMotor.set(speed.getAsDouble()));
   }
 
+  
   public Command zeroCMD() {
     return Commands.sequence(
-        Commands.deadline(Commands.waitUntil(() -> climbEncoder.getVelocity() < 0.1), runCMD(0.5)),
-        Commands.runOnce(() -> climbEncoder.setPosition(-1)));
+      Commands.deadline(
+        Commands.waitUntil(
+           () -> climbEncoder.getVelocity() < 0.1 ), runCMD(0.5)),
+            Commands.runOnce( () -> climbEncoder.setPosition(-1)));
   }
 
   @Override
