@@ -144,7 +144,7 @@ public class Autos {
                         Commands.sequence(Commands.waitSeconds(1), hopper.shootCMD()))),
                 Commands.deadline(
                     Commands.waitSeconds(2),
-                    Commands.parallel(climber.pullCMD(), hopper.stopCMD(), shooter.stopCMD()))));
+                    Commands.parallel(hopper.stopCMD(), shooter.stopCMD()))));
 
     return routine;
   }

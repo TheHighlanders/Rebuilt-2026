@@ -66,7 +66,7 @@ public class Intake extends SubsystemBase {
 
   public Command stoptakeCMD() {
     // Stops motor
-  return Commands.runOnce(
+    return Commands.runOnce(
         () -> {
           SmartDashboard.putString("Intake/State", "NONE");
           intakeMotor.setControl(controller.withVelocity(0));
@@ -92,6 +92,5 @@ public class Intake extends SubsystemBase {
     SmartDashboard.putNumber("Intake/Current", intakeMotor.getStatorCurrent().getValueAsDouble());
     SmartDashboard.putNumber("Intake/Voltage", intakeMotor.getMotorVoltage().getValueAsDouble());
     SmartDashboard.putNumber("Intake/Temp", intakeMotor.getDeviceTemp().getValueAsDouble());
-
   }
 }

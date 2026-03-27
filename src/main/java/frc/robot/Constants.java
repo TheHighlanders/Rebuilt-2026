@@ -134,11 +134,11 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-    public static final int SPINTAKEID = 42;
-    public static final int DEPLOYID = 41;
+    public static final int SPINTAKEID = 41; // kraken
+    public static final int DEPLOYID = 42;
 
-    public static final double INTAKE_SPEED = 0.5;
-    public static final double SPITAKE_SPEED = -0.5;
+    public static final double INTAKE_SPEED = -40;
+    public static final double SPITAKE_SPEED = 20;
     public static final double DEPLOY_SPEED = 1;
     public static final Angle DEPLOY_POSITION = Degrees.of(70);
     public static final Angle READY_POSITION = Degrees.of(40);

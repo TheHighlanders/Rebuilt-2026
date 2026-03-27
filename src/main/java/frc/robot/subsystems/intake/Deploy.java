@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
+import java.util.function.DoubleSupplier;
 
 public class Deploy extends SubsystemBase {
   /** Creates a new Deploy. */
@@ -53,7 +54,7 @@ public class Deploy extends SubsystemBase {
         .kV(IntakeConstants.kV);
     // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
     deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    SmartDashboard.putNumber("INTAKE/Deploy Encoder", deployEncoder.getPosition());
+    SmartDashboard.putNumber("Intake/Deploy/Deploy Encoder", deployEncoder.getPosition());
 
     deployEncoder.setPosition(0);
   }
@@ -105,15 +106,19 @@ public class Deploy extends SubsystemBase {
     //     .andThen(runCMD(0));
   }
 
+  public Command manualCMD(DoubleSupplier speed) {
+    return Commands.run(() -> deployMotor.set(speed.getAsDouble()));
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder", deployEncoder.getPosition());
-    SmartDashboard.putNumber("INTAKE/Deploy/Deploy Encoder Velocity", deployEncoder.getVelocity());
-    SmartDashboard.putNumber("INTAKE/Deploy/Deploy Current", deployMotor.getOutputCurrent());
+    SmartDashboard.putNumber("Intake/Deploy/Deploy Encoder", deployEncoder.getPosition());
+    SmartDashboard.putNumber("Intake/Deploy/Deploy Encoder Velocity", deployEncoder.getVelocity());
+    SmartDashboard.putNumber("Intake/Deploy/Deploy Current", deployMotor.getOutputCurrent());
 
     SmartDashboard.putString(
-        "INTAKE/Deploy State",
+        "Intake/Deploy State",
         getCurrentCommand() == null ? "NONE" : getCurrentCommand().getName());
   }
 

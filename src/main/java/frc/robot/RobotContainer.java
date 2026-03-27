@@ -403,12 +403,21 @@ public class RobotContainer {
         .leftBumper()
         .onFalse(Commands.parallel(intake.stoptakeCMD())); // ,deploy.readyCMD()));
     // outtake
-    operator.a().onTrue(Commands.runOnce(() -> intake.spitakeCMD(), intake));
-    operator.a().onFalse(Commands.runOnce(() -> intake.stoptakeCMD(), intake));
+    operator.a().onTrue(intake.spitakeCMD());
+    operator
+        .a()
+        .onFalse(
+            Commands.either(
+                intake.intakeCMD(), intake.stoptakeCMD(), controller.leftBumper()::getAsBoolean));
     // retract intake
     operator.b().onTrue(deploy.swapCMD());
 
-    operator.rightStick().onTrue(climber.manualCMD(operator::getLeftY));
+    // operator
+    //     .rightStick()
+    //     .onTrue(
+    //         deploy
+    //             .manualCMD(operator::getRightY)
+    //             .until(() -> !operator.rightStick().getAsBoolean()));
 
     /* HOPPER COMMANDS */
 
@@ -429,7 +438,6 @@ public class RobotContainer {
     // clear hopper
     operator.x().onTrue(hopper.backdriveCMD());
     operator.x().onFalse(hopper.stopCMD());
-    
 
     controller.povUp().onTrue(DriveCommands.autoAlign(drive, DriveConstants.POSE_RESET));
     // drive
@@ -499,7 +507,7 @@ public class RobotContainer {
     // backup---raise and lower climber with trigger
     operator.leftTrigger(0.95).onTrue(climber.raiseCMD());
     operator.leftTrigger(0.1).onFalse(climber.pullCMD());
-    operator.rightStick().onTrue(climber.manualCMD(() -> operator.getRightY()));
+    operator.rightStick().onTrue(climber.manualCMD(() -> operator.getRightY())); // TODO
   }
 
   @SuppressWarnings("unused")
