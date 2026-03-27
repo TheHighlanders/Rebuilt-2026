@@ -197,7 +197,7 @@ public class DriveCommands {
           new Pose2d(
               FieldConstants.CLIMB_OUTPOST_CORNER
                   .minus(DriveConstants.TO_CORNER_BUMPERS)
-                  .plus(new Translation2d(0.1, 0)),
+                  .plus(new Translation2d(0.1, -0.05)),
               Rotation2d.kCW_90deg);
     } else {
       alignSeq[0] =
@@ -210,7 +210,7 @@ public class DriveCommands {
           new Pose2d(
               FieldConstants.CLIMB_DEPOT_CORNER
                   .plus(DriveConstants.TO_CORNER_BUMPERS)
-                  .plus(new Translation2d(-0.1, 0)),
+                  .plus(new Translation2d(-0.1, 0.05)),
               Rotation2d.kCCW_90deg);
     }
 
@@ -610,7 +610,7 @@ public class DriveCommands {
                 Commands.deadline(
                     Commands.sequence(Commands.waitSeconds(1.8), climber.pullCMD()),
                     joystickDriveAtAngle(
-                        drive, () -> 0, () -> 0.3, () -> drive.getRotation(), () -> true)))
+                        drive, () -> -0.1 , () -> 0.3, () -> drive.getRotation(), () -> true)))
             .beforeStarting(
                 Commands.runOnce(
                     () -> {
