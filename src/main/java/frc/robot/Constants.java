@@ -115,7 +115,7 @@ public final class Constants {
 
   public static class ClimberConstants {
     public static final int CLIMBERID = 51;
-    public static final double UP_POSITION = -31;
+    public static final double UP_POSITION = -33;
     public static final double DOWN_POSITION = 0;
     public static final double POS_TOLERANCE = 0.1;
 
@@ -140,9 +140,9 @@ public final class Constants {
     public static final double INTAKE_SPEED = -60;
     public static final double SPITAKE_SPEED = 30;
     public static final double DEPLOY_SPEED = 1;
-    public static final double DEPLOY_POSITION = -340;
+    public static final double DEPLOY_POSITION = -335;
     public static final double READY_POSITION = -100;
-    public static final double UP_POSITION = 0;
+    public static final double UP_POSITION = 15;
     public static final double DEPLOY_TOLERANCE = 0.01;
 
     public static final double kP = 0.4; // 1.33;
