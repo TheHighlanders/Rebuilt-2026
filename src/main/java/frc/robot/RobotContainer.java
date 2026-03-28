@@ -440,8 +440,21 @@ public class RobotContainer {
     controller.a().onFalse(hopper.stopCMD());
 
     // clear hopper
-    operator.x().onTrue(hopper.backdriveCMD());
-    operator.x().onFalse(hopper.stopCMD());
+    operator
+        .x()
+        .onTrue(
+            Commands.either(
+                Commands.repeatingSequence(
+                    hopper.clearCMD(),
+                    Commands.waitSeconds(0.7),
+                    hopper.shootCMD(),
+                    Commands.waitSeconds(1)),
+                hopper.backdriveCMD(),
+                controller.a()::getAsBoolean));
+    operator
+        .x()
+        .onFalse(
+            Commands.either(hopper.doubleCMD(), hopper.stopCMD(), controller.a()::getAsBoolean));
 
     controller.povUp().onTrue(DriveCommands.autoAlign(drive, DriveConstants.POSE_RESET));
     // drive

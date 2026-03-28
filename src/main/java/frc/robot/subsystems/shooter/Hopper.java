@@ -50,7 +50,18 @@ public class Hopper extends SubsystemBase {
     return Commands.runOnce(
         () -> {
           kicker.set(0.8);
-          hopper.set(0.4);
+          hopper.set(0.6);
+          // speed can be changed
+          SmartDashboard.putString("Shooter/Hopper State", "Shooting");
+        },
+        this);
+  }
+
+  public Command doubleCMD() {
+    return Commands.runOnce(
+        () -> {
+          kicker.set(0.8);
+          hopper.set(0.8);
           // speed can be changed
           SmartDashboard.putString("Shooter/Hopper State", "Shooting");
         },
