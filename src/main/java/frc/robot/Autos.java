@@ -307,7 +307,7 @@ public class Autos {
 
     midInitial.atTime("intake").onTrue(Commands.parallel(deploy.deployCMD(), intake.intakeCMD()));
 
-    midInitial.atTime("retract").onTrue(Commands.sequence(deploy.readyCMD(), intake.stoptakeCMD()));
+    midInitial.atTime("retract").onTrue(Commands.sequence(intake.stoptakeCMD()));
 
     midInitial
         .atTimeBeforeEnd(1)
@@ -333,9 +333,7 @@ public class Autos {
 
     midSecondary.atTime("intake").onTrue(Commands.parallel(deploy.deployCMD(), intake.intakeCMD()));
 
-    midSecondary
-        .atTime("retract")
-        .onTrue(Commands.sequence(deploy.readyCMD(), intake.stoptakeCMD()));
+    midSecondary.atTime("retract").onTrue(Commands.sequence(intake.stoptakeCMD()));
 
     midSecondary
         .atTimeBeforeEnd(1)
@@ -371,7 +369,7 @@ public class Autos {
 
     midInitial.atTime("intake").onTrue(Commands.sequence(deploy.deployCMD(), intake.intakeCMD()));
 
-    midInitial.atTime("retract").onTrue(Commands.sequence(deploy.readyCMD(), intake.stoptakeCMD()));
+    midInitial.atTime("retract").onTrue(Commands.sequence(intake.stoptakeCMD()));
 
     midInitial
         .atTimeBeforeEnd(1)
@@ -397,9 +395,7 @@ public class Autos {
 
     midSecondary.atTime("intake").onTrue(Commands.parallel(deploy.deployCMD(), intake.intakeCMD()));
 
-    midSecondary
-        .atTime("retract")
-        .onTrue(Commands.sequence(deploy.readyCMD(), intake.stoptakeCMD()));
+    midSecondary.atTime("retract").onTrue(Commands.sequence(intake.stoptakeCMD()));
 
     midSecondary
         .atTimeBeforeEnd(1)
