@@ -42,14 +42,14 @@ public class Intake extends SubsystemBase {
 
     SmartDashboard.putNumber("Intake/in speed", inSpeed);
     SmartDashboard.putNumber("Intake/out speed", outSpeed);
-    SmartDashboard.putString("Intake/State", "NONE");
+    SmartDashboard.putString("Intake/Intake State", "NONE");
   }
   // Intake commands to take in, spit out, and not move
   public Command intakeCMD() {
     // Takes in
     return Commands.runOnce(
         () -> {
-          SmartDashboard.putString("Intake/State", "INTAKING");
+          SmartDashboard.putString("Intake/Intake State", "INTAKING");
           intakeMotor.setControl(controller.withVelocity(inSpeed));
         },
         this);
@@ -58,7 +58,7 @@ public class Intake extends SubsystemBase {
   public Command spitakeCMD() {
     return Commands.runOnce(
         () -> {
-          SmartDashboard.putString("Intake/State", "SPITTING");
+          SmartDashboard.putString("Intake/Intake State", "SPITTING");
           intakeMotor.setControl(controller.withVelocity(outSpeed));
         },
         this);
@@ -68,16 +68,7 @@ public class Intake extends SubsystemBase {
     // Stops motor
     return Commands.runOnce(
         () -> {
-          SmartDashboard.putString("Intake/State", "NONE");
-          intakeMotor.setControl(controller.withVelocity(0));
-        },
-        this);
-  }
-
-  public Command killCMD() {
-    return Commands.runOnce(
-        () -> {
-          SmartDashboard.putString("Intake/State", "BRAKED");
+          SmartDashboard.putString("Intake/Intake State", "NONE");
           intakeMotor.setControl(new StaticBrake());
         },
         this);
@@ -88,9 +79,12 @@ public class Intake extends SubsystemBase {
     // This method will be called once per scheduler run
     inSpeed = SmartDashboard.getNumber("Intake/in speed", IntakeConstants.INTAKE_SPEED);
     outSpeed = SmartDashboard.getNumber("Intake/out speed", IntakeConstants.SPITAKE_SPEED);
-    SmartDashboard.putNumber("Intake/Velocity", intakeMotor.getVelocity().getValueAsDouble());
-    SmartDashboard.putNumber("Intake/Current", intakeMotor.getStatorCurrent().getValueAsDouble());
-    SmartDashboard.putNumber("Intake/Voltage", intakeMotor.getMotorVoltage().getValueAsDouble());
-    SmartDashboard.putNumber("Intake/Temp", intakeMotor.getDeviceTemp().getValueAsDouble());
+    SmartDashboard.putNumber(
+        "Intake/Intake Velocity", intakeMotor.getVelocity().getValueAsDouble());
+    SmartDashboard.putNumber(
+        "Intake/Intake Current", intakeMotor.getStatorCurrent().getValueAsDouble());
+    SmartDashboard.putNumber(
+        "Intake/Intake Voltage", intakeMotor.getMotorVoltage().getValueAsDouble());
+    SmartDashboard.putNumber("Intake/Intake Temp", intakeMotor.getDeviceTemp().getValueAsDouble());
   }
 }

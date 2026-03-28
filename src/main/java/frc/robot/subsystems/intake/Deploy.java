@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Radians;
-
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -17,7 +15,6 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,15 +29,18 @@ public class Deploy extends SubsystemBase {
 
   SparkClosedLoopController closedLoopController = deployMotor.getClosedLoopController();
   RelativeEncoder deployEncoder = deployMotor.getEncoder();
-  ProfiledPIDController controller;
   boolean raised = true;
+
+  double inPos = IntakeConstants.UP_POSITION;
+  double readyPos = IntakeConstants.READY_POSITION;
+  double downPos = IntakeConstants.DEPLOY_POSITION;
 
   SparkMaxConfig config = new SparkMaxConfig();
   ArmFeedforward feedforward =
       new ArmFeedforward(IntakeConstants.kS, IntakeConstants.kG, IntakeConstants.kV);
 
   public Deploy() {
-    config.smartCurrentLimit(50).idleMode(IdleMode.kBrake);
+    config.smartCurrentLimit(40).idleMode(IdleMode.kBrake);
     config.encoder.positionConversionFactor(IntakeConstants.DEPLOY_RATIO);
     config
         .closedLoop
@@ -56,6 +56,10 @@ public class Deploy extends SubsystemBase {
     deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     SmartDashboard.putNumber("Intake/Deploy/Deploy Encoder", deployEncoder.getPosition());
 
+    SmartDashboard.putNumber("Intake/Intake Up Setpoint", inPos);
+    SmartDashboard.putNumber("Intake/Intake Ready Setpoint", readyPos);
+    SmartDashboard.putNumber("Intake/Intake Down Setpoint", downPos);
+
     deployEncoder.setPosition(0);
   }
 
@@ -63,8 +67,8 @@ public class Deploy extends SubsystemBase {
     // Deploys fuel
     return Commands.runOnce(
             () -> {
-              closedLoopController.setSetpoint(
-                  IntakeConstants.DEPLOY_POSITION.in(Radians), ControlType.kPosition);
+              closedLoopController.setSetpoint(downPos, ControlType.kPosition);
+              raised = false;
             })
         .withName("Deployed");
     // return Commands.deadline(
@@ -79,8 +83,8 @@ public class Deploy extends SubsystemBase {
   public Command readyCMD() {
     return Commands.runOnce(
             () -> {
-              closedLoopController.setSetpoint(
-                  IntakeConstants.READY_POSITION.in(Radians), ControlType.kPosition);
+              closedLoopController.setSetpoint(readyPos, ControlType.kPosition);
+              raised = false;
             })
         .withName("Ready");
     // return Commands.deadline(
@@ -95,8 +99,8 @@ public class Deploy extends SubsystemBase {
   public Command undeployCMD() {
     return Commands.run(
             () -> {
-              closedLoopController.setSetpoint(
-                  IntakeConstants.UP_POSITION.in(Radians), ControlType.kPosition);
+              closedLoopController.setSetpoint(inPos, ControlType.kPosition);
+              raised = true;
             })
         .withName("Retracted");
     // return Commands.deadline(
@@ -113,6 +117,11 @@ public class Deploy extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+
+    inPos = SmartDashboard.getNumber("Intake/Intake Up Setpoint", inPos);
+    readyPos = SmartDashboard.getNumber("Intake/Intake Ready Setpoint", readyPos);
+    downPos = SmartDashboard.getNumber("Intake/Intake Down Setpoint", downPos);
+
     SmartDashboard.putNumber("Intake/Deploy/Deploy Encoder", deployEncoder.getPosition());
     SmartDashboard.putNumber("Intake/Deploy/Deploy Encoder Velocity", deployEncoder.getVelocity());
     SmartDashboard.putNumber("Intake/Deploy/Deploy Current", deployMotor.getOutputCurrent());

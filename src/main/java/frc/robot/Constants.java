@@ -137,18 +137,18 @@ public final class Constants {
     public static final int SPINTAKEID = 41; // kraken
     public static final int DEPLOYID = 42;
 
-    public static final double INTAKE_SPEED = -40;
+    public static final double INTAKE_SPEED = -80;
     public static final double SPITAKE_SPEED = 20;
     public static final double DEPLOY_SPEED = 1;
-    public static final Angle DEPLOY_POSITION = Degrees.of(70);
-    public static final Angle READY_POSITION = Degrees.of(40);
-    public static final Angle UP_POSITION = Degrees.of(0);
-    public static final Angle DEPLOY_TOLERANCE = Degrees.of(5);
+    public static final double DEPLOY_POSITION = -300;
+    public static final double READY_POSITION = -100;
+    public static final double UP_POSITION = 0;
+    public static final double DEPLOY_TOLERANCE = 0.01;
 
-    public static final double kP = 1; // 1.33;
+    public static final double kP = 0.4; // 1.33;
     public static final double kI = 0;
-    public static final double kD = 7.84;
-    public static final double DEPLOY_RATIO = 25;
+    public static final double kD = 0; // 7.84;
+    public static final double DEPLOY_RATIO = 45;
     public static final double INTAKE_RATIO = 1;
 
     public static double kS = 1.68;
