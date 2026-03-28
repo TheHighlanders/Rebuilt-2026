@@ -504,15 +504,7 @@ public class RobotContainer {
     controller.rightBumper().onFalse(shooter.stopCMD());
 
     // increment backup shot length
-    operator
-        .povRight()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  mannualShotLength += 0.5;
-                  if (mannualShotLength > 6) mannualShotLength = 1;
-                  SmartDashboard.putNumber("Shooter/Mannual shot length", mannualShotLength);
-                }));
+    operator.povRight().onTrue(shooter.tuneCMD());
 
     // flywheel pre-spin-up (not precise)
     operator.y().onTrue(shooter.flywheelGndCMD(() -> 6));
