@@ -642,6 +642,7 @@ public class DriveCommands {
       BooleanSupplier robotRelative) {
     return Commands.run(
             () -> {
+              SmartDashboard.putBoolean("Drive/Gyro Override", true);
               // Get linear velocity
               Translation2d linearVelocity =
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());

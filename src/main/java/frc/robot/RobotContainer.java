@@ -134,6 +134,9 @@ public class RobotContainer {
         // new ModuleIOTalonFXS(TunerConstants.FrontRight),
         // new ModuleIOTalonFXS(TunerConstants.BackLeft),
         // new ModuleIOTalonFXS(TunerConstants.BackRight));
+
+        SmartDashboard.putBoolean("Drive/Gyro Override", false);
+
         break;
 
       case SIM:
@@ -392,7 +395,10 @@ public class RobotContainer {
                     () -> -operator.getLeftY(),
                     () -> -operator.getLeftX(),
                     () -> robotRelative)
-                .until(() -> !operator.leftStick().getAsBoolean()));
+                .until(() -> !operator.leftStick().getAsBoolean())
+                .andThen(
+                    Commands.runOnce(
+                        () -> SmartDashboard.putBoolean("Drive/Gyro Override", false))));
 
     /* INTAKE COMMANDS. */
     // intake and deploy
@@ -445,8 +451,12 @@ public class RobotContainer {
         .onTrue(
             Commands.either(
                 Commands.repeatingSequence(
+                    hopper.stopCMD(),
+                    Commands.waitSeconds(0.15),
                     hopper.clearCMD(),
                     Commands.waitSeconds(0.7),
+                    hopper.stopCMD(),
+                    Commands.waitSeconds(0.15),
                     hopper.shootCMD(),
                     Commands.waitSeconds(1)),
                 hopper.backdriveCMD(),
@@ -523,7 +533,8 @@ public class RobotContainer {
 
     // backup---raise and lower climber with trigger
     operator.leftTrigger(0.95).onTrue(climber.raiseCMD());
-    operator.leftTrigger(0.1).onFalse(Commands.parallel(climber.pullCMD(), deploy.undeployCMD()));
+    operator.leftTrigger(0.8).onFalse(Commands.parallel(climber.pullCMD(), deploy.undeployCMD()));
+    operator.leftTrigger(0.3).onFalse(climber.manualCMD(() -> 0));
     operator.rightStick().onTrue(climber.manualCMD(() -> operator.getRightY()));
   }
 
