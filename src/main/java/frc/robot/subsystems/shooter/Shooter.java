@@ -99,16 +99,16 @@ public class Shooter extends SubsystemBase {
   protected static double calculate(Translation2d trajectory) {
     double linearVelocity =
         Math.sqrt(
-            ShooterConstants.GRAVITY
-                * Math.pow(trajectory.getX(), 2)
-                / (2
-                    * Math.pow(Math.cos(ShooterConstants.SHOOTER_HOOD.in(Radians)), 2)
-                    * (trajectory.getX() * Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians))
-                        - trajectory.getY())));
-    // + (trajectory.getX() / 25); // air resistance fudge factor works way too well
+                ShooterConstants.GRAVITY
+                    * Math.pow(trajectory.getX(), 2)
+                    / (2
+                        * Math.pow(Math.cos(ShooterConstants.SHOOTER_HOOD.in(Radians)), 2)
+                        * (trajectory.getX() * Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians))
+                            - trajectory.getY())))
+            + (trajectory.getX() / 25); // air resistance fudge factor works way too well
 
     double rotationalVelocity =
-        linearVelocity / (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 2 * Math.PI);
+        linearVelocity / (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 4 * Math.PI);
     return rotationalVelocity;
     // * SmartDashboard.getNumber(
     //     "Shooter/Distance Tune",

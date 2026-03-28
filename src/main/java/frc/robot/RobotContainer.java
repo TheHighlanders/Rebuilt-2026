@@ -416,12 +416,12 @@ public class RobotContainer {
     operator.b().onTrue(deploy.readyCMD());
     operator.b().onFalse(deploy.deployCMD());
 
-    operator
-        .rightStick()
-        .onTrue(
-            deploy
-                .manualCMD(operator::getRightY)
-                .until(() -> !operator.rightStick().getAsBoolean()));
+    // operator
+        // .rightStick()
+        // .onTrue(
+        //     deploy
+        //         .manualCMD(operator::getRightY)
+        //         .until(() -> !operator.rightStick().getAsBoolean()));
 
     /* HOPPER COMMANDS */
 
@@ -511,7 +511,7 @@ public class RobotContainer {
     // backup---raise and lower climber with trigger
     operator.leftTrigger(0.95).onTrue(climber.raiseCMD());
     operator.leftTrigger(0.1).onFalse(Commands.parallel(climber.pullCMD(), deploy.undeployCMD()));
-    // operator.rightStick().onTrue(climber.manualCMD(() -> operator.getRightY())); // TODO
+    operator.rightStick().onTrue(climber.manualCMD(() -> operator.getRightY()));
   }
 
   @SuppressWarnings("unused")
