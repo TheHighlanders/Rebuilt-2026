@@ -396,7 +396,12 @@ public class RobotContainer {
 
     /* INTAKE COMMANDS. */
     // intake and deploy
-    controller.leftBumper().onTrue(Commands.parallel(intake.intakeCMD(), deploy.deployCMD()));
+    controller
+        .leftBumper()
+        .onTrue(
+            Commands.parallel(
+                intake.intakeCMD(),
+                Commands.either(Commands.none(), deploy.deployCMD(), operator.b()::getAsBoolean)));
     controller
         .leftBumper()
         .onFalse(Commands.parallel(intake.stoptakeCMD())); // , deploy.readyCMD()));
