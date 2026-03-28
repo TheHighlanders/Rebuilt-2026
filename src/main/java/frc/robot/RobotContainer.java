@@ -397,7 +397,9 @@ public class RobotContainer {
     /* INTAKE COMMANDS. */
     // intake and deploy
     controller.leftBumper().onTrue(Commands.parallel(intake.intakeCMD(), deploy.deployCMD()));
-    controller.leftBumper().onFalse(Commands.parallel(intake.stoptakeCMD()));//, deploy.readyCMD()));
+    controller
+        .leftBumper()
+        .onFalse(Commands.parallel(intake.stoptakeCMD())); // , deploy.readyCMD()));
     // outtake
     operator.a().onTrue(intake.spitakeCMD());
     operator
@@ -503,7 +505,7 @@ public class RobotContainer {
 
     // backup---raise and lower climber with trigger
     operator.leftTrigger(0.95).onTrue(climber.raiseCMD());
-    operator.leftTrigger(0.1).onFalse(climber.pullCMD(), deploy.raiseCMD());
+    operator.leftTrigger(0.1).onFalse(Commands.parallel(climber.pullCMD(), deploy.undeployCMD()));
     // operator.rightStick().onTrue(climber.manualCMD(() -> operator.getRightY())); // TODO
   }
 

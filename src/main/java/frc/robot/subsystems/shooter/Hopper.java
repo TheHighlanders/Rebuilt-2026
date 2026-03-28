@@ -94,6 +94,5 @@ public class Hopper extends SubsystemBase {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("Shooter/Hopper Current", hopper.getOutputCurrent());
     SmartDashboard.putNumber("Shooter/Hopper Current", kicker.getOutputCurrent());
-
   }
 }

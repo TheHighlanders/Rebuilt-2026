@@ -70,11 +70,11 @@ public class Shooter extends SubsystemBase {
     tryUntilOk(5, () -> flywheel.getConfigurator().apply(config));
     tryUntilOk(5, () -> flywheel.getConfigurator().apply(currentLimits));
 
-    SmartDashboard.putNumber("Shooter/Target RPS", 0.0);
+    SmartDashboard.putNumber("Shooter/ Flywheel Target RPS", 0.0);
     SmartDashboard.putNumber(
-        "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
+        "Shooter/Flywheel Voltage", flywheel.getMotorVoltage().getValueAsDouble());
     SmartDashboard.putNumber(
-        "Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
+        "Shooter/Flywheel Current", flywheel.getStatorCurrent().getValueAsDouble());
   }
 
   public void intake() {} // for sim
@@ -106,8 +106,6 @@ public class Shooter extends SubsystemBase {
                     * (trajectory.getX() * Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians))
                         - trajectory.getY())));
     // + (trajectory.getX() / 25); // air resistance fudge factor works way too well
-
-    SmartDashboard.putNumber("Shooter/Linear Velocity", linearVelocity);
 
     double rotationalVelocity =
         linearVelocity / (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 2 * Math.PI);
@@ -240,7 +238,7 @@ public class Shooter extends SubsystemBase {
         () -> {
           targetRPS = calculateRR(shotPoint.get());
           flywheel.setControl(velocity.withVelocity(targetRPS));
-          SmartDashboard.putNumber("Shooter/Distance", shotPoint.get().getX());
+          SmartDashboard.putNumber("Shooter/Shot Distance", shotPoint.get().getX());
         },
         this);
   }
@@ -250,8 +248,6 @@ public class Shooter extends SubsystemBase {
             () -> {
               targetRPS = calculateRRGround(distance.getAsDouble());
               flywheel.setControl(velocity.withVelocity(targetRPS));
-              SmartDashboard.putNumber("Shooter/Distance", distance.getAsDouble());
-              SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
             },
             this)
         .withName("Ground Align");
@@ -262,8 +258,6 @@ public class Shooter extends SubsystemBase {
             () -> {
               targetRPS = calculateRRHub(distance.getAsDouble());
               flywheel.setControl(velocity.withVelocity(targetRPS));
-              SmartDashboard.putNumber("Shooter/Distance", distance.getAsDouble());
-              SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
             },
             this)
         .withName("Hub Align");
@@ -303,13 +297,13 @@ public class Shooter extends SubsystemBase {
   @Override
   public void periodic() {
     SmartDashboard.putNumber(
-        "Shooter/Flywheel/Voltage", flywheel.getMotorVoltage().getValueAsDouble());
+        "Shooter/Flywheel Voltage", flywheel.getMotorVoltage().getValueAsDouble());
     SmartDashboard.putNumber(
-        "Shooter/Flywheel/Current", flywheel.getStatorCurrent().getValueAsDouble());
-    SmartDashboard.putNumber("Shooter/Target RPS", targetRPS);
+        "Shooter/Flywheel Current", flywheel.getStatorCurrent().getValueAsDouble());
+    SmartDashboard.putNumber("Shooter/Flywheel Target RPS", targetRPS);
     SmartDashboard.putNumber("Shooter/Flywheel RPS", flywheel.getVelocity().getValueAsDouble());
     SmartDashboard.putString(
-        "Shooter/Current Command",
+        "Shooter/Current Shooter Command",
         this.getCurrentCommand() == null ? "None" : this.getCurrentCommand().getName());
   }
 }
