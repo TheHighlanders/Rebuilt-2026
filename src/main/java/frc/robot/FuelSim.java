@@ -338,7 +338,7 @@ public class FuelSim {
    * @param tableKey NetworkTable to log fuel positions to as an array of {@link Translation3d}
    *     structs.
    */
-  public FuelSim(String tableKey) {
+  public FuelSim() {
     // Initialize grid
     for (int i = 0; i < GRID_COLS; i++) {
       for (int j = 0; j < GRID_ROWS; j++) {
@@ -348,14 +348,14 @@ public class FuelSim {
 
     fuelPublisher =
         NetworkTableInstance.getDefault()
-            .getStructArrayTopic(tableKey + "/Fuels", Translation3d.struct)
+            .getStructArrayTopic("fuelsim/Fuels", Translation3d.struct)
             .publish();
   }
 
   /** Creates a new instance of FuelSim with log path "/Fuel Simulation" */
-  public FuelSim() {
-    this("/Fuel Simulation");
-  }
+  // public FuelSim() {
+  //   this("/Fuel Simulation");
+  // }
 
   /** Clears the field of fuel */
   public void clearFuel() {

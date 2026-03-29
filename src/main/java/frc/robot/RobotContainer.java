@@ -71,7 +71,7 @@ public class RobotContainer {
   //  private final LoggedDashboardChooser<Command> autoChooser;
   private final AutoChooser autoChooser;
 
-  public FuelSim fuelSim = new FuelSim("fuelsim"); // creates a new fuelSim of FuelSim
+  public FuelSim fuelSim = new FuelSim(); // creates a new fuelSim of FuelSim
 
   @SuppressWarnings("unused")
   private Command testVisionSim;
@@ -257,10 +257,19 @@ public class RobotContainer {
     autoChooser.addRoutine("middle -> shoot", () -> autos.simpleShoot());
     autoChooser.addRoutine("middle -> outpost -> depot", () -> autos.middle());
     autoChooser.addRoutine("middle -> depot", () -> autos.middleDepot());
+
     autoChooser.addRoutine("left -> neutral", () -> autos.leftMid(true));
     autoChooser.addRoutine("left -> neutral (chill)", () -> autos.leftMid(false));
+    autoChooser.addRoutine("left -> sneak neutral", () -> autos.leftMidDefend(true));
+    autoChooser.addRoutine("left -> sneak neutral (chill)", () -> autos.leftMidDefend(false));
+
     autoChooser.addRoutine("right -> neutral", () -> autos.rightMid(true));
     autoChooser.addRoutine("right -> neutral (chill)", () -> autos.rightMid(false));
+    autoChooser.addRoutine("right -> sneak neutral", () -> autos.rightMidDefend(true));
+    autoChooser.addRoutine("right -> sneak neutral (chill)", () -> autos.rightMidDefend(false));
+
+    autoChooser.addRoutine("middle -> sneak left", () -> autos.simpleShootSneak(true));
+    autoChooser.addRoutine("middle -> sneak right", () -> autos.simpleShootSneak(false));
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());

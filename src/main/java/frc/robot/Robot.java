@@ -7,6 +7,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -28,6 +30,10 @@ public class Robot extends LoggedRobot {
   private Command autonomousCommand;
   private RobotContainer robotContainer;
   Timer gcTimer = new Timer();
+  Timer matchTimer = new Timer();
+  Timer shiftTimer = new Timer();
+  double shift = 10;
+  boolean wonAuto = true;
 
   public Robot() {
     gcTimer.start();
@@ -132,11 +138,46 @@ public class Robot extends LoggedRobot {
       autonomousCommand.cancel();
     }
     robotContainer.teleopInit();
+    matchTimer.start();
+    shiftTimer.start();
+    matchTimer.reset();
+    shiftTimer.reset();
+    wonAuto =
+        DriverStation.getGameSpecificMessage()
+            == (DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red ? "R" : "B");
+    SmartDashboard.putNumber("Match Timer", 1000);
   }
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+    boolean ourShift = true;
+    if (matchTimer.get() > 10) {
+      shift = 25;
+      ourShift = !wonAuto;
+      if (matchTimer.get() > 35) {
+        ourShift = wonAuto;
+        if (matchTimer.get() > 60) {
+          ourShift = !wonAuto;
+          if (matchTimer.get() > 85) {
+            ourShift = wonAuto;
+            if (matchTimer.get() > 110) {
+              shift = 30;
+              ourShift = true;
+            }
+          }
+        }
+      }
+    } else {
+      shift = 10;
+    }
+    SmartDashboard.putNumber("Match Timer", 130 - matchTimer.get());
+    SmartDashboard.putNumber("Shift Timer", shift - shiftTimer.get());
+    SmartDashboard.putBoolean("Our Shift?", ourShift);
+    if (shift < shiftTimer.get()) {
+      shiftTimer.restart();
+    }
+  }
 
   /** This function is called once when test mode is enabled. */
   @Override

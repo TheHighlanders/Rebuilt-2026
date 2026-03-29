@@ -51,6 +51,9 @@ public final class Constants {
     //         .plus(TO_CORNER_BUMPERS)
     //         .plus(new Translation2d(-0.1, 0)),
     //     Rotation2d.kCCW_90deg);
+
+    public static final double SNEAK_WAIT_TIME_LEFT = 20 - 3.4; // max is 16.6
+    public static final double SNEAK_WAIT_TIME_RIGHT = 20 - 3.4; // max is 16.6
   }
 
   public static final class VisionConstants {
