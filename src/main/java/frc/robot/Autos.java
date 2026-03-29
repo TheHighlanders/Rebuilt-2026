@@ -127,13 +127,13 @@ public class Autos {
   public AutoRoutine simpleShoot() {
     AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
 
-    AutoTrajectory collect = routine.trajectory("midToDepotShoot");
+    AutoTrajectory pose = routine.trajectory("midStayStill");
 
     routine
         .active()
         .onTrue(
             Commands.sequence(
-                collect.resetOdometry(),
+                pose.resetOdometry(),
                 Commands.deadline(
                     Commands.waitSeconds(0),
                     DriveCommands.joystickDrive(drive, () -> 0, () -> 0, () -> 0, () -> true)),

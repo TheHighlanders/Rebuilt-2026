@@ -507,7 +507,8 @@ public class RobotContainer {
     operator.povRight().onTrue(shooter.tuneCMD());
 
     // flywheel pre-spin-up (not precise)
-    operator.y().onTrue(shooter.flywheelGndCMD(() -> 6));
+    operator.y().onTrue(shooter.flywheelGndCMD(() -> 15));
+    controller.y().onTrue(shooter.flywheelGndCMD(() -> 10));
 
     /* CLIMBER COMMANDS */
 
