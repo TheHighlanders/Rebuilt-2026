@@ -143,8 +143,8 @@ public final class Constants {
     public static final double INTAKE_SPEED = -60;
     public static final double SPITAKE_SPEED = 30;
     public static final double DEPLOY_SPEED = 1;
-    public static final double DEPLOY_POSITION = -520;
-    public static final double READY_POSITION = -150;
+    public static final double DEPLOY_POSITION = -500;
+    public static final double READY_POSITION = -100;
     public static final double UP_POSITION = 15;
     public static final double DEPLOY_TOLERANCE = 0.01;
 
