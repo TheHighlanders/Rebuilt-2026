@@ -7,7 +7,9 @@ package frc.robot.subsystems.shooter;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -21,6 +23,8 @@ public class Hopper extends SubsystemBase {
   SparkMax hopper = new SparkMax(HopperConstants.HOPPERID, MotorType.kBrushless);
 
   SparkMax kicker = new SparkMax(HopperConstants.KICKERID, MotorType.kBrushless);
+
+  SparkClosedLoopController kickLoopController = kicker.getClosedLoopController();
 
   double kP = 0.1;
   double kI = 0.0;
@@ -46,7 +50,7 @@ public class Hopper extends SubsystemBase {
   public Command shootCMD() {
     return Commands.runOnce(
         () -> {
-          kicker.set(0.8);
+          kickLoopController.setSetpoint(0.8, ControlType.kVelocity);
           hopper.set(0.4);
           // speed can be changed
           SmartDashboard.putString("Shooter/Hopper State", "Shooting");
@@ -68,7 +72,7 @@ public class Hopper extends SubsystemBase {
   public Command backdriveCMD() {
     return Commands.runOnce(
         () -> {
-          kicker.set(-0.5);
+          kickLoopController.setSetpoint(-0.5, ControlType.kVelocity);
           hopper.set(-0.5);
           SmartDashboard.putString("Shooter/Hopper State", "Backdriving");
         },
@@ -79,7 +83,7 @@ public class Hopper extends SubsystemBase {
   public Command clearCMD() {
     return Commands.runOnce(
         () -> {
-          kicker.set(1);
+          kickLoopController.setSetpoint(1, ControlType.kVelocity);
           hopper.set(-1);
           SmartDashboard.putString("Shooter/Hopper State", "Clearing");
         },
