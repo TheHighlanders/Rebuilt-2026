@@ -79,6 +79,10 @@ public class Shooter extends SubsystemBase {
 
   public void intake() {} // for sim
 
+  public double getTargetRPS() {
+    return targetRPS;
+  }
+
   /*
    * compensates for the shooter's position on the robot based on a flat robot-relative trajectory to the target.
    */

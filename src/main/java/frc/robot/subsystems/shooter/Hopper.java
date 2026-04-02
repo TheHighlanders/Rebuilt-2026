@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.shooter;
 
+import java.util.function.DoubleSupplier;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -33,7 +35,9 @@ public class Hopper extends SubsystemBase {
 
   SparkMaxConfig kickConfig = new SparkMaxConfig();
 
-  public Hopper() {
+  DoubleSupplier hopperSpeed;
+
+  public Hopper(DoubleSupplier shooterSpeed) {
     SparkMaxConfig hopperConfig = new SparkMaxConfig();
     hopperConfig.smartCurrentLimit(HopperConstants.HOPPER_CURRENT_LIMIT).idleMode(IdleMode.kCoast);
     hopperConfig.inverted(HopperConstants.INVERT_HOPPER);
@@ -45,12 +49,16 @@ public class Hopper extends SubsystemBase {
     // Persist parameters to retain configuration in the event of a power cycle
     hopper.configure(hopperConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     kicker.configure(kickConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+    hopperSpeed = () -> {
+      return shooterSpeed.getAsDouble() == 0 ? 10 : (shooterSpeed.getAsDouble() * 0.9);
+    };
   }
   // spins the motor inside the hopper
   public Command shootCMD() {
     return Commands.runOnce(
         () -> {
-          kickLoopController.setSetpoint(0.8, ControlType.kVelocity);
+          kickLoopController.setSetpoint(hopperSpeed.getAsDouble(), ControlType.kVelocity);
           hopper.set(0.4);
           // speed can be changed
           SmartDashboard.putString("Shooter/Hopper State", "Shooting");
@@ -72,7 +80,7 @@ public class Hopper extends SubsystemBase {
   public Command backdriveCMD() {
     return Commands.runOnce(
         () -> {
-          kickLoopController.setSetpoint(-0.5, ControlType.kVelocity);
+          kickLoopController.setSetpoint(-7, ControlType.kVelocity);
           hopper.set(-0.5);
           SmartDashboard.putString("Shooter/Hopper State", "Backdriving");
         },
@@ -83,7 +91,7 @@ public class Hopper extends SubsystemBase {
   public Command clearCMD() {
     return Commands.runOnce(
         () -> {
-          kickLoopController.setSetpoint(1, ControlType.kVelocity);
+          kickLoopController.setSetpoint(hopperSpeed.getAsDouble(), ControlType.kVelocity);
           hopper.set(-1);
           SmartDashboard.putString("Shooter/Hopper State", "Clearing");
         },

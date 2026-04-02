@@ -114,7 +114,7 @@ public class RobotContainer {
         // new VisionIOPhotonVision(
         //     VisionConstants.camera3Name, VisionConstants.robotToCamera3));
         shooter = new Shooter();
-        hopper = new Hopper();
+        hopper = new Hopper(shooter::getTargetRPS);
         configureButtonBindings();
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
@@ -207,7 +207,7 @@ public class RobotContainer {
                 new ModuleIO() {});
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         shooter = new Shooter();
-        hopper = new Hopper();
+        hopper = new Hopper(shooter::getTargetRPS);
         configureButtonBindings();
 
         break;
