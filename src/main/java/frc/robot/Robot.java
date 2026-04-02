@@ -171,7 +171,7 @@ public class Robot extends LoggedRobot {
     } else {
       shift = 10;
     }
-    SmartDashboard.putNumber("Match Timer", 130 - matchTimer.get());
+    SmartDashboard.putNumber("Match Timer", 140 - matchTimer.get());
     SmartDashboard.putNumber("Shift Timer", shift - shiftTimer.get());
     SmartDashboard.putBoolean("Our Shift?", ourShift);
     if (shift < shiftTimer.get()) {

@@ -297,14 +297,14 @@ public class RobotContainer {
             () -> robotRelative));
 
     // toggles between robot- and field-relative drive
-    controller
-        .leftStick()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  robotRelative = !robotRelative;
-                  SmartDashboard.putBoolean("Robot Relative Drive", robotRelative);
-                }));
+    // controller
+    //     .leftStick()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () -> {
+    //               robotRelative = !robotRelative;
+    //               SmartDashboard.putBoolean("Robot Relative Drive", robotRelative);
+    //             }));
 
     controller
         .rightStick()
@@ -505,7 +505,7 @@ public class RobotContainer {
     // backup mannual flywheel spinup
     controller
         .rightTrigger(0.05)
-        .onTrue(shooter.rawFlywheelCMD(() -> controller.getRightTriggerAxis() / 4));
+        .onTrue(shooter.flywheelHubCMD(() -> controller.getRightTriggerAxis()));
 
     controller.povRight().onTrue(shooter.tuneCMD());
 
