@@ -41,13 +41,27 @@ public class Hopper extends SubsystemBase {
     // Persist parameters to retain configuration in the event of a power cycle
     hopper.configure(hopperConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     kicker.configure(kickConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+    SmartDashboard.putNumber("Shooter/Hopper Current", hopper.getOutputCurrent());
+    SmartDashboard.putNumber("Shooter/Hopper Current", kicker.getOutputCurrent());
   }
   // spins the motor inside the hopper
   public Command shootCMD() {
     return Commands.runOnce(
         () -> {
-          kicker.set(0.5);
+          kicker.set(0.8);
           hopper.set(0.4);
+          // speed can be changed
+          SmartDashboard.putString("Shooter/Hopper State", "Shooting");
+        },
+        this);
+  }
+
+  public Command doubleCMD() {
+    return Commands.runOnce(
+        () -> {
+          kicker.set(0.8);
+          hopper.set(0.8);
           // speed can be changed
           SmartDashboard.putString("Shooter/Hopper State", "Shooting");
         },
@@ -89,6 +103,7 @@ public class Hopper extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-
+    SmartDashboard.putNumber("Shooter/Hopper Current", hopper.getOutputCurrent());
+    SmartDashboard.putNumber("Shooter/Hopper Current", kicker.getOutputCurrent());
   }
 }

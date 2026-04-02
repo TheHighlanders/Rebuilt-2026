@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -70,7 +71,7 @@ public class RobotContainer {
   //  private final LoggedDashboardChooser<Command> autoChooser;
   private final AutoChooser autoChooser;
 
-  public FuelSim fuelSim = new FuelSim("fuelsim"); // creates a new fuelSim of FuelSim
+  public FuelSim fuelSim = new FuelSim(); // creates a new fuelSim of FuelSim
 
   @SuppressWarnings("unused")
   private Command testVisionSim;
@@ -91,6 +92,12 @@ public class RobotContainer {
         // ModuleIOTalonFX is intended for modules with TalonFX drive, TalonFX turn, and
         // a CANcoder
         drive =
+            // new Drive(
+            //     new GyroIO() {},
+            //     new ModuleIO() {},
+            //     new ModuleIO() {},
+            //     new ModuleIO() {},
+            //     new ModuleIO() {});
             new Drive(
                 new GyroIOBoron(), // new GyroIOBoron(),
                 new ModuleIOTalonFX(TunerConstants.FrontLeft),
@@ -127,6 +134,9 @@ public class RobotContainer {
         // new ModuleIOTalonFXS(TunerConstants.FrontRight),
         // new ModuleIOTalonFXS(TunerConstants.BackLeft),
         // new ModuleIOTalonFXS(TunerConstants.BackRight));
+
+        SmartDashboard.putBoolean("Drive/Gyro Override", false);
+
         break;
 
       case SIM:
@@ -242,13 +252,24 @@ public class RobotContainer {
     autos = new Autos(drive, deploy, intake, hopper, shooter, climber);
     //  autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoFactory.buildAutoChooser());
     autoChooser = new AutoChooser();
-    autoChooser.addRoutine("Subsystem Test", () -> autos.badLaptopTestAuto());
-    autoChooser.addRoutine("Auto Test", () -> autos.testAuto());
-    autoChooser.addRoutine("Simple Shoot", () -> autos.simpleShoot());
+    // autoChooser.addRoutine("Subsystem Test", () -> autos.badLaptopTestAuto());
+    autoChooser.addRoutine("Test Square", () -> autos.testAuto());
+    autoChooser.addRoutine("middle -> shoot", () -> autos.simpleShoot());
     autoChooser.addRoutine("middle -> outpost -> depot", () -> autos.middle());
     autoChooser.addRoutine("middle -> depot", () -> autos.middleDepot());
+
     autoChooser.addRoutine("left -> neutral", () -> autos.leftMid(true));
     autoChooser.addRoutine("left -> neutral (chill)", () -> autos.leftMid(false));
+    autoChooser.addRoutine("left -> sneak neutral", () -> autos.leftMidDefend(true));
+    autoChooser.addRoutine("left -> sneak neutral (chill)", () -> autos.leftMidDefend(false));
+
+    autoChooser.addRoutine("right -> neutral", () -> autos.rightMid(true));
+    autoChooser.addRoutine("right -> neutral (chill)", () -> autos.rightMid(false));
+    autoChooser.addRoutine("right -> sneak neutral", () -> autos.rightMidDefend(true));
+    autoChooser.addRoutine("right -> sneak neutral (chill)", () -> autos.rightMidDefend(false));
+
+    autoChooser.addRoutine("middle -> sneak left", () -> autos.simpleShootSneak(true));
+    autoChooser.addRoutine("middle -> sneak right", () -> autos.simpleShootSneak(false));
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
@@ -276,14 +297,14 @@ public class RobotContainer {
             () -> robotRelative));
 
     // toggles between robot- and field-relative drive
-    controller
-        .leftStick()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  robotRelative = !robotRelative;
-                  SmartDashboard.putBoolean("Robot Relative Drive", robotRelative);
-                }));
+    // controller
+    //     .leftStick()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () -> {
+    //               robotRelative = !robotRelative;
+    //               SmartDashboard.putBoolean("Robot Relative Drive", robotRelative);
+    //             }));
 
     controller
         .rightStick()
@@ -383,23 +404,39 @@ public class RobotContainer {
                     () -> -operator.getLeftY(),
                     () -> -operator.getLeftX(),
                     () -> robotRelative)
-                .until(() -> !operator.leftStick().getAsBoolean()));
+                .until(() -> !operator.leftStick().getAsBoolean())
+                .andThen(
+                    Commands.runOnce(
+                        () -> SmartDashboard.putBoolean("Drive/Gyro Override", false))));
 
-    /* INTAKE COMMANDS. TODO */
+    /* INTAKE COMMANDS. */
     // intake and deploy
     controller
         .leftBumper()
-        .onTrue(Commands.parallel(intake.intakeCMD())); // , deploy.deployCMD()));
+        .onTrue(
+            Commands.parallel(
+                intake.intakeCMD(),
+                Commands.either(Commands.none(), deploy.deployCMD(), operator.b()::getAsBoolean)));
     controller
         .leftBumper()
-        .onFalse(Commands.parallel(intake.stoptakeCMD())); // ,deploy.readyCMD()));
+        .onFalse(Commands.parallel(intake.stoptakeCMD())); // , deploy.readyCMD()));
     // outtake
-    operator.a().onTrue(Commands.runOnce(() -> intake.spitakeCMD(), intake));
-    operator.a().onFalse(Commands.runOnce(() -> intake.stoptakeCMD(), intake));
+    operator.a().onTrue(intake.spitakeCMD());
+    operator
+        .a()
+        .onFalse(
+            Commands.either(
+                intake.intakeCMD(), intake.stoptakeCMD(), controller.leftBumper()::getAsBoolean));
     // retract intake
-    operator.b().onTrue(deploy.swapCMD());
+    operator.b().onTrue(deploy.readyCMD());
+    operator.b().onFalse(deploy.deployCMD());
 
-    /// operator.leftStick().onTrue(deploy.mannualCMD(operator::getLeftY));
+    // operator
+    // .rightStick()
+    // .onTrue(
+    //     deploy
+    //         .manualCMD(operator::getRightY)
+    //         .until(() -> !operator.rightStick().getAsBoolean()));
 
     /* HOPPER COMMANDS */
 
@@ -418,8 +455,25 @@ public class RobotContainer {
     controller.a().onFalse(hopper.stopCMD());
 
     // clear hopper
-    operator.x().onTrue(hopper.backdriveCMD());
-    operator.x().onFalse(hopper.stopCMD());
+    operator
+        .x()
+        .onTrue(
+            Commands.either(
+                Commands.repeatingSequence(
+                    hopper.stopCMD(),
+                    Commands.waitSeconds(0.15),
+                    hopper.clearCMD(),
+                    Commands.waitSeconds(0.7),
+                    hopper.stopCMD(),
+                    Commands.waitSeconds(0.15),
+                    hopper.shootCMD(),
+                    Commands.waitSeconds(1)),
+                hopper.backdriveCMD(),
+                controller.a()::getAsBoolean));
+    operator
+        .x()
+        .onFalse(
+            Commands.either(hopper.doubleCMD(), hopper.stopCMD(), controller.a()::getAsBoolean));
 
     controller.povUp().onTrue(DriveCommands.autoAlign(drive, DriveConstants.POSE_RESET));
     // drive
@@ -451,24 +505,19 @@ public class RobotContainer {
     // backup mannual flywheel spinup
     controller
         .rightTrigger(0.05)
-        .onTrue(shooter.rawFlywheelCMD(() -> controller.getRightTriggerAxis() * 3));
+        .onTrue(shooter.flywheelHubCMD(() -> controller.getRightTriggerAxis()));
+
+    controller.povRight().onTrue(shooter.tuneCMD());
 
     controller.rightTrigger(0.05).onFalse(shooter.stopCMD());
     controller.rightBumper().onFalse(shooter.stopCMD());
 
     // increment backup shot length
-    operator
-        .povRight()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  mannualShotLength += 0.5;
-                  if (mannualShotLength > 6) mannualShotLength = 1;
-                  SmartDashboard.putNumber("Shooter/Mannual shot length", mannualShotLength);
-                }));
+    operator.povRight().onTrue(shooter.tuneCMD());
 
     // flywheel pre-spin-up (not precise)
-    operator.y().onTrue(shooter.flywheelGndCMD(() -> 6));
+    operator.y().onTrue(shooter.flywheelGndCMD(() -> 15));
+    controller.y().onTrue(shooter.flywheelGndCMD(() -> 10));
 
     /* CLIMBER COMMANDS */
 
@@ -486,7 +535,8 @@ public class RobotContainer {
 
     // backup---raise and lower climber with trigger
     operator.leftTrigger(0.95).onTrue(climber.raiseCMD());
-    operator.leftTrigger(0.1).onFalse(climber.pullCMD());
+    operator.leftTrigger(0.8).onFalse(Commands.parallel(climber.pullCMD(), deploy.undeployCMD()));
+    operator.leftTrigger(0.3).onFalse(climber.manualCMD(() -> 0));
     operator.rightStick().onTrue(climber.manualCMD(() -> operator.getRightY()));
   }
 
@@ -533,6 +583,10 @@ public class RobotContainer {
     controller.rightBumper().onFalse(shooter.stopCMD());
 
     controller.x().onFalse(hopper.stopCMD());
+  }
+
+  public void teleopInit() {
+    CommandScheduler.getInstance().schedule(Commands.sequence(hopper.stopCMD(), shooter.stopCMD()));
   }
 
   /**

@@ -37,7 +37,7 @@ public final class Constants {
   public static final class DriveConstants {
     public static final double SLOWMODE = 0.6;
     public static final double POINT_DEADBAND = 0.4;
-    public static final int GYRO_ID = 0; // TODO
+    public static final int GYRO_ID = 0;
     public static final Angle ALIGN_SHOOTER_COMP =
         Radians.of(
             Math.PI
@@ -51,6 +51,9 @@ public final class Constants {
     //         .plus(TO_CORNER_BUMPERS)
     //         .plus(new Translation2d(-0.1, 0)),
     //     Rotation2d.kCCW_90deg);
+
+    public static final double SNEAK_WAIT_TIME_LEFT = 20 - 3.4; // max is 16.6
+    public static final double SNEAK_WAIT_TIME_RIGHT = 20 - 3.4; // max is 16.6
   }
 
   public static final class VisionConstants {
@@ -115,7 +118,7 @@ public final class Constants {
 
   public static class ClimberConstants {
     public static final int CLIMBERID = 51;
-    public static final double UP_POSITION = -30; // Rotations. TODO
+    public static final double UP_POSITION = -33;
     public static final double DOWN_POSITION = 0;
     public static final double POS_TOLERANCE = 0.1;
 
@@ -134,21 +137,22 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-    public static final int SPINTAKEID = 42;
-    public static final int DEPLOYID = 41;
+    public static final int SPINTAKEID = 41; // kraken
+    public static final int DEPLOYID = 42;
 
-    public static final double INTAKE_SPEED = 0.5;
-    public static final double SPITAKE_SPEED = -0.5;
+    public static final double INTAKE_SPEED = -60;
+    public static final double SPITAKE_SPEED = 30;
     public static final double DEPLOY_SPEED = 1;
-    public static final Angle DEPLOY_POSITION = Degrees.of(70);
-    public static final Angle READY_POSITION = Degrees.of(40);
-    public static final Angle UP_POSITION = Degrees.of(0);
-    public static final Angle DEPLOY_TOLERANCE = Degrees.of(5);
+    public static final double DEPLOY_POSITION = -500;
+    public static final double READY_POSITION = -100;
+    public static final double UP_POSITION = 15;
+    public static final double DEPLOY_TOLERANCE = 0.01;
 
-    public static final double kP = 1; // 1.33;
+    public static final double kP = 0.4; // 1.33;
     public static final double kI = 0;
-    public static final double kD = 7.84;
-    public static final double DEPLOY_RATIO = 25;
+    public static final double kD = 0; // 7.84;
+    public static final double DEPLOY_RATIO = 45;
+    public static final double INTAKE_RATIO = 1;
 
     public static double kS = 1.68;
     public static double kG = 3.05;
@@ -159,9 +163,9 @@ public final class Constants {
 
     public static final int SHOOTERID = 32;
 
-    public static final double kP = 0.11;
+    public static final double kP = 1;
     public static final double kI = 0;
-    public static final double kD = 0.01;
+    public static final double kD = 0;
     public static final double kS = 0.1;
     public static final double kV = 0.12;
     public static final double GEAR_RATIO = 2;
@@ -209,8 +213,7 @@ public final class Constants {
     public static final Translation2d OUTPOST_POSE_BLUE =
         new Translation2d(Units.inchesToMeters(33.25 / 2), Units.inchesToMeters(26.22));
     public static final Translation2d DEPOT_POSE_BLUE =
-        new Translation2d(
-            Units.inchesToMeters(27 / 2), Units.inchesToMeters(158.84 + 75.93)); // TODO: measure
+        new Translation2d(Units.inchesToMeters(27 / 2), Units.inchesToMeters(158.84 + 75.93));
   }
 
   public static enum Mode {

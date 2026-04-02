@@ -56,12 +56,18 @@ public class Climber extends SubsystemBase {
                         climbEncoder.getPosition()
                             >= ClimberConstants.DOWN_POSITION - ClimberConstants.POS_TOLERANCE)),
             runCMD(ClimberConstants.PULL_SPEED))
-        .andThen(runCMD(0))
+        .andThen(runCMD(1))
         .andThen(Commands.runOnce(() -> climbEncoder.setPosition(0)));
   }
 
   public Command manualCMD(DoubleSupplier speed) {
     return Commands.run(() -> climbMotor.set(speed.getAsDouble()));
+  }
+
+  public Command zeroCMD() {
+    return Commands.sequence(
+        Commands.deadline(Commands.waitUntil(() -> climbEncoder.getVelocity() < 0.1), runCMD(0.5)),
+        Commands.runOnce(() -> climbEncoder.setPosition(-1)));
   }
 
   @Override
