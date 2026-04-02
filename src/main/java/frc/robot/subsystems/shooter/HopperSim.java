@@ -10,7 +10,7 @@ public class HopperSim extends Hopper {
   boolean kicking = false;
 
   public HopperSim(ShooterSim shooter) {
-    super();
+    super(shooter::getTargetRPS);
     this.shooter = shooter;
   }
 
