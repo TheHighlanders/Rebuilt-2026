@@ -241,7 +241,7 @@ public class Shooter extends SubsystemBase {
     return Commands.run(
         () -> {
           targetRPS = calculateRR(shotPoint.get());
-          flywheel.setControl(velocity.withVelocity(targetRPS + 1));
+          flywheel.setControl(velocity.withVelocity(targetRPS));
           SmartDashboard.putNumber("Shooter/Shot Distance", shotPoint.get().getX());
         },
         this);
@@ -251,7 +251,7 @@ public class Shooter extends SubsystemBase {
     return Commands.run(
             () -> {
               targetRPS = calculateRRGround(distance.getAsDouble());
-              flywheel.setControl(velocity.withVelocity(targetRPS + 1));
+              flywheel.setControl(velocity.withVelocity(targetRPS));
             },
             this)
         .withName("Ground Align");
@@ -261,7 +261,7 @@ public class Shooter extends SubsystemBase {
     return Commands.run(
             () -> {
               targetRPS = calculateRRHub(distance.getAsDouble());
-              flywheel.setControl(velocity.withVelocity(targetRPS + 1));
+              flywheel.setControl(velocity.withVelocity(targetRPS));
             },
             this)
         .withName("Hub Align");

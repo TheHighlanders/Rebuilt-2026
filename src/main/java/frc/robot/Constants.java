@@ -129,11 +129,16 @@ public final class Constants {
   public final class HopperConstants {
 
     public static final int HOPPERID = 21;
+    public static final int HOPPER_CURRENT_LIMIT = 50;
+    public static final boolean INVERT_HOPPER = false;
+
     public static final int KICKERID = 31;
     public static final int KICKER_CURRENT_LIMIT = 50;
-    public static final int HOPPER_CURRENT_LIMIT = 50;
     public static final boolean INVERT_KICKER = true;
-    public static final boolean INVERT_HOPPER = false;
+
+    public static final double kP = 0.00025;
+    public static final double kI = 0.000001;
+    public static final double kD = 6.5;
   }
 
   public static class IntakeConstants {
@@ -167,7 +172,7 @@ public final class Constants {
     public static final double kI = 0;
     public static final double kD = 0;
     public static final double kS = 0.1;
-    public static final double kV = 0.12;
+    public static final double kV = 0.24;
     public static final double GEAR_RATIO = 2;
 
     public static final Translation3d SHOOTER_RR_POS =

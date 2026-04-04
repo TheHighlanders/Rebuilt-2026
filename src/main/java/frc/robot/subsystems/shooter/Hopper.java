@@ -27,9 +27,9 @@ public class Hopper extends SubsystemBase {
 
   SparkClosedLoopController kickLoopController = kicker.getClosedLoopController();
 
-  double kP = 6 * 0.0001;
-  double kI = 0.0;
-  double kD = 2;
+  double kP = HopperConstants.kP;
+  double kI = HopperConstants.kI;
+  double kD = HopperConstants.kD;
 
   SparkMaxConfig kickConfig = new SparkMaxConfig();
 
@@ -58,15 +58,15 @@ public class Hopper extends SubsystemBase {
 
     kickerSpeed =
         () -> {
-          return shooterSpeed.getAsDouble() == 0 ? 600 : shooterSpeed.getAsDouble() * 60;
+          return (shooterSpeed.getAsDouble() == 0 ? 600 : shooterSpeed.getAsDouble() * 60) + 20;
         };
   }
   // spins the motor inside the hopper
   public Command shootCMD() {
-    return Commands.runOnce(
+    return Commands.run(
         () -> {
           kickLoopController.setSetpoint(kickerSpeed.getAsDouble(), ControlType.kVelocity);
-          // hopper.set(0.4);
+          hopper.set(1);
           // speed can be changed
           SmartDashboard.putString("Shooter/Hopper State", "Shooting");
         },
@@ -74,7 +74,7 @@ public class Hopper extends SubsystemBase {
   }
 
   public Command doubleCMD() {
-    return Commands.runOnce(
+    return Commands.run(
         () -> {
           kickLoopController.setSetpoint(kickerSpeed.getAsDouble(), ControlType.kVelocity);
           hopper.set(0.8);
@@ -88,7 +88,7 @@ public class Hopper extends SubsystemBase {
   public Command stopCMD() {
     return Commands.runOnce(
         () -> {
-          kickLoopController.setSetpoint(0, ControlType.kVelocity);
+          kicker.set(0); // kickLoopController.setSetpoint(0, ControlType.kVelocity);
           hopper.set(0);
           SmartDashboard.putString("Shooter/Hopper State", "Stopped");
         },
@@ -108,7 +108,7 @@ public class Hopper extends SubsystemBase {
 
   // clears the hopper
   public Command clearCMD() {
-    return Commands.runOnce(
+    return Commands.run(
         () -> {
           kickLoopController.setSetpoint(kickerSpeed.getAsDouble(), ControlType.kVelocity);
           hopper.set(-1);
