@@ -136,10 +136,10 @@ public final class Constants {
     public static final int KICKER_CURRENT_LIMIT = 50;
     public static final boolean INVERT_KICKER = true;
 
-    public static final double kP = 0.00025;
-    public static final double kI = 0.000001;
-    public static final double kD = 6.5;
-    public static final double kV = 0.5;
+    public static final double kP = 0.00002;
+    public static final double kI = 0.0000001;
+    public static final double kD = 0.002;
+    public static final double kV = 0.00225;
   }
 
   public static class IntakeConstants {

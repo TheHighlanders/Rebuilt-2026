@@ -31,6 +31,7 @@ public class Hopper extends SubsystemBase {
   double kI = HopperConstants.kI;
   double kD = HopperConstants.kD;
   double kV = HopperConstants.kV;
+  double kickBoost = 20;
 
   SparkMaxConfig kickConfig = new SparkMaxConfig();
 
@@ -56,11 +57,13 @@ public class Hopper extends SubsystemBase {
     SmartDashboard.putNumber("Shooter/Kicker/I", kI);
     SmartDashboard.putNumber("Shooter/Kicker/D", kD);
     SmartDashboard.putNumber("Shooter/Kicker/V", kV);
+    SmartDashboard.putNumber("Shooter/Kicker/Boost", kickBoost);
     SmartDashboard.putNumber("Shooter/Kicker/Reset?", 0);
 
     kickerSpeed =
         () -> {
-          return (shooterSpeed.getAsDouble() == 0 ? 600 : shooterSpeed.getAsDouble() * 60) + 20;
+          return (shooterSpeed.getAsDouble() == 0 ? 600 : shooterSpeed.getAsDouble() * 60)
+              + kickBoost;
         };
   }
   // spins the motor inside the hopper
@@ -130,7 +133,8 @@ public class Hopper extends SubsystemBase {
     kP = SmartDashboard.getNumber("Shooter/Kicker/P", kP);
     kI = SmartDashboard.getNumber("Shooter/Kicker/I", kI);
     kD = SmartDashboard.getNumber("Shooter/Kicker/D", kD);
-    kD = SmartDashboard.getNumber("Shooter/Kicker/V", kV);
+    kV = SmartDashboard.getNumber("Shooter/Kicker/V", kV);
+    kickBoost = SmartDashboard.getNumber("Shooter/Kicker/Boost", kickBoost);
     kickConfig.closedLoop.p(kP).i(kI).d(kD).feedForward.kV(kV);
     if (SmartDashboard.getNumber("Shooter/Kicker/Reset?", 0) != 0)
       kicker.configure(
