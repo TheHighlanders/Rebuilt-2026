@@ -45,7 +45,7 @@ public final class Constants {
     public static final Translation2d TO_CORNER_BUMPERS =
         new Translation2d(Units.inchesToMeters(33.25 / 2), Units.inchesToMeters(33.6 / 2));
     public static final Pose2d POSE_RESET =
-        new Pose2d(Meters.of(3.61), Meters.of(3.87), Rotation2d.kZero); // CHANGED
+        new Pose2d(Meters.of(3.61), Meters.of(3.87), Rotation2d.kCCW_90deg); // CHANGED
     // new Pose2d(
     //     FieldConstants.CLIMB_DEPOT_CORNER
     //         .plus(TO_CORNER_BUMPERS)
@@ -136,10 +136,10 @@ public final class Constants {
     public static final int KICKER_CURRENT_LIMIT = 50;
     public static final boolean INVERT_KICKER = true;
 
-    public static final double kP = 0.00002;
-    public static final double kI = 0.0000001;
-    public static final double kD = 0.002;
-    public static final double kV = 0.00225;
+    public static final double kP = 0.0001;
+    public static final double kI = 0.000001;
+    public static final double kD = 1;
+    public static final double kV = 0.00235;
   }
 
   public static class IntakeConstants {

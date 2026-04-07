@@ -31,7 +31,7 @@ public class Hopper extends SubsystemBase {
   double kI = HopperConstants.kI;
   double kD = HopperConstants.kD;
   double kV = HopperConstants.kV;
-  double kickBoost = 20;
+  double kickBoost = 50;
 
   SparkMaxConfig kickConfig = new SparkMaxConfig();
 

@@ -129,6 +129,10 @@ public class Deploy extends SubsystemBase {
     SmartDashboard.putString(
         "Intake/Deploy State",
         getCurrentCommand() == null ? "NONE" : getCurrentCommand().getName());
+
+    if (Math.abs(closedLoopController.getSetpoint() - deployEncoder.getPosition()) < 10) {
+      deployMotor.stopMotor();
+    }
   }
 
   public Command swapCMD() {

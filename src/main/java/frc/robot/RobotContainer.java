@@ -508,7 +508,7 @@ public class RobotContainer {
     // backup mannual flywheel spinup
     controller
         .rightTrigger(0.05)
-        .onTrue(shooter.flywheelHubCMD(() -> controller.getRightTriggerAxis()));
+        .onTrue(shooter.flywheelHubCMD(() -> (controller.getRightTriggerAxis() * 0.7)  + 0.7));
 
     controller.povRight().onTrue(shooter.tuneCMD());
 
