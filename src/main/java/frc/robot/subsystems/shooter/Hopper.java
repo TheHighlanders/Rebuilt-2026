@@ -30,6 +30,7 @@ public class Hopper extends SubsystemBase {
   double kP = HopperConstants.kP;
   double kI = HopperConstants.kI;
   double kD = HopperConstants.kD;
+  double kV = HopperConstants.kV;
 
   SparkMaxConfig kickConfig = new SparkMaxConfig();
 
@@ -40,7 +41,7 @@ public class Hopper extends SubsystemBase {
     hopperConfig.smartCurrentLimit(HopperConstants.HOPPER_CURRENT_LIMIT).idleMode(IdleMode.kCoast);
     hopperConfig.inverted(HopperConstants.INVERT_HOPPER);
 
-    kickConfig.closedLoop.p(kP).i(kI).d(kD);
+    kickConfig.closedLoop.p(kP).i(kI).d(kD).feedForward.kV(kV);
     kickConfig.smartCurrentLimit(HopperConstants.KICKER_CURRENT_LIMIT).idleMode(IdleMode.kCoast);
     kickConfig.inverted(HopperConstants.INVERT_KICKER);
 
@@ -54,6 +55,7 @@ public class Hopper extends SubsystemBase {
     SmartDashboard.putNumber("Shooter/Kicker/P", kP);
     SmartDashboard.putNumber("Shooter/Kicker/I", kI);
     SmartDashboard.putNumber("Shooter/Kicker/D", kD);
+    SmartDashboard.putNumber("Shooter/Kicker/V", kV);
     SmartDashboard.putNumber("Shooter/Kicker/Reset?", 0);
 
     kickerSpeed =
@@ -128,7 +130,8 @@ public class Hopper extends SubsystemBase {
     kP = SmartDashboard.getNumber("Shooter/Kicker/P", kP);
     kI = SmartDashboard.getNumber("Shooter/Kicker/I", kI);
     kD = SmartDashboard.getNumber("Shooter/Kicker/D", kD);
-    kickConfig.closedLoop.p(kP).i(kI).d(kD);
+    kD = SmartDashboard.getNumber("Shooter/Kicker/V", kV);
+    kickConfig.closedLoop.p(kP).i(kI).d(kD).feedForward.kV(kV);
     if (SmartDashboard.getNumber("Shooter/Kicker/Reset?", 0) != 0)
       kicker.configure(
           kickConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);

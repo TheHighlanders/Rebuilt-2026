@@ -139,6 +139,7 @@ public final class Constants {
     public static final double kP = 0.00025;
     public static final double kI = 0.000001;
     public static final double kD = 6.5;
+    public static final double kV = 0.5;
   }
 
   public static class IntakeConstants {
