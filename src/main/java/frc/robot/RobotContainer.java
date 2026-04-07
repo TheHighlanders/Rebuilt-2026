@@ -41,6 +41,8 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -104,13 +106,13 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {});
+        vision = new Vision(drive::addVisionMeasurement, 
         // new VisionIOPhotonVision(
         //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
         // new VisionIOPhotonVision(
-        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
-        // new VisionIOPhotonVision(
-        //     VisionConstants.camera2Name, VisionConstants.robotToCamera2),
+        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1),
+        new VisionIOPhotonVision(
+            VisionConstants.camera2Name, VisionConstants.robotToCamera2));
         // new VisionIOPhotonVision(
         //     VisionConstants.camera3Name, VisionConstants.robotToCamera3));
         shooter = new Shooter();
@@ -148,15 +150,17 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-        // new VisionIOPhotonVisionSim(
-        //     VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
-        // new VisionIOPhotonVisionSim(
-        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose),
-        // new VisionIOPhotonVisionSim(
-        //     VisionConstants.camera2Name, VisionConstants.robotToCamera2, drive::getPose),
-        // new VisionIOPhotonVisionSim(
-        //     VisionConstants.camera3Name, VisionConstants.robotToCamera3, drive::getPose));
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIOPhotonVisionSim(
+                    VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
+                new VisionIOPhotonVisionSim(
+                    VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose),
+                new VisionIOPhotonVisionSim(
+                    VisionConstants.camera2Name, VisionConstants.robotToCamera2, drive::getPose),
+                new VisionIOPhotonVisionSim(
+                    VisionConstants.camera3Name, VisionConstants.robotToCamera3, drive::getPose));
         ShooterSim temp = new ShooterSim(fuelSim); // how do i destruct this
         shooter = temp;
         hopper = new HopperSim(temp);

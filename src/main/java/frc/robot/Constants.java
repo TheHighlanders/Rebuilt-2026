@@ -64,26 +64,26 @@ public final class Constants {
     // Camera names, must match names configured on coprocessor
     public static String camera0Name = "intake_camera_driver";
     public static String camera1Name = "shooter_camera";
-    public static String camera2Name = "BL_camera";
+    public static String camera2Name = "BR_swerve_camera";
     public static String camera3Name = "BR_camera";
 
     // Robot to camera transforms
     // (Not used by Limelight, configure in web UI instead)
 
     public static Transform3d robotToCamera0 =
-        new Transform3d(Units.inchesToMeters(12), 0, 0.5, new Rotation3d(0.0, 0.0, 0.0));
+        new Transform3d(Units.inchesToMeters(12), 0, 0.5, new Rotation3d(0.0, 0.0, 0.0)); // fake
     public static Transform3d robotToCamera1 =
         new Transform3d(
             -0.132,
             -0.248,
             0.0513 + 0.115 + 0.0375,
-            new Rotation3d(0.0, Units.degreesToRadians(-25), Math.PI / 2));
+            new Rotation3d(0.0, Units.degreesToRadians(-25), Math.PI / 2)); // on hopper motor
     public static Transform3d robotToCamera2 =
         new Transform3d(
-            Units.inchesToMeters(7.5),
-            Units.inchesToMeters(-12),
-            0.1,
-            new Rotation3d(0.0, -0.6, -Math.PI / 2));
+            Units.inchesToMeters(-9),
+            Units.inchesToMeters(-11),
+            Units.inchesToMeters(11),
+            new Rotation3d(0.0, -Math.PI / 4, Units.degreesToRadians(-90)));  
     public static Transform3d robotToCamera3 =
         new Transform3d(
             Units.inchesToMeters(10),
