@@ -41,6 +41,7 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 
 /**
@@ -105,13 +106,13 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {});
+        vision = new Vision(drive::addVisionMeasurement, 
         // new VisionIOPhotonVision(
         //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
         // new VisionIOPhotonVision(
-        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
-        // new VisionIOPhotonVision(
-        //     VisionConstants.camera2Name, VisionConstants.robotToCamera2),
+        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1),
+        new VisionIOPhotonVision(
+            VisionConstants.camera2Name, VisionConstants.robotToCamera2));
         // new VisionIOPhotonVision(
         //     VisionConstants.camera3Name, VisionConstants.robotToCamera3));
         shooter = new Shooter();
