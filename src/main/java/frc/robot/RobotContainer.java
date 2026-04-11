@@ -106,13 +106,15 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
-        vision = new Vision(drive::addVisionMeasurement, 
-        // new VisionIOPhotonVision(
-        //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
-        // new VisionIOPhotonVision(
-        //     VisionConstants.camera1Name, VisionConstants.robotToCamera1),
-        new VisionIOPhotonVision(
-            VisionConstants.camera2Name, VisionConstants.robotToCamera2));
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                // new VisionIOPhotonVision(
+                //     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
+                new VisionIOPhotonVision(
+                    VisionConstants.camera1Name, VisionConstants.robotToCamera1));
+                // new VisionIOPhotonVision(
+                //     VisionConstants.camera2Name, VisionConstants.robotToCamera2));
         // new VisionIOPhotonVision(
         //     VisionConstants.camera3Name, VisionConstants.robotToCamera3));
         shooter = new Shooter();
@@ -509,7 +511,7 @@ public class RobotContainer {
     // backup mannual flywheel spinup
     controller
         .rightTrigger(0.05)
-        .onTrue(shooter.flywheelHubCMD(() -> (controller.getRightTriggerAxis() * 0.7)  + 0.7));
+        .onTrue(shooter.flywheelHubCMD(() -> (controller.getRightTriggerAxis() * 0.7) + 0.7));
 
     controller.povRight().onTrue(shooter.tuneCMD());
 
