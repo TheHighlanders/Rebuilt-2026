@@ -74,16 +74,17 @@ public final class Constants {
         new Transform3d(Units.inchesToMeters(12), 0, 0.5, new Rotation3d(0.0, 0.0, 0.0)); // fake
     public static Transform3d robotToCamera1 =
         new Transform3d(
-            -0.132,
-            -0.248,
-            0.0513 + 0.115 + 0.0375,
-            new Rotation3d(0.0, Units.degreesToRadians(-25), Math.PI / 2)); // on hopper motor
+            -0.320,
+            -0.137,
+            0.285,
+            new Rotation3d(
+                -Math.PI / 2, (Math.PI / 2) - 1.145, Math.PI / 2)); // on climber supports
     public static Transform3d robotToCamera2 =
         new Transform3d(
             Units.inchesToMeters(-9),
             Units.inchesToMeters(-11),
             Units.inchesToMeters(11),
-            new Rotation3d(0.0, -Math.PI / 4, Units.degreesToRadians(-90)));  
+            new Rotation3d(0.0, -Math.PI / 4, Units.degreesToRadians(-90)));
     public static Transform3d robotToCamera3 =
         new Transform3d(
             Units.inchesToMeters(10),
