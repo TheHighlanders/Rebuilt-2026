@@ -113,10 +113,6 @@ public class Shooter extends SubsystemBase {
     double rotationalVelocity =
         linearVelocity / (ShooterConstants.FLYWHEEL_RADIUS.in(Meters) * 4 * Math.PI);
     return rotationalVelocity;
-    // * SmartDashboard.getNumber(
-    //     "Shooter/Distance Tune",
-    //     1); // * 2; // to account for a rotating ball. - but I think the gearbox
-    // does that
   }
 
   /*
@@ -127,21 +123,6 @@ public class Shooter extends SubsystemBase {
     return calculate(robotToShooterTraj(trajectory));
   }
 
-  /*
-   * finds desired angular velocity of the shooter to reach the hub from a certain distance away
-   * using a physics simulation.
-   */
-  protected double calculateRRHub(double distance) {
-    return calculateRR(new Translation2d(distance, FieldConstants.HUB_HEIGHT));
-  }
-
-  /*
-   * finds desired angular velocity of the shooter to reach the ground a certain distance away
-   * using a physics simulation.
-   */
-  protected double calculateRRGround(double distance) {
-    return calculateRR(new Translation2d(distance, 0));
-  }
 
   /*
    * finds desired angular velocity of the shooter to reach the ground a certain distance away
@@ -150,13 +131,15 @@ public class Shooter extends SubsystemBase {
   protected double calculateGroundLookup(double distance) {
     // find position of data at around desired distance on lookup table
     SmartDashboard.putNumber("Shooter/Ground Calc'd Distance", distance);
+    if (distance > 500) return 18;
+
     int index = 0;
     for (double test : LookupTable.DISTS) {
       if (distance > test) index++;
       else break;
     }
     if (index >= LookupTable.DISTS.length) index = LookupTable.DISTS.length - 1;
-    // int range = 1; // (int) Math.sqrt(LookupTable.DISTS.length / 4);
+    if (index <= 0) index = 1;
 
     double lowRPS = LookupTable.RPMS[index - 1];
     double highRPS = LookupTable.RPMS[index];
@@ -167,46 +150,6 @@ public class Shooter extends SubsystemBase {
 
     double targetRPSLookup = lowRPS + ((highRPS - lowRPS) * iterateProportion);
 
-    // // data limits
-    // if (index + range > LookupTable.DISTS.length) index = LookupTable.DISTS.length - range;
-
-    // if (index < Math.sqrt(LookupTable.DISTS.length / 4)) index = range;
-
-    // // find neigboring data
-    // double[] neighborsX = Arrays.copyOfRange(LookupTable.DISTS, index - range, index + range);
-
-    // double[] neighborsY = Arrays.copyOfRange(LookupTable.RPMS, index - range, index + range);
-
-    // /* FIND REGRESSION FOR NEIGHBORING DATA */
-    // // x mean
-    // double xMean = 0;
-    // for (double d : neighborsX) xMean += d;
-    // xMean /= neighborsX.length;
-
-    // // x standard deviation
-    // double xStdDev = 0;
-    // for (double d : neighborsX) xStdDev += Math.pow(d - xMean, 2);
-    // xStdDev = Math.sqrt(xStdDev / neighborsX.length);
-
-    // // y mean
-    // double yMean = 0;
-    // for (double d : neighborsY) yMean += d;
-    // yMean /= neighborsY.length;
-
-    // // y standard deviation
-    // double yStdDev = 0;
-    // for (double d : neighborsY) yStdDev += Math.pow(d - yMean, 2);
-    // yStdDev = Math.sqrt(yStdDev / neighborsY.length);
-
-    // // slope
-    // double r = 0;
-    // for (int i = 0; i < neighborsX.length; i++) {
-    //   r += (neighborsX[i] - xMean) / xStdDev * (neighborsY[i] - yMean) / yStdDev;
-    // }
-    // r /= neighborsX.length - 1;
-    // double slope = r * (yStdDev / xStdDev);
-
-    // regression
     return targetRPSLookup;
   }
 
@@ -215,17 +158,25 @@ public class Shooter extends SubsystemBase {
    * using a lookup table of values taken from the real robot.
    */
   protected double calculateLookup(Translation2d trajectory) {
-    // double fallrate =
-    //     (trajectory.getY()
-    //             - Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians)) * trajectory.getX())
-    //         / (trajectory.getX() * trajectory.getX());
-    // return calculateGroundLookup(
-    //     (-Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians))
-    //             * Math.sqrt(
-    //                 Math.pow(Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians)), 2)
-    //                     - (4 * ShooterConstants.SHOOTER_RR_POS.getZ() * fallrate)))
-    //         / (2 * fallrate));
-    return calculateGroundLookup(trajectory.getX() + (trajectory.getY() / 3));
+    //detecting a shot too steep. 
+    //We multiply by two since sometimes the trajectory hits the target pose while the ball is still going up.
+    if (2*trajectory.getY()/trajectory.getX() > Math.tan(1.36135682)) 
+    return calculateLookup(
+      new Translation2d(
+        2*trajectory.getY()/Math.tan(1.36135682), 
+        trajectory.getY()));
+
+    double fallrate =
+        (trajectory.getY()
+                - (Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians)) * trajectory.getX()))
+            / (trajectory.getX() * trajectory.getX());
+    
+    return calculateGroundLookup(
+        (-Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians))
+                - Math.sqrt(
+                    Math.pow(Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians)), 2)
+                        - (4 * ShooterConstants.SHOOTER_RR_POS.getZ() * fallrate)))
+            / (2 * fallrate));
   }
 
   /*
@@ -234,14 +185,6 @@ public class Shooter extends SubsystemBase {
    */
   protected double calculateRRLookup(Translation2d trajectory) {
     return calculateLookup(robotToShooterTraj(trajectory));
-  }
-
-  /*
-   * finds desired angular velocity of the shooter to reach the hub from a certain distance away
-   * using a physics simulation.
-   */
-  protected double calculateHubRRLookup(double distance) {
-    return calculateRRLookup(new Translation2d(distance, FieldConstants.HUB_HEIGHT));
   }
 
   public boolean atSpeed() {
@@ -259,23 +202,11 @@ public class Shooter extends SubsystemBase {
   }
 
   public Command flywheelGndCMD(DoubleSupplier distance) {
-    return Commands.run(
-            () -> {
-              targetRPS = calculateRRGround(distance.getAsDouble());
-              flywheel.setControl(velocity.withVelocity(targetRPS));
-            },
-            this)
-        .withName("Ground Align");
+    return flywheelCMD(() -> new Translation2d(distance.getAsDouble(), 0));
   }
 
   public Command flywheelHubCMD(DoubleSupplier distance) {
-    return Commands.run(
-            () -> {
-              targetRPS = calculateHubRRLookup(distance.getAsDouble());
-              flywheel.setControl(velocity.withVelocity(targetRPS));
-            },
-            this)
-        .withName("Hub Align");
+    return flywheelCMD(() -> new Translation2d(distance.getAsDouble(), FieldConstants.HUB_HEIGHT));
   }
 
   public Command rawFlywheelCMD(DoubleSupplier drive) {
