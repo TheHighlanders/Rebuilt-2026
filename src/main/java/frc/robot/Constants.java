@@ -150,7 +150,7 @@ public final class Constants {
     public static final double INTAKE_SPEED = -60;
     public static final double SPITAKE_SPEED = 30;
     public static final double DEPLOY_SPEED = 1;
-    public static final double DEPLOY_POSITION = -500;
+    public static final double DEPLOY_POSITION = -450;
     public static final double READY_POSITION = -100;
     public static final double UP_POSITION = 15;
     public static final double DEPLOY_TOLERANCE = 0.01;
@@ -187,9 +187,13 @@ public final class Constants {
 
     public static class LookupTable {
       // SORTED!!
-      public static final double[] RPMS = {1, 2, 3, 5}; // TODO: fill with real data
+      public static final double[] RPMS = {
+        10, 10.5, 11, 11.5, 12, 12.5, 13, 14, 15, 15.5, 16, 17, 17.5, 18
+      }; // TODO: fill with real data
       // DISTANCE OF FUEL LANDING FROM SHOOTER!!
-      public static final double[] DISTS = {1, 2, 2.5, 5.5}; // TODO: fill with real data
+      public static final double[] DISTS = {
+        1.44, 1.7, 2.2, 2.37, 2.87, 2.80, 2.85, 3.54, 3.74, 3.90, 4.05, 4.75, 500
+      }; // TODO: fill with real data
     }
   }
 

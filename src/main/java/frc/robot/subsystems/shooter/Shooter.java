@@ -26,7 +26,6 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.ShooterConstants.LookupTable;
-import java.util.Arrays;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -150,54 +149,65 @@ public class Shooter extends SubsystemBase {
    */
   protected double calculateGroundLookup(double distance) {
     // find position of data at around desired distance on lookup table
+    SmartDashboard.putNumber("Shooter/Ground Calc'd Distance", distance);
     int index = 0;
     for (double test : LookupTable.DISTS) {
       if (distance > test) index++;
       else break;
     }
-    int range = (int) Math.sqrt(LookupTable.DISTS.length / 4);
+    if (index >= LookupTable.DISTS.length) index = LookupTable.DISTS.length - 1;
+    // int range = 1; // (int) Math.sqrt(LookupTable.DISTS.length / 4);
 
-    // data limits
-    if (index + range > LookupTable.DISTS.length) index = LookupTable.DISTS.length - range;
+    double lowRPS = LookupTable.RPMS[index - 1];
+    double highRPS = LookupTable.RPMS[index];
 
-    if (index < Math.sqrt(LookupTable.DISTS.length / 4)) index = range;
+    double iterateProportion =
+        (distance - LookupTable.DISTS[index - 1])
+            / (LookupTable.DISTS[index] - LookupTable.DISTS[index - 1]);
 
-    // find neigboring data
-    double[] neighborsX = Arrays.copyOfRange(LookupTable.DISTS, index - range, index + range);
+    double targetRPSLookup = lowRPS + ((highRPS - lowRPS) * iterateProportion);
 
-    double[] neighborsY = Arrays.copyOfRange(LookupTable.RPMS, index - range, index + range);
+    // // data limits
+    // if (index + range > LookupTable.DISTS.length) index = LookupTable.DISTS.length - range;
 
-    /* FIND REGRESSION FOR NEIGHBORING DATA */
-    // x mean
-    double xMean = 0;
-    for (double d : neighborsX) xMean += d;
-    xMean /= neighborsX.length;
+    // if (index < Math.sqrt(LookupTable.DISTS.length / 4)) index = range;
 
-    // x standard deviation
-    double xStdDev = 0;
-    for (double d : neighborsX) xStdDev += Math.pow(d - xMean, 2);
-    xStdDev = Math.sqrt(xStdDev / neighborsX.length);
+    // // find neigboring data
+    // double[] neighborsX = Arrays.copyOfRange(LookupTable.DISTS, index - range, index + range);
 
-    // y mean
-    double yMean = 0;
-    for (double d : neighborsY) yMean += d;
-    yMean /= neighborsY.length;
+    // double[] neighborsY = Arrays.copyOfRange(LookupTable.RPMS, index - range, index + range);
 
-    // y standard deviation
-    double yStdDev = 0;
-    for (double d : neighborsY) yStdDev += Math.pow(d - yMean, 2);
-    yStdDev = Math.sqrt(yStdDev / neighborsY.length);
+    // /* FIND REGRESSION FOR NEIGHBORING DATA */
+    // // x mean
+    // double xMean = 0;
+    // for (double d : neighborsX) xMean += d;
+    // xMean /= neighborsX.length;
 
-    // slope
-    double r = 0;
-    for (int i = 0; i < neighborsX.length; i++) {
-      r += (neighborsX[i] - xMean) / xStdDev * (neighborsY[i] - yMean) / yStdDev;
-    }
-    r /= neighborsX.length - 1;
-    double slope = r * (yStdDev / xStdDev);
+    // // x standard deviation
+    // double xStdDev = 0;
+    // for (double d : neighborsX) xStdDev += Math.pow(d - xMean, 2);
+    // xStdDev = Math.sqrt(xStdDev / neighborsX.length);
+
+    // // y mean
+    // double yMean = 0;
+    // for (double d : neighborsY) yMean += d;
+    // yMean /= neighborsY.length;
+
+    // // y standard deviation
+    // double yStdDev = 0;
+    // for (double d : neighborsY) yStdDev += Math.pow(d - yMean, 2);
+    // yStdDev = Math.sqrt(yStdDev / neighborsY.length);
+
+    // // slope
+    // double r = 0;
+    // for (int i = 0; i < neighborsX.length; i++) {
+    //   r += (neighborsX[i] - xMean) / xStdDev * (neighborsY[i] - yMean) / yStdDev;
+    // }
+    // r /= neighborsX.length - 1;
+    // double slope = r * (yStdDev / xStdDev);
 
     // regression
-    return yMean + (slope * (distance - xMean));
+    return targetRPSLookup;
   }
 
   /*
@@ -205,16 +215,17 @@ public class Shooter extends SubsystemBase {
    * using a lookup table of values taken from the real robot.
    */
   protected double calculateLookup(Translation2d trajectory) {
-    double fallrate =
-        (trajectory.getY()
-                - Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians)) * trajectory.getX())
-            / (trajectory.getX() * trajectory.getX());
-    return calculateGroundLookup(
-        (-Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians))
-                * Math.sqrt(
-                    Math.pow(Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians)), 2)
-                        - (4 * ShooterConstants.SHOOTER_RR_POS.getZ() * fallrate)))
-            / (2 * fallrate));
+    // double fallrate =
+    //     (trajectory.getY()
+    //             - Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians)) * trajectory.getX())
+    //         / (trajectory.getX() * trajectory.getX());
+    // return calculateGroundLookup(
+    //     (-Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians))
+    //             * Math.sqrt(
+    //                 Math.pow(Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians)), 2)
+    //                     - (4 * ShooterConstants.SHOOTER_RR_POS.getZ() * fallrate)))
+    //         / (2 * fallrate));
+    return calculateGroundLookup(trajectory.getX() + (trajectory.getY() / 3));
   }
 
   /*
@@ -240,7 +251,7 @@ public class Shooter extends SubsystemBase {
   public Command flywheelCMD(Supplier<Translation2d> shotPoint) {
     return Commands.run(
         () -> {
-          targetRPS = calculateRR(shotPoint.get());
+          targetRPS = calculateRRLookup(shotPoint.get());
           flywheel.setControl(velocity.withVelocity(targetRPS));
           SmartDashboard.putNumber("Shooter/Shot Distance", shotPoint.get().getX());
         },
@@ -260,7 +271,7 @@ public class Shooter extends SubsystemBase {
   public Command flywheelHubCMD(DoubleSupplier distance) {
     return Commands.run(
             () -> {
-              targetRPS = calculateRRHub(distance.getAsDouble());
+              targetRPS = calculateHubRRLookup(distance.getAsDouble());
               flywheel.setControl(velocity.withVelocity(targetRPS));
             },
             this)
@@ -279,10 +290,8 @@ public class Shooter extends SubsystemBase {
   public Command tuneCMD() {
     return Commands.run(
             () -> {
-              flywheel.setControl(
-                  velocity.withVelocity(
-                      SmartDashboard.getNumber(
-                          "Shooter/Mannual Target RPS", 0))); // .setVoltage(voltage);
+              targetRPS = SmartDashboard.getNumber("Shooter/Mannual Target RPS", 0);
+              flywheel.setControl(velocity.withVelocity(targetRPS)); // .setVoltage(voltage);
             },
             this)
         .withName("Tuning");

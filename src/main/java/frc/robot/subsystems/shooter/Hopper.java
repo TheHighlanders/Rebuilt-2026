@@ -62,8 +62,7 @@ public class Hopper extends SubsystemBase {
 
     kickerSpeed =
         () -> {
-          return (shooterSpeed.getAsDouble() == 0 ? 600 : shooterSpeed.getAsDouble() * 60)
-              + kickBoost;
+          return 700;
         };
   }
   // spins the motor inside the hopper

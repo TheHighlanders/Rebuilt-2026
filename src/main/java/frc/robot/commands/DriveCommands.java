@@ -370,9 +370,10 @@ public class DriveCommands {
                 () ->
                     new Translation2d(
                         drive
-                            .getPose()
-                            .getTranslation()
-                            .getDistance(targetFR.get().toTranslation2d()),
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(targetFR.get().toTranslation2d())
+                            + 0.2,
                         targetFR.get().getZ())),
             // shooter.flywheelCMD(
             //     () -> {

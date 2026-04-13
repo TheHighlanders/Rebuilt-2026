@@ -130,7 +130,10 @@ public class Deploy extends SubsystemBase {
         "Intake/Deploy State",
         getCurrentCommand() == null ? "NONE" : getCurrentCommand().getName());
 
-    if (Math.abs(closedLoopController.getSetpoint() - deployEncoder.getPosition()) < 10) {
+    SmartDashboard.putNumber(
+        "Intake/Deploy/Setpoint Error",
+        Math.abs(closedLoopController.getSetpoint() - deployEncoder.getPosition()));
+    if (Math.abs(closedLoopController.getSetpoint() - deployEncoder.getPosition()) < 30) {
       deployMotor.stopMotor();
     }
   }
