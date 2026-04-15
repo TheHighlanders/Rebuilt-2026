@@ -28,7 +28,7 @@ public class Autos {
   Hopper hopper;
   Shooter shooter;
   Climber climber;
-  private static final double boost = 0.3;
+  private static final double boost = 0;
 
   public Autos(
       Drive drive, Deploy deploy, Intake intake, Hopper hopper, Shooter shooter, Climber climber) {
@@ -136,13 +136,13 @@ public class Autos {
             Commands.sequence(
                 pose.resetOdometry(),
                 Commands.deadline(
-                    Commands.waitSeconds(0),
-                    DriveCommands.joystickDrive(drive, () -> 0, () -> 0, () -> 0, () -> true)),
+                    Commands.waitSeconds(2.5),
+                    DriveCommands.joystickDrive(drive, () -> 0, () -> 0.1, () -> 0, () -> true)),
                 Commands.deadline(
                     Commands.waitSeconds(12.5),
                     Commands.parallel(
                         shooter.rawFlywheelCMD(() -> 0.25),
-                        Commands.sequence(Commands.waitSeconds(1), hopper.shootCMD()))),
+                        Commands.sequence(Commands.waitSeconds(3), hopper.shootCMD()))),
                 Commands.deadline(
                     Commands.waitSeconds(2),
                     Commands.parallel(hopper.stopCMD(), shooter.stopCMD()))));
@@ -195,15 +195,11 @@ public class Autos {
             shooter.flywheelHubCMD(
                 () ->
                     Math.min(
-                            drive
-                                .getPose()
-                                .getTranslation()
-                                .getDistance(FieldConstants.HUB_POSE_BLUE),
-                            drive
-                                .getPose()
-                                .getTranslation()
-                                .getDistance(FieldConstants.HUB_POSE_RED))
-                        + boost));
+                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
+                        drive
+                            .getPose()
+                            .getTranslation()
+                            .getDistance(FieldConstants.HUB_POSE_RED))));
 
     shoot.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
 
@@ -525,7 +521,7 @@ public class Autos {
                         Commands.waitSeconds(routineWaitTimer),
                         Commands.parallel(
                             shooter.rawFlywheelCMD(() -> 0.25),
-                            Commands.sequence(Commands.waitSeconds(1), hopper.shootCMD()))),
+                            Commands.sequence(Commands.waitSeconds(3), hopper.shootCMD()))),
                     Commands.deadline(
                         Commands.waitSeconds(2),
                         Commands.parallel(hopper.stopCMD(), shooter.stopCMD()))),

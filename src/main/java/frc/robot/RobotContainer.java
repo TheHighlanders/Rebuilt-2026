@@ -289,7 +289,6 @@ public class RobotContainer {
   private void configureButtonBindings() {
     robotRelative = false;
     speed = 1;
-    mannualShotLength = 1;
 
     /* DRIVE COMMANDS */
     // Default command, normal field-relative drive

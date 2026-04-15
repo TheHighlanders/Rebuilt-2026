@@ -373,7 +373,7 @@ public class DriveCommands {
                                 .getPose()
                                 .getTranslation()
                                 .getDistance(targetFR.get().toTranslation2d())
-                            + 0.3, // boost
+                            + 0.15, // boost
                         targetFR.get().getZ())),
             // shooter.flywheelCMD(
             //     () -> {
