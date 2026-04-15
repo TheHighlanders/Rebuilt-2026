@@ -66,7 +66,6 @@ public class RobotContainer {
 
   private boolean robotRelative;
   private double speed;
-  private double mannualShotLength;
   double testDistance = 1;
 
   // Dashboard inputs

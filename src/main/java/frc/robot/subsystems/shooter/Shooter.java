@@ -123,7 +123,6 @@ public class Shooter extends SubsystemBase {
     return calculate(robotToShooterTraj(trajectory));
   }
 
-
   /*
    * finds desired angular velocity of the shooter to reach the ground a certain distance away
    * using a lookup table of values taken from the real robot.
@@ -131,26 +130,26 @@ public class Shooter extends SubsystemBase {
   protected double calculateGroundLookup(double distance) {
     // find position of data at around desired distance on lookup table
     SmartDashboard.putNumber("Shooter/Ground Calc'd Distance", distance);
-    if (distance > 500) return 18;
+    // if (distance > 500) return 18;
 
-    int index = 0;
-    for (double test : LookupTable.DISTS) {
-      if (distance > test) index++;
-      else break;
-    }
-    if (index >= LookupTable.DISTS.length) index = LookupTable.DISTS.length - 1;
-    if (index <= 0) index = 1;
+    // int index = 0;
+    // for (double test : LookupTable.DISTS) {
+    //   if (distance > test) index++;
+    //   else break;
+    // }
+    // if (index >= LookupTable.DISTS.length) index = LookupTable.DISTS.length - 1;
+    // if (index <= 0) index = 1;
 
-    double lowRPS = LookupTable.RPMS[index - 1];
-    double highRPS = LookupTable.RPMS[index];
+    // double lowRPS = LookupTable.RPMS[index - 1];
+    // double highRPS = LookupTable.RPMS[index];
 
-    double iterateProportion =
-        (distance - LookupTable.DISTS[index - 1])
-            / (LookupTable.DISTS[index] - LookupTable.DISTS[index - 1]);
+    // double iterateProportion =
+    //     (distance - LookupTable.DISTS[index - 1])
+    //         / (LookupTable.DISTS[index] - LookupTable.DISTS[index - 1]);
 
-    double targetRPSLookup = lowRPS + ((highRPS - lowRPS) * iterateProportion);
+    // double targetRPSLookup = lowRPS + ((highRPS - lowRPS) * iterateProportion);
 
-    return targetRPSLookup;
+    return LookupTable.rpmFromRegression(distance);
   }
 
   /*
@@ -158,19 +157,20 @@ public class Shooter extends SubsystemBase {
    * using a lookup table of values taken from the real robot.
    */
   protected double calculateLookup(Translation2d trajectory) {
-    //detecting a shot too steep. 
-    //We multiply by two since sometimes the trajectory hits the target pose while the ball is still going up.
-    if (2*trajectory.getY()/trajectory.getX() > Math.tan(1.36135682)) 
-    return calculateLookup(
-      new Translation2d(
-        2*trajectory.getY()/Math.tan(1.36135682), 
-        trajectory.getY()));
+    // detecting a shot too steep.
+    // We multiply by two since sometimes the trajectory hits the target pose while the ball is
+    // still going up.
+    if (2 * trajectory.getY() / trajectory.getX() > Math.tan(1.36135682))
+      return calculateLookup(
+          new Translation2d(2 * trajectory.getY() / Math.tan(1.36135682), trajectory.getY()));
+
+    // https://www.desmos.com/calculator/jceelcasyl
 
     double fallrate =
         (trajectory.getY()
                 - (Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians)) * trajectory.getX()))
             / (trajectory.getX() * trajectory.getX());
-    
+
     return calculateGroundLookup(
         (-Math.tan(ShooterConstants.SHOOTER_HOOD.in(Radians))
                 - Math.sqrt(

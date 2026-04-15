@@ -150,20 +150,20 @@ public final class Constants {
     public static final double INTAKE_SPEED = -60;
     public static final double SPITAKE_SPEED = 30;
     public static final double DEPLOY_SPEED = 1;
-    public static final double DEPLOY_POSITION = -450;
-    public static final double READY_POSITION = -100;
-    public static final double UP_POSITION = 15;
+    public static final double DEPLOY_POSITION = -0.05;
+    public static final double READY_POSITION = 0.18;
+    public static final double UP_POSITION = 0.35;
     public static final double DEPLOY_TOLERANCE = 0.01;
 
-    public static final double kP = 0.4; // 1.33;
+    public static final double kP = 1.5;
     public static final double kI = 0;
-    public static final double kD = 0; // 7.84;
-    public static final double DEPLOY_RATIO = 45;
+    public static final double kD = 0.1; // 7.84;
+    public static final double DEPLOY_RATIO = 0.02222222222; // 1/45
     public static final double INTAKE_RATIO = 1;
 
     public static double kS = 1.68;
-    public static double kG = 3.05;
-    public static double kV = 0.27;
+    public static double kG = 1;
+    public static double kV = 4;
   }
 
   public static class ShooterConstants {
@@ -186,14 +186,26 @@ public final class Constants {
     public static final double GRAVITY = 9.80665;
 
     public static class LookupTable {
-      // SORTED!!
+
       public static final double[] RPMS = {
-        10, 10.5, 11, 11.5, 12, 12.5, 13, 14, 15, 15.5, 16, 17, 17.5, 18
-      }; // TODO: fill with real data
-      // DISTANCE OF FUEL LANDING FROM SHOOTER!!
-      public static final double[] DISTS = {
+        10, 10.5, 11, 11.5, 12, 12.5, 13, 14, 15, 15.5, 16, 17, 18
+      };
+
+      public static final double[] DISTS = { // from shooter to ground
         1.44, 1.7, 2.2, 2.37, 2.87, 2.80, 2.85, 3.54, 3.74, 3.90, 4.05, 4.75, 500
-      }; // TODO: fill with real data
+      };
+
+      // https://www.desmos.com/calculator/u1wxwbbfe7
+      public static double rpmFromRegression(double d) {
+        if (d > 4.75) return 17.5;
+        return -0.175267 * d * d * d * d
+            + 1.96563 * d * d * d
+            - 7.52783 * d * d
+            + 13.57803 * d
+            + 0.938049;
+        // we can also make it linear
+        // return 2.2705d + 6.31543;
+      }
     }
   }
 

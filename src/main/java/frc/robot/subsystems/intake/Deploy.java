@@ -34,6 +34,12 @@ public class Deploy extends SubsystemBase {
   double inPos = IntakeConstants.UP_POSITION;
   double readyPos = IntakeConstants.READY_POSITION;
   double downPos = IntakeConstants.DEPLOY_POSITION;
+  double kP = IntakeConstants.kP;
+  double kI = IntakeConstants.kI;
+  double kD = IntakeConstants.kD;
+  double kS = IntakeConstants.kS;
+  double kV = IntakeConstants.kV;
+  double kG = IntakeConstants.kG;
 
   SparkMaxConfig config = new SparkMaxConfig();
   ArmFeedforward feedforward =
@@ -45,13 +51,13 @@ public class Deploy extends SubsystemBase {
     config
         .closedLoop
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        .p(IntakeConstants.kP)
-        .i(IntakeConstants.kI)
-        .d(IntakeConstants.kD)
+        .p(kP)
+        .i(kI)
+        .d(kD)
         .feedForward
-        .kS(IntakeConstants.kS)
-        .kCos(IntakeConstants.kG)
-        .kV(IntakeConstants.kV);
+        .kS(kS)
+        .kCos(kG)
+        .kV(kV);
     // .kCosRatio(IntakeConstants.DEPLOY_RATIO);
     deployMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     SmartDashboard.putNumber("Intake/Deploy/Deploy Encoder", deployEncoder.getPosition());
@@ -60,7 +66,16 @@ public class Deploy extends SubsystemBase {
     SmartDashboard.putNumber("Intake/Intake Ready Setpoint", readyPos);
     SmartDashboard.putNumber("Intake/Intake Down Setpoint", downPos);
 
-    deployEncoder.setPosition(0);
+    SmartDashboard.putNumber("Intake/Deploy/tune/kP", kP);
+    SmartDashboard.putNumber("Intake/Deploy/tune/kI", kI);
+    SmartDashboard.putNumber("Intake/Deploy/tune/kD", kD);
+    SmartDashboard.putNumber("Intake/Deploy/tune/kS", kS);
+    SmartDashboard.putNumber("Intake/Deploy/tune/kV", kG);
+    SmartDashboard.putNumber("Intake/Deploy/tune/kG", kG);
+    SmartDashboard.putNumber("Intake/Deploy/tune/ratio", IntakeConstants.DEPLOY_RATIO);
+    SmartDashboard.putNumber("Intake/Deploy/tune/Reset?", 0);
+
+    deployEncoder.setPosition(0.35);
   }
 
   public Command deployCMD() {
@@ -122,6 +137,34 @@ public class Deploy extends SubsystemBase {
     readyPos = SmartDashboard.getNumber("Intake/Intake Ready Setpoint", readyPos);
     downPos = SmartDashboard.getNumber("Intake/Intake Down Setpoint", downPos);
 
+    kP = SmartDashboard.getNumber("Intake/Deploy/tune/kP", kP);
+    kI = SmartDashboard.getNumber("Intake/Deploy/tune/kI", kI);
+    kD = SmartDashboard.getNumber("Intake/Deploy/tune/kD", kD);
+    kS = SmartDashboard.getNumber("Intake/Deploy/tune/kS", kS);
+    kV = SmartDashboard.getNumber("Intake/Deploy/tune/kV", kG);
+    kG = SmartDashboard.getNumber("Intake/Deploy/tune/kG", kG);
+
+    config
+        .closedLoop
+        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+        .p(kP)
+        .i(kI)
+        .d(kD)
+        .feedForward
+        .kS(kS)
+        .kCos(kG)
+        .kV(kV)
+        .kCosRatio(IntakeConstants.DEPLOY_RATIO);
+
+    config.encoder.positionConversionFactor(
+        SmartDashboard.getNumber("Intake/Deploy/tune/ratio", IntakeConstants.DEPLOY_RATIO));
+
+    if (SmartDashboard.getNumber("Intake/Deploy/tune/Reset?", 0) != 0) {
+      deployMotor.configure(
+          config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+      deployEncoder.setPosition(0.35);
+    }
+
     SmartDashboard.putNumber("Intake/Deploy/Deploy Encoder", deployEncoder.getPosition());
     SmartDashboard.putNumber("Intake/Deploy/Deploy Encoder Velocity", deployEncoder.getVelocity());
     SmartDashboard.putNumber("Intake/Deploy/Deploy Current", deployMotor.getOutputCurrent());
@@ -133,8 +176,8 @@ public class Deploy extends SubsystemBase {
     SmartDashboard.putNumber(
         "Intake/Deploy/Setpoint Error",
         Math.abs(closedLoopController.getSetpoint() - deployEncoder.getPosition()));
-    if (Math.abs(closedLoopController.getSetpoint() - deployEncoder.getPosition()) < 30) {
-      deployMotor.stopMotor();
+    if (deployEncoder.getPosition() < -0.05) {
+      deployMotor.set(0);
     }
   }
 
