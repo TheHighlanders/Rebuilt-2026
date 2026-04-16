@@ -137,11 +137,14 @@ public class Autos {
                 pose.resetOdometry(),
                 Commands.deadline(
                     Commands.waitSeconds(2.5),
-                    DriveCommands.joystickDrive(drive, () -> 0, () -> 0.1, () -> 0, () -> true)),
+                    DriveCommands.joystickDrive(drive, () -> 0, () -> 0.35, () -> 0, () -> true)),
+                Commands.deadline(
+                    Commands.waitSeconds(0.1),
+                    DriveCommands.joystickDrive(drive, () -> 0, () -> 0, () -> 0, () -> true)),
                 Commands.deadline(
                     Commands.waitSeconds(12.5),
                     Commands.parallel(
-                        shooter.rawFlywheelCMD(() -> 0.25),
+                        shooter.flywheelHubCMD(() -> 1.5),
                         Commands.sequence(Commands.waitSeconds(3), hopper.shootCMD()))),
                 Commands.deadline(
                     Commands.waitSeconds(2),
@@ -258,7 +261,12 @@ public class Autos {
 
     collect
         .atTime("intake")
-        .onTrue(Commands.sequence(deploy.deployCMD(), intake.intakeCMD(), sendState("Intaking!")));
+        .onTrue(
+            Commands.sequence(
+                Commands.waitSeconds(0.5),
+                deploy.deployCMD(),
+                intake.intakeCMD(),
+                sendState("Intaking!")));
 
     collect
         .done()
@@ -268,7 +276,11 @@ public class Autos {
                 sendState("Shooting!"),
                 DriveCommands.joystickAlignDrive(drive, shooter, () -> 0, () -> 0, () -> true)));
 
-    collect.doneDelayed(1).onTrue(hopper.shootCMD());
+    collect
+        .doneDelayed(1)
+        .onTrue(
+            Commands.sequence(
+                Commands.waitUntil(DriveCommands.aligned()::getAsBoolean), hopper.shootCMD()));
 
     collect
         .atTimeBeforeEnd(1)
