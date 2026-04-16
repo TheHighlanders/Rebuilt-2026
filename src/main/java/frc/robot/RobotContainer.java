@@ -408,9 +408,9 @@ public class RobotContainer {
         .leftBumper()
         .onFalse(Commands.parallel(intake.stoptakeCMD())); // , deploy.readyCMD()));
     // outtake
-    operator.a().onTrue(intake.spitakeCMD());
+    operator.x().onTrue(intake.spitakeCMD());
     operator
-        .a()
+        .x()
         .onFalse(
             Commands.either(
                 intake.intakeCMD(), intake.stoptakeCMD(), controller.leftBumper()::getAsBoolean));
@@ -418,7 +418,7 @@ public class RobotContainer {
     operator.b().onTrue(deploy.readyCMD());
     operator.b().onFalse(deploy.deployCMD());
 
-    operator.x().onTrue(deploy.undeployCMD());
+    operator.y().onTrue(deploy.undeployCMD());
 
     /* HOPPER COMMANDS */
 
@@ -438,7 +438,7 @@ public class RobotContainer {
 
     // clear hopper
     operator
-        .y()
+        .a()
         .onTrue(
             Commands.either(
                 Commands.repeatingSequence(
@@ -453,7 +453,7 @@ public class RobotContainer {
                 hopper.backdriveCMD(),
                 controller.a()::getAsBoolean));
     operator
-        .y()
+        .a()
         .onFalse(
             Commands.either(hopper.shootCMD(), hopper.stopCMD(), controller.a()::getAsBoolean));
 
