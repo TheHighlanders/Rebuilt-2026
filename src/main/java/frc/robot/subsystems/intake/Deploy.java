@@ -112,7 +112,7 @@ public class Deploy extends SubsystemBase {
   }
 
   public Command undeployCMD() {
-    return Commands.run(
+    return Commands.runOnce(
             () -> {
               closedLoopController.setSetpoint(inPos, ControlType.kPosition);
               raised = true;

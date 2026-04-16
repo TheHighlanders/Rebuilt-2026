@@ -249,10 +249,10 @@ public class Autos {
     return routine;
   }
 
-  public AutoRoutine middleDepot() {
+  public AutoRoutine middleDepot(boolean side) {
     AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
 
-    AutoTrajectory collect = routine.trajectory("midToDepotShoot");
+    AutoTrajectory collect = routine.trajectory(side ? "midToDepotShoot" : "midToDepotShoot2");
 
     routine
         .active()

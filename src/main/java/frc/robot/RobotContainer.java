@@ -257,10 +257,11 @@ public class RobotContainer {
     //  autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoFactory.buildAutoChooser());
     autoChooser = new AutoChooser();
     // autoChooser.addRoutine("Subsystem Test", () -> autos.badLaptopTestAuto());
-    autoChooser.addRoutine("Test Square", () -> autos.testAuto());
+    // autoChooser.addRoutine("Test Square", () -> autos.testAuto());
     autoChooser.addRoutine("middle -> shoot", () -> autos.simpleShoot());
-    autoChooser.addRoutine("middle -> outpost -> depot", () -> autos.middle());
-    autoChooser.addRoutine("middle -> depot", () -> autos.middleDepot());
+    autoChooser.addRoutine("middle -> depot", () -> autos.middleDepot(true));
+    autoChooser.addRoutine("middle -> sneak left", () -> autos.simpleShootSneak(true));
+    autoChooser.addRoutine("middle -> sneak right", () -> autos.simpleShootSneak(false));
 
     autoChooser.addRoutine("left -> neutral", () -> autos.leftMid(true));
     autoChooser.addRoutine("left -> neutral (chill)", () -> autos.leftMid(false));
@@ -271,9 +272,6 @@ public class RobotContainer {
     autoChooser.addRoutine("right -> neutral (chill)", () -> autos.rightMid(false));
     autoChooser.addRoutine("right -> sneak neutral", () -> autos.rightMidDefend(true));
     autoChooser.addRoutine("right -> sneak neutral (chill)", () -> autos.rightMidDefend(false));
-
-    autoChooser.addRoutine("middle -> sneak left", () -> autos.simpleShootSneak(true));
-    autoChooser.addRoutine("middle -> sneak right", () -> autos.simpleShootSneak(false));
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
