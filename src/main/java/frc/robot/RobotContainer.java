@@ -165,7 +165,7 @@ public class RobotContainer {
         shooter = temp;
         hopper = new HopperSim(temp);
 
-        fuelSim.spawnStartingFuel(false); // Armaan, disable center fuel for performance
+        // fuelSim.spawnStartingFuel(false); // Armaan, disable center fuel for performance
 
         // Register a robot for collision with fuel
         fuelSim.registerRobot(
@@ -253,7 +253,7 @@ public class RobotContainer {
                     vision));
 
     // Set up auto routines
-    autos = new Autos(drive, deploy, intake, hopper, shooter, climber);
+    autos = new Autos(drive, vision, deploy, intake, hopper, shooter, climber);
     //  autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoFactory.buildAutoChooser());
     autoChooser = new AutoChooser();
     // autoChooser.addRoutine("Subsystem Test", () -> autos.badLaptopTestAuto());
@@ -264,15 +264,15 @@ public class RobotContainer {
     autoChooser.addRoutine("middle -> sneak left", () -> autos.simpleShootSneak(true));
     autoChooser.addRoutine("middle -> sneak right", () -> autos.simpleShootSneak(false));
 
-    autoChooser.addRoutine("left -> neutral", () -> autos.leftMid(true));
-    autoChooser.addRoutine("left -> neutral (chill)", () -> autos.leftMid(false));
-    autoChooser.addRoutine("left -> sneak neutral", () -> autos.leftMidDefend(true));
-    autoChooser.addRoutine("left -> sneak neutral (chill)", () -> autos.leftMidDefend(false));
+    autoChooser.addRoutine("left -> neutral", () -> autos.side(true, true));
+    autoChooser.addRoutine("left -> neutral (chill)", () -> autos.side(false, true));
+    autoChooser.addRoutine("left -> sneak neutral", () -> autos.sideDefend(true, true));
+    autoChooser.addRoutine("left -> sneak neutral (chill)", () -> autos.sideDefend(false, true));
 
-    autoChooser.addRoutine("right -> neutral", () -> autos.rightMid(true));
-    autoChooser.addRoutine("right -> neutral (chill)", () -> autos.rightMid(false));
-    autoChooser.addRoutine("right -> sneak neutral", () -> autos.rightMidDefend(true));
-    autoChooser.addRoutine("right -> sneak neutral (chill)", () -> autos.rightMidDefend(false));
+    autoChooser.addRoutine("right -> neutral", () -> autos.side(true, false));
+    autoChooser.addRoutine("right -> neutral (chill)", () -> autos.side(false, false));
+    autoChooser.addRoutine("right -> sneak neutral", () -> autos.sideDefend(true, false));
+    autoChooser.addRoutine("right -> sneak neutral (chill)", () -> autos.sideDefend(false, false));
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
