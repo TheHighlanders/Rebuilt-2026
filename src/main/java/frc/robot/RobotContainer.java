@@ -15,7 +15,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -326,6 +325,7 @@ public class RobotContainer {
 
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    // TODO: Change to left stick?
 
     // snaps intake forward
     controller
@@ -353,15 +353,15 @@ public class RobotContainer {
                 .until(() -> !controller.rightBumper().getAsBoolean()));
 
     // slow mode
-    operator
-        .povDown()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  speed -= 0.1;
-                  if (speed < DriveConstants.SLOWMODE) speed = 1;
-                  SmartDashboard.putNumber("Drive/Speed", speed);
-                }));
+    // operator
+    //     .povDown()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () -> {
+    //               speed -= 0.1;
+    //               if (speed < DriveConstants.SLOWMODE) speed = 1;
+    //               SmartDashboard.putNumber("Drive/Speed", speed);
+    //             }));
 
     // reset drive commands
     operator
@@ -380,23 +380,7 @@ public class RobotContainer {
                     () -> controller.getRightX() * speed,
                     () -> robotRelative)));
 
-    // fancy gyro reset
-    operator
-        .leftStick()
-        .onTrue(
-            DriveCommands.joystickGyroOverride(
-                    drive,
-                    () -> -controller.getLeftX() * speed,
-                    () -> -controller.getLeftY() * speed,
-                    () -> controller.getRightX() * speed,
-                    () -> -operator.getLeftY(),
-                    () -> -operator.getLeftX(),
-                    () -> robotRelative)
-                .until(() -> !operator.leftStick().getAsBoolean()));
-
-    // reset gyro
-    controller.povDown().onTrue(Commands.runOnce(() -> drive.setPose(DriveConstants.POSE_RESET)));
-
+    // fancy gyro override
     operator
         .leftStick()
         .onTrue(
@@ -435,12 +419,7 @@ public class RobotContainer {
     operator.b().onTrue(deploy.readyCMD());
     operator.b().onFalse(deploy.deployCMD());
 
-    // operator
-    // .rightStick()
-    // .onTrue(
-    //     deploy
-    //         .manualCMD(operator::getRightY)
-    //         .until(() -> !operator.rightStick().getAsBoolean()));
+    operator.x().onTrue(deploy.undeployCMD());
 
     /* HOPPER COMMANDS */
 
@@ -460,7 +439,7 @@ public class RobotContainer {
 
     // clear hopper
     operator
-        .x()
+        .y()
         .onTrue(
             Commands.either(
                 Commands.repeatingSequence(
@@ -475,53 +454,53 @@ public class RobotContainer {
                 hopper.backdriveCMD(),
                 controller.a()::getAsBoolean));
     operator
-        .x()
+        .y()
         .onFalse(
-            Commands.either(hopper.doubleCMD(), hopper.stopCMD(), controller.a()::getAsBoolean));
-
-    controller.povUp().onTrue(DriveCommands.autoAlign(drive, DriveConstants.POSE_RESET));
-    // drive
-    //     .getPose()
-    //     .plus(
-    //         new Transform2d(
-    //             new Translation2d(0.2, drive.getRotation()), drive.getRotation()))));
+            Commands.either(hopper.shootCMD(), hopper.stopCMD(), controller.a()::getAsBoolean));
 
     /* SHOOTER COMMANDS */
 
     // This trigger probably goes off way too much - maybe make shooter.atSpeed() lock this at true?
-    DriveCommands.aligned()
-        .and(() -> shooter.atSpeed() && false) // Armaan, turn off rumble
-        .onTrue(
-            Commands.sequence(
-                Commands.run(
-                    () -> {
-                      controller.getHID().setRumble(RumbleType.kLeftRumble, 1);
-                      controller.getHID().setRumble(RumbleType.kRightRumble, 1);
-                      SmartDashboard.putString("Rumble?", "Yes");
-                    }),
-                Commands.waitSeconds(1),
-                Commands.run(
-                    () -> {
-                      controller.getHID().setRumble(RumbleType.kBothRumble, 0);
-                      SmartDashboard.putString("Rumble?", "No");
-                    })));
+    // DriveCommands.aligned()
+    //     .and(() -> shooter.atSpeed() && false) // Armaan, turn off rumble
+    //     .onTrue(
+    //         Commands.sequence(
+    //             Commands.run(
+    //                 () -> {
+    //                   controller.getHID().setRumble(RumbleType.kLeftRumble, 1);
+    //                   controller.getHID().setRumble(RumbleType.kRightRumble, 1);
+    //                   SmartDashboard.putString("Rumble?", "Yes");
+    //                 }),
+    //             Commands.waitSeconds(1),
+    //             Commands.run(
+    //                 () -> {
+    //                   controller.getHID().setRumble(RumbleType.kBothRumble, 0);
+    //                   SmartDashboard.putString("Rumble?", "No");
+    //                 })));
 
     // backup mannual flywheel spinup
     controller
         .rightTrigger(0.05)
-        .onTrue(shooter.flywheelHubCMD(() -> (controller.getRightTriggerAxis() * 0.7) + 0.7));
+        .onTrue(shooter.flywheelHubCMD(() -> controller.getRightTriggerAxis()));
 
     controller.povRight().onTrue(shooter.tuneCMD());
 
     controller.rightTrigger(0.05).onFalse(shooter.stopCMD());
     controller.rightBumper().onFalse(shooter.stopCMD());
 
-    // increment backup shot length
-    operator.povRight().onTrue(shooter.tuneCMD());
+    // // increment backup shot length
+    // operator.povRight().onTrue(shooter.tuneCMD());
 
     // flywheel pre-spin-up (not precise)
-    operator.y().onTrue(shooter.flywheelGndCMD(() -> 15));
-    controller.y().onTrue(shooter.flywheelGndCMD(() -> 10));
+    operator.rightTrigger().onTrue(shooter.flywheelGndCMD(() -> 3));
+    operator.rightTrigger().onFalse(shooter.stopCMD());
+
+    // soft dump
+    operator
+        .rightTrigger(0.05)
+        .onTrue(shooter.rawFlywheelCMD(() -> operator.getRightTriggerAxis() * 0.25));
+
+    operator.rightTrigger(0.05).onFalse(shooter.stopCMD());
 
     /* CLIMBER COMMANDS */
 
