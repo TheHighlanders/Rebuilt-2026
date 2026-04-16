@@ -31,7 +31,6 @@ public class Robot extends LoggedRobot {
   private RobotContainer robotContainer;
   Timer gcTimer = new Timer();
   Timer matchTimer = new Timer();
-  Timer shiftTimer = new Timer();
   double shift = 10;
   boolean wonAuto = true;
 
@@ -139,30 +138,34 @@ public class Robot extends LoggedRobot {
     }
     robotContainer.teleopInit();
     matchTimer.start();
-    shiftTimer.start();
     matchTimer.reset();
-    shiftTimer.reset();
-    wonAuto =
-        DriverStation.getGameSpecificMessage()
-            == (DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red ? "R" : "B");
-    SmartDashboard.putNumber("Match Timer", 1000);
+    if (DriverStation.getGameSpecificMessage().length() < 1) wonAuto = true;
+    else
+      wonAuto =
+          DriverStation.getGameSpecificMessage().charAt(0)
+              == (DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red ? 'R' : 'B');
+    SmartDashboard.putBoolean("Won?", wonAuto);
   }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
+
     boolean ourShift = true;
     if (matchTimer.get() > 10) {
-      shift = 25;
+      shift = 35;
       ourShift = !wonAuto;
       if (matchTimer.get() > 35) {
         ourShift = wonAuto;
+        shift += 25;
         if (matchTimer.get() > 60) {
           ourShift = !wonAuto;
+          shift += 25;
           if (matchTimer.get() > 85) {
             ourShift = wonAuto;
+            shift += 25;
             if (matchTimer.get() > 110) {
-              shift = 30;
+              shift += 30;
               ourShift = true;
             }
           }
@@ -171,12 +174,9 @@ public class Robot extends LoggedRobot {
     } else {
       shift = 10;
     }
-    SmartDashboard.putNumber("Match Timer", 140 - matchTimer.get());
-    SmartDashboard.putNumber("Shift Timer", shift - shiftTimer.get());
+    SmartDashboard.putNumber("Match Timer", 1 + 140 - matchTimer.get());
+    SmartDashboard.putNumber("Shift Timer", 1 + shift - matchTimer.get());
     SmartDashboard.putBoolean("Our Shift?", ourShift);
-    if (shift < shiftTimer.get()) {
-      shiftTimer.restart();
-    }
   }
 
   /** This function is called once when test mode is enabled. */
