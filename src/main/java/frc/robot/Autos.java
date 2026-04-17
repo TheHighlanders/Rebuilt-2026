@@ -1,5 +1,7 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Meters;
+
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
@@ -32,7 +34,13 @@ public class Autos {
   Climber climber;
 
   public Autos(
-      Drive drive, Vision vision, Deploy deploy, Intake intake, Hopper hopper, Shooter shooter, Climber climber) {
+      Drive drive,
+      Vision vision,
+      Deploy deploy,
+      Intake intake,
+      Hopper hopper,
+      Shooter shooter,
+      Climber climber) {
     autoFactory =
         new AutoFactory(
             drive::getPose, // A function that returns the current robot pose
@@ -128,6 +136,28 @@ public class Autos {
   }
 
   public AutoRoutine simpleShoot() {
+    AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
+
+    AutoTrajectory pose = routine.trajectory("midStayStill");
+
+    routine
+        .active()
+        .onTrue(
+            Commands.sequence(
+                pose.resetOdometry(),
+                Commands.deadline(
+                    Commands.waitSeconds(15),
+                    Commands.parallel(
+                        shooter.flywheelHubCMD(() -> 1),
+                        Commands.sequence(Commands.waitSeconds(3), hopper.shootCMD()))),
+                Commands.deadline(
+                    Commands.waitSeconds(2),
+                    Commands.parallel(hopper.stopCMD(), shooter.stopCMD()))));
+
+    return routine;
+  }
+
+  public AutoRoutine simpleShootAccurate() {
     AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
 
     AutoTrajectory pose = routine.trajectory("midStayStill");
@@ -330,28 +360,42 @@ public class Autos {
 
     midInitial
         .done()
-        .onTrue(DriveCommands.joystickAlignDriveHub(drive, shooter, () -> 0, () -> 0, () -> false));
-
-    midInitial.done().onTrue(
-        Commands.sequence(
-            Commands.either(
-                DriveCommands.autoAlign(drive, backup.getInitialPose().orElse(drive.getPose())), 
-                Commands.none(), 
-                () -> drive.getPose().getTranslation().getDistance(midSecondary.getInitialPose().orElse(drive.getPose()).getTranslation()) < 1),
-        hopper.shootCMD().andThen(sendState("shooting!"))
-    ));
-
-    midInitial.doneDelayed(4.9).onTrue(hopper.stopCMD().andThen(shooter.stopCMD()));
-
-    midInitial
-        .doneDelayed(5)
         .onTrue(
             Commands.sequence(
+                Commands.either(
+                    DriveCommands.autoAlign(drive, backup.getInitialPose().orElse(drive.getPose()))
+                        .andThen(backup.cmd()),
+                    Commands.waitUntil(shooter::atSpeed),
+                    () ->
+                        drive
+                                .getPose()
+                                .getMeasureX()
+                                .in(Meters)
+                        > 5),
+                Commands.deadline(
+                    Commands.waitSeconds(1), 
+                    DriveCommands.joystickAlignDriveHub(drive, shooter, () -> 0, () -> 0, () -> false)),
+                hopper.shootCMD(),
+                sendState("shooting!"),
+                Commands.waitSeconds(4.9),
+                hopper.stopCMD(),
+                shooter.stopCMD(),
+                Commands.waitSeconds(0.1),
                 Commands.either(
                     DriveCommands.autoAlign(
                         drive, midSecondary.getInitialPose().orElse(drive.getPose())),
                     Commands.none(),
-                    () -> vision.hasTarget() && drive.getPose().getTranslation().getDistance(midSecondary.getInitialPose().orElse(drive.getPose()).getTranslation()) < 1),
+                    () ->
+                        vision.hasTarget()
+                            && drive
+                                    .getPose()
+                                    .getTranslation()
+                                    .getDistance(
+                                        midSecondary
+                                            .getInitialPose()
+                                            .orElse(drive.getPose())
+                                            .getTranslation())
+                                < 1),
                 midSecondary.cmd()));
 
     midSecondary.atTime("intake").onTrue(Commands.parallel(deploy.deployCMD(), intake.intakeCMD()));
@@ -375,16 +419,23 @@ public class Autos {
 
     midSecondary
         .done()
-        .onTrue(DriveCommands.joystickAlignDriveHub(drive, shooter, () -> 0, () -> 0, () -> false));
-
-    midSecondary.done().onTrue(
-        Commands.sequence(
-            Commands.either(
-                DriveCommands.autoAlign(drive, backup.getInitialPose().orElse(drive.getPose())), 
-                Commands.none(), 
-                () -> drive.getPose().getTranslation().getDistance(midSecondary.getInitialPose().orElse(drive.getPose()).getTranslation()) < 1),
-        hopper.shootCMD().andThen(sendState("shooting!"))
-    ));
+        .onTrue(
+            Commands.sequence(
+                Commands.either(
+                    DriveCommands.autoAlign(drive, backup.getInitialPose().orElse(drive.getPose()))
+                        .andThen(backup.cmd()),
+                    Commands.waitUntil(shooter::atSpeed),
+                    () ->
+                        drive
+                                .getPose()
+                                .getMeasureX()
+                                .in(Meters)
+                        > 5),
+                Commands.deadline(
+                    Commands.waitSeconds(1), 
+                    DriveCommands.joystickAlignDriveHub(drive, shooter, () -> 0, () -> 0, () -> false)),
+                hopper.shootCMD(),
+                sendState("shooting!")));
 
     return routine;
   }
@@ -435,7 +486,7 @@ public class Autos {
     return routine;
   }
 
-public AutoRoutine simpleShootSneak(boolean left) {
+  public AutoRoutine simpleShootSneak(boolean left) {
     AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
 
     AutoTrajectory sneak =
@@ -463,8 +514,7 @@ public AutoRoutine simpleShootSneak(boolean left) {
     return routine;
   }
 
-  
-    public AutoRoutine rightMid(boolean aggressive) {
+  public AutoRoutine rightMid(boolean aggressive) {
     AutoRoutine routine = autoFactory.newRoutine("");
 
     AutoTrajectory midInitial =

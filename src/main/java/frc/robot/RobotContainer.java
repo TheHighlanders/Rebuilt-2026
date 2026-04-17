@@ -259,6 +259,7 @@ public class RobotContainer {
     // autoChooser.addRoutine("Subsystem Test", () -> autos.badLaptopTestAuto());
     // autoChooser.addRoutine("Test Square", () -> autos.testAuto());
     autoChooser.addRoutine("middle -> shoot", () -> autos.simpleShoot());
+    autoChooser.addRoutine("middle -> back up -> shoot", () -> autos.simpleShootAccurate());
     autoChooser.addRoutine("middle -> depot", () -> autos.middleDepot(true));
     autoChooser.addRoutine("middle -> new depot (UNTESTED)", () -> autos.middleDepot(false));
     autoChooser.addRoutine("middle -> sneak left", () -> autos.simpleShootSneak(true));
