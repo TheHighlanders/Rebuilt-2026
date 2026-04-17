@@ -260,8 +260,7 @@ public class RobotContainer {
     // autoChooser.addRoutine("Test Square", () -> autos.testAuto());
     autoChooser.addRoutine("middle -> shoot", () -> autos.simpleShoot());
     autoChooser.addRoutine("middle -> back up -> shoot", () -> autos.simpleShootAccurate());
-    autoChooser.addRoutine("middle -> depot", () -> autos.middleDepot(true));
-    autoChooser.addRoutine("middle -> new depot (UNTESTED)", () -> autos.middleDepot(false));
+    autoChooser.addRoutine("middle -> depot", () -> autos.middleDepot());
     autoChooser.addRoutine("middle -> sneak left", () -> autos.simpleShootSneak(true));
     autoChooser.addRoutine("middle -> sneak right", () -> autos.simpleShootSneak(false));
 
@@ -492,8 +491,8 @@ public class RobotContainer {
     // operator.povRight().onTrue(shooter.tuneCMD());
 
     // flywheel pre-spin-up (not precise)
-    operator.rightTrigger().onTrue(shooter.flywheelGndCMD(() -> 3));
-    operator.rightTrigger().onFalse(shooter.stopCMD());
+    operator.rightTrigger().onTrue(shooter.flywheelHubCMD(() -> (operator.rightBumper().getAsBoolean() ? 1 : 2) + operator.getRightTriggerAxis()));
+    operator.rightTrigger(0.05).onFalse(shooter.stopCMD());
 
     // soft dump
     operator

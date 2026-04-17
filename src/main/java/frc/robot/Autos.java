@@ -277,10 +277,10 @@ public class Autos {
     return routine;
   }
 
-  public AutoRoutine middleDepot(boolean side) {
+  public AutoRoutine middleDepot() {
     AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
 
-    AutoTrajectory collect = routine.trajectory(side ? "midToDepotShoot" : "midToDepotShoot2");
+    AutoTrajectory collect = routine.trajectory("midToDepotShoot");
 
     routine
         .active()
@@ -300,7 +300,7 @@ public class Autos {
         .done()
         .onTrue(
             Commands.sequence(
-                intake.stoptakeCMD(),
+                deploy.undeployCMD(),
                 sendState("Shooting!"),
                 DriveCommands.joystickAlignDrive(drive, shooter, () -> 0, () -> 0, () -> true)));
 
@@ -308,7 +308,10 @@ public class Autos {
         .doneDelayed(1)
         .onTrue(
             Commands.sequence(
-                Commands.waitUntil(DriveCommands.aligned()::getAsBoolean), hopper.shootCMD()));
+                intake.stoptakeCMD(),
+                Commands.waitUntil(DriveCommands.aligned()::getAsBoolean),
+                hopper.shootCMD(),
+                sendState("Shooting!")));
 
     collect
         .atTimeBeforeEnd(1)
@@ -321,8 +324,6 @@ public class Autos {
                             .getPose()
                             .getTranslation()
                             .getDistance(FieldConstants.HUB_POSE_RED))));
-
-    collect.done().onTrue(hopper.shootCMD().andThen(sendState("shooting!")));
 
     return routine;
   }
@@ -363,27 +364,31 @@ public class Autos {
         .onTrue(
             Commands.sequence(
                 Commands.either(
-                    DriveCommands.autoAlign(drive, backup.getInitialPose().orElse(drive.getPose()))
-                        .andThen(backup.cmd()),
+                    Commands.sequence(
+                        sendState("Aligning for backup!"),
+                        DriveCommands.autoAlign(
+                            drive, backup.getInitialPose().orElse(drive.getPose())),
+                        sendState("Backup enter..."),
+                        backup.cmd(),
+                        sendState("Backup done!")),
                     Commands.waitUntil(shooter::atSpeed),
-                    () ->
-                        drive
-                                .getPose()
-                                .getMeasureX()
-                                .in(Meters)
-                        > 5),
+                    () -> drive.getPose().getMeasureX().in(Meters) > 5),
                 Commands.deadline(
-                    Commands.waitSeconds(1), 
-                    DriveCommands.joystickAlignDriveHub(drive, shooter, () -> 0, () -> 0, () -> false)),
+                    Commands.waitSeconds(1),
+                    sendState("Aligning..."),
+                    DriveCommands.joystickAlignDriveHub(
+                        drive, shooter, () -> 0, () -> 0, () -> false)),
                 hopper.shootCMD(),
-                sendState("shooting!"),
+                sendState("Shooting!"),
                 Commands.waitSeconds(4.9),
                 hopper.stopCMD(),
                 shooter.stopCMD(),
                 Commands.waitSeconds(0.1),
                 Commands.either(
-                    DriveCommands.autoAlign(
-                        drive, midSecondary.getInitialPose().orElse(drive.getPose())),
+                    Commands.sequence(
+                        sendState("Aligning for second pass..."),
+                        DriveCommands.autoAlign(
+                            drive, midSecondary.getInitialPose().orElse(drive.getPose()))),
                     Commands.none(),
                     () ->
                         vision.hasTarget()
@@ -396,6 +401,7 @@ public class Autos {
                                             .orElse(drive.getPose())
                                             .getTranslation())
                                 < 1),
+                sendState("Second pass!"),
                 midSecondary.cmd()));
 
     midSecondary.atTime("intake").onTrue(Commands.parallel(deploy.deployCMD(), intake.intakeCMD()));
@@ -422,18 +428,20 @@ public class Autos {
         .onTrue(
             Commands.sequence(
                 Commands.either(
-                    DriveCommands.autoAlign(drive, backup.getInitialPose().orElse(drive.getPose()))
-                        .andThen(backup.cmd()),
+                    Commands.sequence(
+                        sendState("Aligning for backup! (2)"),
+                        DriveCommands.autoAlign(
+                            drive, backup.getInitialPose().orElse(drive.getPose())),
+                        sendState("Backup enter... (2)"),
+                        backup.cmd(),
+                        sendState("Backup done! (2)")),
                     Commands.waitUntil(shooter::atSpeed),
-                    () ->
-                        drive
-                                .getPose()
-                                .getMeasureX()
-                                .in(Meters)
-                        > 5),
+                    () -> drive.getPose().getMeasureX().in(Meters) > 5),
                 Commands.deadline(
-                    Commands.waitSeconds(1), 
-                    DriveCommands.joystickAlignDriveHub(drive, shooter, () -> 0, () -> 0, () -> false)),
+                    Commands.waitSeconds(1),
+                    sendState("Aligning..."),
+                    DriveCommands.joystickAlignDriveHub(
+                        drive, shooter, () -> 0, () -> 0, () -> false)),
                 hopper.shootCMD(),
                 sendState("shooting!")));
 
