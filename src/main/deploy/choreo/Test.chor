@@ -5,6 +5,20 @@
  "variables":{
   "expressions":{},
   "poses":{
+   "depotShot":{
+    "x":{
+     "exp":"3.06 m",
+     "val":3.06
+    },
+    "y":{
+     "exp":"3.95 m",
+     "val":3.95
+    },
+    "heading":{
+     "exp":"95 deg",
+     "val":1.6580627893946132
+    }
+   },
    "leftshotclose":{
     "x":{
      "exp":"2.8 m",

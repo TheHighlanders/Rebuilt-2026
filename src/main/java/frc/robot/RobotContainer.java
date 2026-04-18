@@ -260,8 +260,10 @@ public class RobotContainer {
     // autoChooser.addRoutine("Test Square", () -> autos.testAuto());
     autoChooser.addRoutine("middle -> shoot", () -> autos.simpleShoot());
     autoChooser.addRoutine("middle -> back up -> shoot", () -> autos.simpleShootAccurate());
-    autoChooser.addRoutine("middle -> depot", () -> autos.middleDepot(true, false));
-    autoChooser.addRoutine("middle -> depot chop", () -> autos.middleDepot(false, false));
+    autoChooser.addRoutine("middle -> depot", () -> autos.middleDepot(true, false, false));
+    autoChooser.addRoutine("middle -> depot chop", () -> autos.middleDepot(false, false, false));
+    autoChooser.addRoutine("middle -> depot AUTO-CLIMB", () -> autos.middleDepot(true, false, true));
+    autoChooser.addRoutine("middle -> depot chop AUTO-CLIMB", () -> autos.middleDepot(false, false, true));
     autoChooser.addRoutine("middle -> sneak left", () -> autos.simpleShootSneak(true));
     autoChooser.addRoutine("middle -> sneak right", () -> autos.simpleShootSneak(false));
 
@@ -341,16 +343,16 @@ public class RobotContainer {
                 .until(DriveCommands.aligned()));
 
     // auto align
-    controller
-        .rightBumper()
-        .onTrue(
-            DriveCommands.joystickAlignDrive(
-                    drive,
-                    shooter,
-                    () -> -controller.getLeftY() * 0.7,
-                    () -> -controller.getLeftX() * 0.7,
-                    () -> robotRelative)
-                .until(() -> !controller.rightBumper().getAsBoolean()));
+    // controller
+    //     .rightBumper()
+    //     .onTrue(
+    //         DriveCommands.joystickAlignDrive(
+    //                 drive,
+    //                 shooter,
+    //                 () -> -controller.getLeftY() * 0.7,
+    //                 () -> -controller.getLeftX() * 0.7,
+    //                 () -> robotRelative)
+    //             .until(() -> !controller.rightBumper().getAsBoolean()));
 
     // slow mode
     // operator
@@ -481,12 +483,13 @@ public class RobotContainer {
     // backup mannual flywheel spinup
     controller
         .rightTrigger(0.05)
-        .onTrue(shooter.flywheelHubCMD(() -> controller.getRightTriggerAxis()));
-
-    controller.povRight().onTrue(shooter.tuneCMD());
+        .onTrue(
+            shooter.flywheelHubCMD(
+                () ->
+                    (controller.getRightTriggerAxis()
+                        + (controller.rightBumper().getAsBoolean() ? 1 : 0))));
 
     controller.rightTrigger(0.05).onFalse(shooter.stopCMD());
-    controller.rightBumper().onFalse(shooter.stopCMD());
 
     // // increment backup shot length
     // operator.povRight().onTrue(shooter.tuneCMD());
@@ -497,9 +500,9 @@ public class RobotContainer {
         .onTrue(
             shooter.flywheelHubCMD(
                 () ->
-                    (operator.rightBumper().getAsBoolean() ? 1 : 2)
-                        + operator.getRightTriggerAxis()));
-    operator.rightTrigger(0.05).onFalse(shooter.stopCMD());
+                    ((operator.rightBumper().getAsBoolean() ? 2 : 3)
+                        + operator.getRightTriggerAxis())));
+    operator.rightTrigger().onFalse(shooter.stopCMD());
 
     // soft dump
     operator

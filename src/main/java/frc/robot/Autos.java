@@ -277,11 +277,11 @@ public class Autos {
     return routine;
   }
 
-  public AutoRoutine middleDepot(boolean side, boolean addClimb) {
+  public AutoRoutine middleDepot(boolean side, boolean sneak, boolean addClimbOrLeft) {
     AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
 
     AutoTrajectory collect = routine.trajectory(side ? "midToDepotShoot" : "midToDepotShoot2");
-    AutoTrajectory climb = routine.trajectory("climbFromDepot");
+    AutoTrajectory add = routine.trajectory(sneak ? (addClimbOrLeft ? "depotSneakLeft" : "depotSneakRight") : "climbFromDepot");
 
     routine
         .active()
@@ -324,25 +324,30 @@ public class Autos {
                             .getPose()
                             .getTranslation()
                             .getDistance(FieldConstants.HUB_POSE_RED))));
-
-    if (addClimb) {
-      routine
-          .active()
+                            
+    if (sneak) {
+      collect
+          .doneDelayed(20 - ((addClimbOrLeft ? DriveConstants.SNEAK_WAIT_TIME_LEFT : DriveConstants.SNEAK_WAIT_TIME_RIGHT) + (side ? 6.6 : 5.3)))
           .onTrue(
-              Commands.parallel(
-                  Commands.sequence(Commands.waitSeconds(11), climber.raiseCMD()),
-                  Commands.sequence(
-                      Commands.waitSeconds(12),
-                      climb.cmd(),
-                      Commands.deadline(
-                          Commands.waitSeconds(2),
-                          DriveCommands.joystickDrive(
-                              drive, () -> -0.25, () -> 0, () -> 0, () -> false)),
-                      Commands.deadline(
-                          Commands.waitSeconds(1),
-                          DriveCommands.joystickDrive(
-                              drive, () -> 0, () -> -0.25, () -> 0, () -> false)),
-                      climber.pullCMD())));
+            add.cmd());
+    }
+    else if (addClimbOrLeft) {
+      collect
+          .doneDelayed(20 - (8 + (side ? 6.6 : 5.3)))
+          .onTrue(
+              Commands.sequence(
+                  Commands.waitSeconds(11),
+                  Commands.deadline(
+                      Commands.sequence(Commands.waitSeconds(1), add.cmd()), climber.raiseCMD()),
+                  Commands.deadline(
+                      Commands.waitSeconds(2),
+                      DriveCommands.joystickDrive(
+                          drive, () -> -0.25, () -> 0, () -> 0, () -> false)),
+                  Commands.deadline(
+                      Commands.waitSeconds(1),
+                      DriveCommands.joystickDrive(
+                          drive, () -> 0, () -> -0.25, () -> 0, () -> false)),
+                  climber.pullCMD()));
     }
 
     return routine;
