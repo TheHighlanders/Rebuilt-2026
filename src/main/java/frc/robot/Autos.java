@@ -320,12 +320,16 @@ public class Autos {
         .onTrue(
             shooter.flywheelHubCMD(
                 () ->
-                    Math.min(
-                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
-                        drive
-                            .getPose()
-                            .getTranslation()
-                            .getDistance(FieldConstants.HUB_POSE_RED))));
+                    (Math.min(
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_BLUE),
+                            drive
+                                .getPose()
+                                .getTranslation()
+                                .getDistance(FieldConstants.HUB_POSE_RED))
+                        + 0.5)));
 
     if (sneak) {
       collect
