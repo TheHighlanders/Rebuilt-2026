@@ -281,7 +281,9 @@ public class Autos {
     AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
 
     AutoTrajectory collect = routine.trajectory(side ? "midToDepotShoot" : "midToDepotShoot2");
-    AutoTrajectory add = routine.trajectory(sneak ? (addClimbOrLeft ? "depotSneakLeft" : "depotSneakRight") : "climbFromDepot");
+    AutoTrajectory add =
+        routine.trajectory(
+            sneak ? (addClimbOrLeft ? "depotSneakLeft" : "depotSneakRight") : "climbFromDepot");
 
     routine
         .active()
@@ -324,14 +326,17 @@ public class Autos {
                             .getPose()
                             .getTranslation()
                             .getDistance(FieldConstants.HUB_POSE_RED))));
-                            
+
     if (sneak) {
       collect
-          .doneDelayed(20 - ((addClimbOrLeft ? DriveConstants.SNEAK_WAIT_TIME_LEFT : DriveConstants.SNEAK_WAIT_TIME_RIGHT) + (side ? 6.6 : 5.3)))
-          .onTrue(
-            add.cmd());
-    }
-    else if (addClimbOrLeft) {
+          .doneDelayed(
+              20
+                  - ((addClimbOrLeft
+                          ? DriveConstants.SNEAK_WAIT_TIME_LEFT
+                          : DriveConstants.SNEAK_WAIT_TIME_RIGHT)
+                      + (side ? 6.6 : 5.3)))
+          .onTrue(add.cmd());
+    } else if (addClimbOrLeft) {
       collect
           .doneDelayed(20 - (6.7 + (side ? 6.6 : 5.3)))
           .onTrue(

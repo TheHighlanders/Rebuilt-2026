@@ -262,8 +262,10 @@ public class RobotContainer {
     autoChooser.addRoutine("middle -> back up -> shoot", () -> autos.simpleShootAccurate());
     autoChooser.addRoutine("middle -> depot", () -> autos.middleDepot(true, false, false));
     autoChooser.addRoutine("middle -> depot chop", () -> autos.middleDepot(false, false, false));
-    autoChooser.addRoutine("middle -> depot AUTO-CLIMB", () -> autos.middleDepot(true, false, true));
-    autoChooser.addRoutine("middle -> depot chop AUTO-CLIMB", () -> autos.middleDepot(false, false, true));
+    autoChooser.addRoutine(
+        "middle -> depot AUTO-CLIMB", () -> autos.middleDepot(true, false, true));
+    autoChooser.addRoutine(
+        "middle -> depot chop AUTO-CLIMB", () -> autos.middleDepot(false, false, true));
     autoChooser.addRoutine("middle -> sneak left", () -> autos.simpleShootSneak(true));
     autoChooser.addRoutine("middle -> sneak right", () -> autos.simpleShootSneak(false));
 
