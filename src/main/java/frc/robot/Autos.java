@@ -333,10 +333,9 @@ public class Autos {
     }
     else if (addClimbOrLeft) {
       collect
-          .doneDelayed(20 - (8 + (side ? 6.6 : 5.3)))
+          .doneDelayed(20 - (6.7 + (side ? 6.6 : 5.3)))
           .onTrue(
               Commands.sequence(
-                  Commands.waitSeconds(11),
                   Commands.deadline(
                       Commands.sequence(Commands.waitSeconds(1), add.cmd()), climber.raiseCMD()),
                   Commands.deadline(
