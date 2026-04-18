@@ -329,7 +329,7 @@ public class Autos {
                                 .getPose()
                                 .getTranslation()
                                 .getDistance(FieldConstants.HUB_POSE_RED))
-                        + 0.5)));
+                        + 1)));
 
     if (sneak) {
       collect
