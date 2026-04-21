@@ -31,11 +31,8 @@ public class Hopper extends SubsystemBase {
   double kI = HopperConstants.kI;
   double kD = HopperConstants.kD;
   double kV = HopperConstants.kV;
-  double kickBoost = 50;
 
   SparkMaxConfig kickConfig = new SparkMaxConfig();
-
-  DoubleSupplier kickerSpeed;
 
   public Hopper(DoubleSupplier shooterSpeed) {
     SparkMaxConfig hopperConfig = new SparkMaxConfig();
@@ -51,25 +48,20 @@ public class Hopper extends SubsystemBase {
     kicker.configure(kickConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     SmartDashboard.putNumber("Shooter/Hopper Current", hopper.getOutputCurrent());
-    SmartDashboard.putNumber("Shooter/Hopper Current", kicker.getOutputCurrent());
+    SmartDashboard.putNumber("Shooter/Kicker Current", kicker.getOutputCurrent());
 
     SmartDashboard.putNumber("Shooter/Kicker/P", kP);
     SmartDashboard.putNumber("Shooter/Kicker/I", kI);
     SmartDashboard.putNumber("Shooter/Kicker/D", kD);
     SmartDashboard.putNumber("Shooter/Kicker/V", kV);
-    SmartDashboard.putNumber("Shooter/Kicker/Boost", kickBoost);
     SmartDashboard.putNumber("Shooter/Kicker/Reset?", 0);
 
-    kickerSpeed =
-        () -> {
-          return 700;
-        };
   }
   // spins the motor inside the hopper
   public Command shootCMD() {
     return Commands.run(
         () -> {
-          kickLoopController.setSetpoint(kickerSpeed.getAsDouble(), ControlType.kVelocity);
+          kickLoopController.setSetpoint(HopperConstants.KICKER_RPM, ControlType.kVelocity);
           hopper.set(1);
           // speed can be changed
           SmartDashboard.putString("Shooter/Hopper State", "Shooting");
@@ -80,7 +72,7 @@ public class Hopper extends SubsystemBase {
   public Command doubleCMD() {
     return Commands.run(
         () -> {
-          kickLoopController.setSetpoint(kickerSpeed.getAsDouble(), ControlType.kVelocity);
+          kickLoopController.setSetpoint(HopperConstants.KICKER_RPM, ControlType.kVelocity);
           hopper.set(0.8);
           // speed can be changed
           SmartDashboard.putString("Shooter/Hopper State", "Shooting");
@@ -114,7 +106,7 @@ public class Hopper extends SubsystemBase {
   public Command clearCMD() {
     return Commands.run(
         () -> {
-          kickLoopController.setSetpoint(kickerSpeed.getAsDouble(), ControlType.kVelocity);
+          kickLoopController.setSetpoint(HopperConstants.KICKER_RPM, ControlType.kVelocity);
           hopper.set(-1);
           SmartDashboard.putString("Shooter/Hopper State", "Clearing");
         },
@@ -125,15 +117,14 @@ public class Hopper extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("Shooter/Hopper Current", hopper.getOutputCurrent());
-    SmartDashboard.putNumber("Shooter/Hopper Current", kicker.getOutputCurrent());
+    SmartDashboard.putNumber("Shooter/Kicker Current", kicker.getOutputCurrent());
     SmartDashboard.putNumber("Shooter/Kicker RPS", kicker.getEncoder().getVelocity());
-    SmartDashboard.putNumber("Shooter/Kicker Target RPS", kickerSpeed.getAsDouble());
 
     kP = SmartDashboard.getNumber("Shooter/Kicker/P", kP);
     kI = SmartDashboard.getNumber("Shooter/Kicker/I", kI);
     kD = SmartDashboard.getNumber("Shooter/Kicker/D", kD);
     kV = SmartDashboard.getNumber("Shooter/Kicker/V", kV);
-    kickBoost = SmartDashboard.getNumber("Shooter/Kicker/Boost", kickBoost);
+    
     kickConfig.closedLoop.p(kP).i(kI).d(kD).feedForward.kV(kV);
     if (SmartDashboard.getNumber("Shooter/Kicker/Reset?", 0) != 0)
       kicker.configure(

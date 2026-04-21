@@ -141,6 +141,7 @@ public final class Constants {
     public static final double kI = 0.000001;
     public static final double kD = 1;
     public static final double kV = 0.00235;
+    public static final double KICKER_RPM = 700;
   }
 
   public static class IntakeConstants {
