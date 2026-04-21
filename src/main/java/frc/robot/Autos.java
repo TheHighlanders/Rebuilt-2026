@@ -329,7 +329,7 @@ public class Autos {
                                 .getPose()
                                 .getTranslation()
                                 .getDistance(FieldConstants.HUB_POSE_RED))
-                        + 1)));
+                        + 0.2)));
 
     if (sneak) {
       collect
@@ -342,13 +342,13 @@ public class Autos {
           .onTrue(add.cmd());
     } else if (addClimbOrLeft) {
       collect
-          .doneDelayed(20 - (6.7 + (side ? 6.6 : 5.3)))
+          .doneDelayed(20 - (5 + (side ? 6.6 : 5.3)))
           .onTrue(
               Commands.sequence(
                   Commands.deadline(
                       Commands.sequence(Commands.waitSeconds(1), add.cmd()), climber.raiseCMD()),
                   Commands.deadline(
-                      Commands.waitSeconds(2),
+                      Commands.waitSeconds(1.5),
                       DriveCommands.joystickDrive(
                           drive, () -> -0.25, () -> 0, () -> 0, () -> false)),
                   Commands.deadline(
