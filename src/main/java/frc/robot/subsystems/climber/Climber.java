@@ -75,5 +75,9 @@ public class Climber extends SubsystemBase {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("Climber/Current", climbMotor.getOutputCurrent());
     SmartDashboard.putNumber("Climber/Voltage", climbMotor.getAppliedOutput());
+
+    if (climbMotor.getMotorTemperature() > 60) {
+      climbMotor.set(0);
+    }
   }
 }

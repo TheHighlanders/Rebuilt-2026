@@ -55,7 +55,6 @@ public class Hopper extends SubsystemBase {
     SmartDashboard.putNumber("Shooter/Kicker/D", kD);
     SmartDashboard.putNumber("Shooter/Kicker/V", kV);
     SmartDashboard.putNumber("Shooter/Kicker/Reset?", 0);
-
   }
   // spins the motor inside the hopper
   public Command shootCMD() {
@@ -124,7 +123,7 @@ public class Hopper extends SubsystemBase {
     kI = SmartDashboard.getNumber("Shooter/Kicker/I", kI);
     kD = SmartDashboard.getNumber("Shooter/Kicker/D", kD);
     kV = SmartDashboard.getNumber("Shooter/Kicker/V", kV);
-    
+
     kickConfig.closedLoop.p(kP).i(kI).d(kD).feedForward.kV(kV);
     if (SmartDashboard.getNumber("Shooter/Kicker/Reset?", 0) != 0)
       kicker.configure(

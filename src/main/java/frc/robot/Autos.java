@@ -674,4 +674,32 @@ public class Autos {
 
     return routine;
   }
+
+  public AutoRoutine swipe(boolean left) {
+    AutoRoutine routine = autoFactory.newRoutine("");
+
+    AutoTrajectory swipe = routine.trajectory(left ? "swipeLeft" : "swipeRight");
+
+    routine
+        .active()
+        .onTrue(
+            Commands.sequence(
+                swipe.resetOdometry(),
+                Commands.waitSeconds(0.2), // to make sure we don't bonk
+                Commands.deadline(
+                    Commands.waitSeconds(5.6),
+                    DriveCommands.joystickAlignDriveHub(
+                        drive, shooter, () -> 0, () -> 0, () -> false),
+                    Commands.waitUntil(DriveCommands.aligned()::getAsBoolean),
+                    hopper.shootCMD()),
+                shooter.stopCMD(),
+                hopper.stopCMD(),
+                swipe.cmd()));
+
+    swipe.atTime("intake").onTrue(Commands.parallel(deploy.deployCMD(), intake.intakeCMD()));
+
+    swipe.done().onTrue(intake.stoptakeCMD());
+
+    return routine;
+  }
 }
