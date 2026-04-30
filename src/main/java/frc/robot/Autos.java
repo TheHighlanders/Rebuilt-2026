@@ -702,4 +702,45 @@ public class Autos {
 
     return routine;
   }
+
+  public AutoRoutine bumpFollow(boolean left) {
+    AutoRoutine routine = autoFactory.newRoutine("");
+
+    AutoTrajectory shoot =
+        left
+            ? routine.trajectory("bumpShootLeft")
+            : routine.trajectory("bumpShootRight");
+    AutoTrajectory neutral =
+        left
+            ? routine.trajectory("bumpNeutralLeft")
+            : routine.trajectory("bumpNeutralRight");
+
+    routine.active().onTrue(Commands.sequence(shoot.resetOdometry(), shoot.cmd()));
+
+    shoot
+        .active()
+        .onTrue(
+            shooter.flywheelHubCMD(
+                () ->
+                    Math.min(
+                        drive.getPose().getTranslation().getDistance(FieldConstants.HUB_POSE_BLUE),
+                        drive
+                            .getPose()
+                            .getTranslation()
+                            .getDistance(FieldConstants.HUB_POSE_RED))));
+
+    shoot
+        .doneDelayed(1.5)
+        .onTrue(hopper.shootCMD());
+        
+    shoot
+        .doneDelayed(8)
+        .onTrue(
+            Commands.sequence(
+                hopper.stopCMD(),
+                shooter.stopCMD(),
+                neutral.cmd()));
+
+    return routine;
+  }
 }
