@@ -266,8 +266,11 @@ public class RobotContainer {
         "middle -> depot AUTO-CLIMB", () -> autos.middleDepot(true, false, true));
     autoChooser.addRoutine(
         "middle -> depot chop AUTO-CLIMB", () -> autos.middleDepot(false, false, true));
+
     autoChooser.addRoutine("middle -> sneak left", () -> autos.simpleShootSneak(true));
     autoChooser.addRoutine("middle -> sneak right", () -> autos.simpleShootSneak(false));
+    autoChooser.addRoutine("bump -> follow left", () -> autos.bumpFollow(true));
+    autoChooser.addRoutine("bump -> follow right", () -> autos.bumpFollow(false));
 
     autoChooser.addRoutine("left -> neutral", () -> autos.side(true, true));
     autoChooser.addRoutine("left -> neutral (chill)", () -> autos.side(false, true));

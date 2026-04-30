@@ -707,13 +707,9 @@ public class Autos {
     AutoRoutine routine = autoFactory.newRoutine("");
 
     AutoTrajectory shoot =
-        left
-            ? routine.trajectory("bumpShootLeft")
-            : routine.trajectory("bumpShootRight");
+        left ? routine.trajectory("bumpShootLeft") : routine.trajectory("bumpShootRight");
     AutoTrajectory neutral =
-        left
-            ? routine.trajectory("bumpNeutralLeft")
-            : routine.trajectory("bumpNeutralRight");
+        left ? routine.trajectory("bumpNeutralLeft") : routine.trajectory("bumpNeutralRight");
 
     routine.active().onTrue(Commands.sequence(shoot.resetOdometry(), shoot.cmd()));
 
@@ -729,17 +725,11 @@ public class Autos {
                             .getTranslation()
                             .getDistance(FieldConstants.HUB_POSE_RED))));
 
+    shoot.doneDelayed(1.5).onTrue(hopper.shootCMD());
+
     shoot
-        .doneDelayed(1.5)
-        .onTrue(hopper.shootCMD());
-        
-    shoot
-        .doneDelayed(8)
-        .onTrue(
-            Commands.sequence(
-                hopper.stopCMD(),
-                shooter.stopCMD(),
-                neutral.cmd()));
+        .doneDelayed(4) // CAN BE CHANGED
+        .onTrue(Commands.sequence(hopper.stopCMD(), shooter.stopCMD(), neutral.cmd()));
 
     return routine;
   }
