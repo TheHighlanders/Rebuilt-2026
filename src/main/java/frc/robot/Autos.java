@@ -277,10 +277,10 @@ public class Autos {
     return routine;
   }
 
-  public AutoRoutine middleDepot(boolean side, boolean sneak, boolean addClimbOrLeft) {
+  public AutoRoutine middleDepot(boolean depot, boolean sneak, boolean addClimbOrLeft) {
     AutoRoutine routine = autoFactory.newRoutine("DepotAndClimb");
 
-    AutoTrajectory collect = routine.trajectory(side ? "midToDepotShoot" : "midToDepotShoot2");
+    AutoTrajectory collect = routine.trajectory(depot ? "midToDepotShoot" : "middleBackUp");
     AutoTrajectory add =
         routine.trajectory(
             sneak ? (addClimbOrLeft ? "depotSneakLeft" : "depotSneakRight") : "climbFromDepot");
@@ -338,11 +338,11 @@ public class Autos {
                   - ((addClimbOrLeft
                           ? DriveConstants.SNEAK_WAIT_TIME_LEFT
                           : DriveConstants.SNEAK_WAIT_TIME_RIGHT)
-                      + (side ? 6.6 : 5.3)))
+                      + (depot ? 6.6 : 0.9)))
           .onTrue(add.cmd());
     } else if (addClimbOrLeft) {
       collect
-          .doneDelayed(20 - (5 + (side ? 6.6 : 5.3)))
+          .doneDelayed(20 - (5 + (depot ? 6.6 : 0.9)))
           .onTrue(
               Commands.sequence(
                   Commands.deadline(

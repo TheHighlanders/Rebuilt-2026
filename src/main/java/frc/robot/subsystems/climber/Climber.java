@@ -48,6 +48,10 @@ public class Climber extends SubsystemBase {
   }
 
   public Command pullCMD() {
+    // return Commands.deadline(
+    //               Commands.waitSeconds(7),
+    //               runCMD(1))
+    //             .andThen(runCMD(0))
     return Commands.deadline(
             Commands.race(
                 Commands.waitSeconds(2.5),
