@@ -457,7 +457,7 @@ public class RobotContainer {
                     Commands.waitSeconds(0.15),
                     hopper.shootCMD(),
                     Commands.waitSeconds(1)),
-                hopper.backdriveCMD(),
+                hopper.shootCMD(),
                 controller.a()::getAsBoolean));
     operator
         .a()
