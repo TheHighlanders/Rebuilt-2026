@@ -338,11 +338,11 @@ public class Autos {
                   - ((addClimbOrLeft
                           ? DriveConstants.SNEAK_WAIT_TIME_LEFT
                           : DriveConstants.SNEAK_WAIT_TIME_RIGHT)
-                      + (depot ? 6.6 : 0.9)))
+                      + (depot ? 6.3 : 0.9)))
           .onTrue(add.cmd());
     } else if (addClimbOrLeft) {
       collect
-          .doneDelayed(20 - (5 + (depot ? 6.6 : 0.9)))
+          .doneDelayed(20 - (5 + (depot ? 6.3 : 0.9)))
           .onTrue(
               Commands.sequence(
                   Commands.deadline(

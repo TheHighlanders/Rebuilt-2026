@@ -271,6 +271,9 @@ public class RobotContainer {
     autoChooser.addRoutine("bump -> follow left", () -> autos.bumpFollow(true));
     autoChooser.addRoutine("bump -> follow right", () -> autos.bumpFollow(false));
 
+    autoChooser.addRoutine("swipe -> follow left", () -> autos.swipe(true));
+    autoChooser.addRoutine("swipe -> follow right", () -> autos.swipe(false));
+
     autoChooser.addRoutine("left -> neutral", () -> autos.side(true, true));
     autoChooser.addRoutine("left -> neutral (chill)", () -> autos.side(false, true));
     autoChooser.addRoutine("left -> sneak neutral", () -> autos.sideDefend(true, true));
